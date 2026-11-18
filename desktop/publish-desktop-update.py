@@ -111,7 +111,7 @@ def main() -> int:
             sftp.get_channel().settimeout(60 * 60)
         except Exception:
             pass
-        sftp.put(str(pkg), remote_tmp, callback=progress)
+        sftp.put(str(pkg), remote_tmp, callback=progress, confirm=False)
         print("upload done", sha512_b64(pkg)[:24] + "...", flush=True)
 
     # Activate via publish-update.php using server-local packagePath
