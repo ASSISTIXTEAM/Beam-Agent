@@ -1,0 +1,91 @@
+{
+  "beamHome": "C:\\Users\\Alexa\\.beam",
+  "projectsRoot": "C:\\Users\\Alexa\\.beam\\projects",
+  "defaultWorkspace": "C:\\Users\\Alexa\\.beam\\default-workspace",
+  "workspaceJson": "C:\\Users\\Alexa\\.beam\\storages\\workspace.json",
+  "deepseekHome": "C:\\Users\\Alexa\\.deepseek",
+  "deepseekHarnessDocs": "C:\\Users\\Alexa\\OneDrive\\Documents\\deepseek-harness",
+  "report": [
+    "beam home => C:\\Users\\Alexa\\.beam",
+    "projects root => C:\\Users\\Alexa\\.beam\\projects",
+    "workspace.json has no DeepSeek-origin paths",
+    "patched runtime\\app\\beam\\node_modules\\@assistix\\beam-api-workspace-controller\\lib\\typert.host.js",
+    "patched dist\\Beam Agent\\resources\\app\\beam\\node_modules\\@assistix\\beam-api-workspace-controller\\lib\\typert.host.js",
+    "patched runtime\\app\\beam\\node_modules\\@assistix\\beam-api-workspace-controller\\lib\\typert.remote-client.js",
+    "patched dist\\Beam Agent\\resources\\app\\beam\\node_modules\\@assistix\\beam-api-workspace-controller\\lib\\typert.remote-client.js",
+    "patched runtime\\app\\beam\\node_modules\\@assistix\\beam-api-remotes\\lib\\client.js",
+    "patched dist\\Beam Agent\\resources\\app\\beam\\node_modules\\@assistix\\beam-api-remotes\\lib\\client.js",
+    "patched runtime\\app\\beam\\node_modules\\@assistix\\beam-client-ui-workspace\\lib\\client.js",
+    "patched dist\\Beam Agent\\resources\\app\\beam\\node_modules\\@assistix\\beam-client-ui-workspace\\lib\\client.js",
+    "VERIFY [\n  {\n    \"file\": \"runtime\\\\app\\\\beam\\\\node_modules\\\\@assistix\\\\beam-api-workspace-controller\\\\lib\\\\index.js\",\n    \"namedCreate\": true,\n    \"harnessFilter\": true,\n    \"stillDocsHarness\": false\n  },\n  {\n    \"file\": \"dist\\\\Beam Agent\\\\resources\\\\app\\\\beam\\\\node_modules\\\\@assistix\\\\beam-api-workspace-controller\\\\lib\\\\index.js\",\n    \"namedCreate\": true,\n    \"harnessFilter\": true,\n    \"stillDocsHarness\": false\n  },\n  {\n    \"file\": \"runtime\\\\app\\\\beam\\\\node_modules\\\\@assistix\\\\beam-client-ui-workspace\\\\lib\\\\client.js\",\n    \"createModal\": false,\n    \"createByNameCall\": true,\n    \"projectsLabelEn\": true,\n    \"projectsLabelRu\": true\n  },\n  {\n    \"file\": \"dist\\\\Beam Agent\\\\resources\\\\app\\\\beam\\\\node_modules\\\\@assistix\\\\beam-client-ui-workspace\\\\lib\\\\client.js\",\n    \"createModal\": false,\n    \"createByNameCall\": true,\n    \"projectsLabelEn\": true,\n    \"projectsLabelRu\": true\n  },\n  {\n    \"file\": \"runtime\\\\app\\\\beam\\\\node_modules\\\\@assistix\\\\beam-api-remotes\\\\lib\\\\client.js\",\n    \"titleOptional\": true,\n    \"pathNotRequired\": true\n  },\n  {\n    \"file\": \"dist\\\\Beam Agent\\\\resources\\\\app\\\\beam\\\\node_modules\\\\@assistix\\\\beam-api-remotes\\\\lib\\\\client.js\",\n    \"titleOptional\": true,\n    \"pathNotRequired\": true\n  },\n  {\n    \"file\": \"runtime\\\\app\\\\beam\\\\node_modules\\\\@assistix\\\\beam-api-workspace-controller\\\\lib\\\\typert.host.js\",\n    \"hostTitleOptional\": true,\n    \"hostPathOptional\": true,\n    \"createNoRequiredPath\": true\n  },\n  {\n    \"file\": \"dist\\\\Beam Agent\\\\resources\\\\app\\\\beam\\\\node_modules\\\\@assistix\\\\beam-api-workspace-controller\\\\lib\\\\typert.host.js\",\n    \"hostTitleOptional\": true,\n    \"hostPathOptional\": true,\n    \"createNoRequiredPath\": true\n  },\n  {\n    \"file\": \"runtime\\\\app\\\\beam\\\\node_modules\\\\@assistix\\\\beam-api-workspace-controller\\\\lib\\\\typert.remote-client.js\",\n    \"hostTitleOptional\": true,\n    \"hostPathOptional\": true,\n    \"createNoRequiredPath\": true\n  },\n  {\n    \"file\": \"dist\\\\Beam Agent\\\\resources\\\\app\\\\beam\\\\node_modules\\\\@assistix\\\\beam-api-workspace-controller\\\\lib\\\\typert.remote-client.js\",\n    \"hostTitleOptional\": true,\n    \"hostPathOptional\": true,\n    \"createNoRequiredPath\": true\n  },\n  {\n    \"workspacePaths\": [\n      \"C:\\\\Users\\\\Alexa\\\\.beam\\\\default-workspace\"\n    ],\n    \"anyHarness\": false,\n    \"projectsRootExists\": true\n  }\n]"
+  ],
+  "verification": [
+    {
+      "file": "runtime\\app\\beam\\node_modules\\@assistix\\beam-api-workspace-controller\\lib\\index.js",
+      "namedCreate": true,
+      "harnessFilter": true,
+      "stillDocsHarness": false
+    },
+    {
+      "file": "dist\\Beam Agent\\resources\\app\\beam\\node_modules\\@assistix\\beam-api-workspace-controller\\lib\\index.js",
+      "namedCreate": true,
+      "harnessFilter": true,
+      "stillDocsHarness": false
+    },
+    {
+      "file": "runtime\\app\\beam\\node_modules\\@assistix\\beam-client-ui-workspace\\lib\\client.js",
+      "createModal": false,
+      "createByNameCall": true,
+      "projectsLabelEn": true,
+      "projectsLabelRu": true
+    },
+    {
+      "file": "dist\\Beam Agent\\resources\\app\\beam\\node_modules\\@assistix\\beam-client-ui-workspace\\lib\\client.js",
+      "createModal": false,
+      "createByNameCall": true,
+      "projectsLabelEn": true,
+      "projectsLabelRu": true
+    },
+    {
+      "file": "runtime\\app\\beam\\node_modules\\@assistix\\beam-api-remotes\\lib\\client.js",
+      "titleOptional": true,
+      "pathNotRequired": true
+    },
+    {
+      "file": "dist\\Beam Agent\\resources\\app\\beam\\node_modules\\@assistix\\beam-api-remotes\\lib\\client.js",
+      "titleOptional": true,
+      "pathNotRequired": true
+    },
+    {
+      "file": "runtime\\app\\beam\\node_modules\\@assistix\\beam-api-workspace-controller\\lib\\typert.host.js",
+      "hostTitleOptional": true,
+      "hostPathOptional": true,
+      "createNoRequiredPath": true
+    },
+    {
+      "file": "dist\\Beam Agent\\resources\\app\\beam\\node_modules\\@assistix\\beam-api-workspace-controller\\lib\\typert.host.js",
+      "hostTitleOptional": true,
+      "hostPathOptional": true,
+      "createNoRequiredPath": true
+    },
+    {
+      "file": "runtime\\app\\beam\\node_modules\\@assistix\\beam-api-workspace-controller\\lib\\typert.remote-client.js",
+      "hostTitleOptional": true,
+      "hostPathOptional": true,
+      "createNoRequiredPath": true
+    },
+    {
+      "file": "dist\\Beam Agent\\resources\\app\\beam\\node_modules\\@assistix\\beam-api-workspace-controller\\lib\\typert.remote-client.js",
+      "hostTitleOptional": true,
+      "hostPathOptional": true,
+      "createNoRequiredPath": true
+    },
+    {
+      "workspacePaths": [
+        "C:\\Users\\Alexa\\.beam\\default-workspace"
+      ],
+      "anyHarness": false,
+      "projectsRootExists": true
+    }
+  ]
+}

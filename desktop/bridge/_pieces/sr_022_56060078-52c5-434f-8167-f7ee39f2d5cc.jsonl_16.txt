@@ -1,0 +1,348 @@
+PATH: c:\Users\Alexa\OneDrive\Documents\Beam Agent\desktop\bridge\server.js
+OLD_LEN: 6820
+NEW_LEN: 5351
+FILE: 56060078-52c5-434f-8167-f7ee39f2d5cc.jsonl L16
+---OLD---
+  if (!wantStream) {
+    let upstream
+    let errText = null
+    try {
+      ;({ upstream, errText } = await callKumoSanitized(body, tier, { stream: false, ...kumoOpts }))
+    } catch (e) {
+      return sendJson(res, 502, {
+        type: 'error',
+        error: { type: 'api_error', message: e.message || 'Нет связи с модельным API' },
+      })
+    }
+    const text = errText != null ? errText : await upstream.text()
+    let data
+    try { data = JSON.parse(text) } catch {
+      bridgeLog(`kumo_bad_json status=${upstream.status} body=${text.slice(0, 200)}`)
+      return sendJson(res, 502, { type: 'error', error: { type: 'api_error', message: 'Модели вернули некорректный ответ. Попробуйте ещё раз.' } })
+    }
+    if (!upstream.ok) {
+      const status = upstream.status >= 400 ? upstream.status : 502
+      const errType = (status === 400 || status === 413) ? 'invalid_request_error' : 'api_error'
+      return sendJson(res, status, {
+        type: 'error',
+        error: { type: errType, message: kumoErrorMessage(status, text) },
+      })
+    }
+    const choice = data.choices?.[0] || {}
+    const msg = choice.message || {}
+    const content = []
+    if (msg.content) content.push({ type: 'text', text: scrubBrandLeak(msg.content) })
+    if (msg.tool_calls?.length) content.push(...openAIToolCallsToAnthropic(msg.tool_calls))
+    const stop = msg.tool_calls?.length ? 'tool_use' : (choice.finish_reason === 'length' ? 'max_tokens' : 'end_turn')
+    // Avoid EMPTY_RESPONSE → SERVER in desktop: never return zero content blocks
+    if (!content.length) content.push({ type: 'text', text: '…' })
+    chargeTokens(state, tier.id, data.usage)
+    return sendJson(res, 200, {
+      id: data.id || `msg_${crypto.randomBytes(8).toString('hex')}`,
+      type: 'message',
+      role: 'assistant',
+      model: tier.id,
+      content,
+      stop_reason: stop,
+      stop_sequence: null,
+      usage: {
+        input_tokens: data.usage?.prompt_tokens || 0,
+        output_tokens: data.usage?.completion_tokens || 0,
+      },
+    })
+  }
+
+  // Streaming Anthropic-compatible SSE
+  let upstream
+  let errText = null
+  try {
+    ;({ upstream, errText } = await callKumoSanitized(body, tier, { stream: true, ...kumoOpts }))
+  } catch (e) {
+    return sendJson(res, 502, {
+      type: 'error',
+      error: { type: 'api_error', message: e.message || 'Нет связи с модельным API' },
+    })
+  }
+  if (!upstream.ok) {
+    const text = errText != null ? errText : await upstream.text()
+    if (!errText) bridgeLog(`kumo_stream_http status=${upstream.status} body=${text.slice(0, 200)}`)
+    const status = upstream.status >= 400 ? upstream.status : 502
+    const errType = (status === 400 || status === 413) ? 'invalid_request_error' : 'api_error'
+    return sendJson(res, status, {
+      type: 'error',
+      error: { type: errType, message: kumoErrorMessage(status, text) },
+    })
+  }
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream; charset=utf-8',
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive',
+    'Access-Control-Allow-Origin': '*',
+  })
+
+  const msgId = `msg_${crypto.randomBytes(8).toString('hex')}`
+  sseWrite(res, 'message_start', {
+    type: 'message_start',
+    message: {
+      id: msgId,
+      type: 'message',
+      role: 'assistant',
+      model: tier.id,
+      content: [],
+      stop_reason: null,
+      stop_sequence: null,
+      usage: { input_tokens: 0, output_tokens: 0 },
+    },
+  })
+
+  const reader = upstream.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  const ensureTextBlock = () => {
+    if (textStarted) return
+    textStarted = true
+    sseWrite(res, 'content_block_start', {
+      type: 'content_block_start',
+      index: blockIndex,
+      content_block: { type: 'text', text: '' },
+    })
+  }
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    const parts = buffer.split('\n')
+    buffer = parts.pop() || ''
+    for (const line of parts) {
+      const trimmed = line.trim()
+      if (!trimmed.startsWith('data:')) continue
+      const payload = trimmed.slice(5).trim()
+      if (payload === '[DONE]') continue
+      let chunk
+      try { chunk = JSON.parse(payload) } catch { continue }
+      if (chunk.usage) usage = { ...usage, ...chunk.usage }
+      const delta = chunk.choices?.[0]?.delta || {}
+      const finish = chunk.choices?.[0]?.finish_reason
+      if (delta.content) {
+        ensureTextBlock()
+        sseWrite(res, 'content_block_delta', {
+          type: 'content_block_delta',
+          index: blockIndex,
+          delta: { type: 'text_delta', text: scrubBrandLeak(delta.content) },
+        })
+      }
+      if (delta.tool_calls) {
+        if (textStarted) {
+          sseWrite(res, 'content_block_stop', { type: 'content_block_stop', index: blockIndex })
+          blockIndex += 1
+          textStarted = false
+        }
+        for (const tc of delta.tool_calls) {
+          const idx = tc.index ?? 0
+          if (!toolBuf.has(idx)) {
+            const id = tc.id || `tool_${crypto.randomBytes(6).toString('hex')}`
+            toolBuf.set(idx, { id, name: tc.function?.name || '', args: '', anthropicIndex: blockIndex })
+            sseWrite(res, 'content_block_start', {
+              type: 'content_block_start',
+              index: blockIndex,
+              content_block: { type: 'tool_use', id, name: tc.function?.name || '', input: {} },
+            })
+            blockIndex += 1
+          }
+          const entry = toolBuf.get(idx)
+          if (tc.function?.name) entry.name = tc.function.name
+          if (tc.function?.arguments) {
+            entry.args += tc.function.arguments
+            sseWrite(res, 'content_block_delta', {
+              type: 'content_block_delta',
+              index: entry.anthropicIndex,
+              delta: { type: 'input_json_delta', partial_json: tc.function.arguments },
+            })
+          }
+        }
+        stopReason = 'tool_use'
+      }
+      if (finish === 'length') stopReason = 'max_tokens'
+      if (finish === 'tool_calls') stopReason = 'tool_use'
+    }
+  }
+
+  if (textStarted) {
+    sseWrite(res, 'content_block_stop', { type: 'content_block_stop', index: 0 })
+  }
+  for (const entry of toolBuf.values()) {
+    sseWrite(res, 'content_block_stop', { type: 'content_block_stop', index: entry.anthropicIndex })
+  }
+
+  chargeTokens(state, tier.id, {
+    prompt_tokens: usage.prompt_tokens || 0,
+    completion_tokens: usage.completion_tokens || Math.max(1, [...toolBuf.values()].length),
+  })
+
+  sseWrite(res, 'message_delta', {
+    type: 'message_delta',
+    delta: { stop_reason: stopReason, stop_sequence: null },
+    usage: { output_tokens: usage.completion_tokens || 0 },
+  })
+  sseWrite(res, 'message_stop', { type: 'message_stop' })
+  res.end()
+  } catch (e) {
+---NEW---
+  if (!wantStream) {
+    let completed
+    try {
+      completed = await completeWithOutputContinues(body, tier, kumoOpts)
+    } catch (e) {
+      return sendJson(res, 502, {
+        type: 'error',
+        error: { type: 'api_error', message: e.message || 'Нет связи с модельным API' },
+      })
+    }
+    if (completed.badJson) {
+      bridgeLog(`kumo_bad_json body=${String(completed.errText || '').slice(0, 200)}`)
+      return sendJson(res, 502, { type: 'error', error: { type: 'api_error', message: 'Модели вернули некорректный ответ. Попробуйте ещё раз.' } })
+    }
+    if (!completed.upstream?.ok || !completed.content) {
+      const raw = completed.errText || ''
+      const status = completed.upstream?.status >= 400 ? completed.upstream.status : 502
+      const errType = (status === 400 || status === 413) ? 'invalid_request_error' : 'api_error'
+      return sendJson(res, status, {
+        type: 'error',
+        error: { type: errType, message: kumoErrorMessage(status, raw) },
+      })
+    }
+    chargeTokens(state, tier.id, completed.usage)
+    return sendJson(res, 200, {
+      id: completed.id || `msg_${crypto.randomBytes(8).toString('hex')}`,
+      type: 'message',
+      role: 'assistant',
+      model: tier.id,
+      content: completed.content,
+      stop_reason: completed.stop,
+      stop_sequence: null,
+      usage: {
+        input_tokens: completed.usage?.prompt_tokens || 0,
+        output_tokens: completed.usage?.completion_tokens || 0,
+      },
+    })
+  }
+
+  // Streaming Anthropic-compatible SSE (+ invisible output continuation)
+  let upstream
+  let openaiBody
+  let errText = null
+  try {
+    ;({ upstream, openaiBody, errText } = await callKumoSanitized(body, tier, { stream: true, ...kumoOpts }))
+  } catch (e) {
+    return sendJson(res, 502, {
+      type: 'error',
+      error: { type: 'api_error', message: e.message || 'Нет связи с модельным API' },
+    })
+  }
+  if (!upstream.ok) {
+    const text = errText != null ? errText : await upstream.text()
+    if (!errText) bridgeLog(`kumo_stream_http status=${upstream.status} body=${text.slice(0, 200)}`)
+    const status = upstream.status >= 400 ? upstream.status : 502
+    const errType = (status === 400 || status === 413) ? 'invalid_request_error' : 'api_error'
+    return sendJson(res, status, {
+      type: 'error',
+      error: { type: errType, message: kumoErrorMessage(status, text) },
+    })
+  }
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream; charset=utf-8',
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive',
+    'Access-Control-Allow-Origin': '*',
+  })
+
+  const msgId = `msg_${crypto.randomBytes(8).toString('hex')}`
+  sseWrite(res, 'message_start', {
+    type: 'message_start',
+    message: {
+      id: msgId,
+      type: 'message',
+      role: 'assistant',
+      model: tier.id,
+      content: [],
+      stop_reason: null,
+      stop_sequence: null,
+      usage: { input_tokens: 0, output_tokens: 0 },
+    },
+  })
+
+  const streamState = {
+    blockIndex,
+    textStarted,
+    toolBuf,
+    usage,
+  }
+  let accumulatedText = ''
+  let continues = 0
+  let pipe = await pipeOpenAiSseToAnthropic(upstream, res, streamState)
+  accumulatedText += pipe.text
+  stopReason = pipe.stopReason
+  usage = streamState.usage
+
+  while (
+    stopReason === 'max_tokens' &&
+    !pipe.hadTools &&
+    continues < MAX_OUTPUT_CONTINUES
+  ) {
+    continues += 1
+    const contBody = buildContinuationOpenAIBody(openaiBody, accumulatedText, KUMO_SAFE_BUDGET)
+    bridgeLog(`output_continue stream round=${continues} chars=${accumulatedText.length}`)
+    let contUp
+    try {
+      contUp = await callKumo(contBody, { stream: true, backends: kumoOpts.backends || tier.backends || [tier.backend] })
+    } catch (e) {
+      bridgeLog(`output_continue stream_fail ${e?.message || e}`)
+      break
+    }
+    if (!contUp.ok) {
+      const failBody = await contUp.text().catch(() => '')
+      bridgeLog(`output_continue stream_http status=${contUp.status} body=${failBody.slice(0, 200)}`)
+      break
+    }
+    openaiBody = contBody
+    // Keep the open text block — seamless tokens for the client.
+    pipe = await pipeOpenAiSseToAnthropic(contUp, res, streamState)
+    accumulatedText += pipe.text
+    stopReason = pipe.stopReason
+    usage = streamState.usage
+  }
+
+  // Prefer end_turn so desktop never shows «Output token limit reached» for ordinary long work.
+  if (stopReason === 'max_tokens') {
+    bridgeLog(`output_continue stream_cap_reached rounds=${continues} chars=${accumulatedText.length}`)
+    stopReason = 'end_turn'
+  }
+
+  blockIndex = streamState.blockIndex
+  textStarted = streamState.textStarted
+  toolBuf = streamState.toolBuf
+
+  if (textStarted) {
+    sseWrite(res, 'content_block_stop', { type: 'content_block_stop', index: 0 })
+  }
+  for (const entry of toolBuf.values()) {
+    sseWrite(res, 'content_block_stop', { type: 'content_block_stop', index: entry.anthropicIndex })
+  }
+
+  chargeTokens(state, tier.id, {
+    prompt_tokens: usage.prompt_tokens || 0,
+    completion_tokens: usage.completion_tokens || Math.max(1, [...toolBuf.values()].length),
+  })
+
+  sseWrite(res, 'message_delta', {
+    type: 'message_delta',
+    delta: { stop_reason: stopReason, stop_sequence: null },
+    usage: { output_tokens: usage.completion_tokens || 0 },
+  })
+  sseWrite(res, 'message_stop', { type: 'message_stop' })
+  res.end()
+  } catch (e) {

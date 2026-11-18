@@ -1,0 +1,19 @@
+Beam Agent — Early Alpha (ASSISTIX)
+
+Это ранняя альфа-сборка для тестеров.
+This is an Early Alpha build for testers.
+
+Что входит / What's included:
+• Electron-приложение Beam Agent
+• Локальный bridge (Tide / Flare / Pine через Kumorouter)
+• Встроенный Node runtime
+• Тихий запуск без окна консоли
+• Данные в %USERPROFILE%\.beam (не DeepSeek)
+
+Вход: ASSISTIX ID (OAuth / логин в приложении).
+Секреты API в установщик не кладутся.
+
+Опционально снаружи: LibreOffice может улучшить preview .docx
+(ядро чата/агента работает без него).
+
+После установки запустите «Beam Agent» из меню Пуск.

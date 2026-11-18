@@ -1,0 +1,52 @@
+{
+  "cssHref": "beam-app://app/assets/beam-override.css?v=coolicons-everywhere-v4b",
+  "audit": {
+    "cells": [
+      {
+        "label": "Общие",
+        "beam": null,
+        "svgs": 1,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/settings.png\")",
+        "bg": "rgb(242, 250, 248)",
+        "pathOpacity": "0"
+      },
+      {
+        "label": "Профиль",
+        "beam": null,
+        "svgs": 1,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/user.png\")",
+        "bg": "rgb(242, 250, 248)",
+        "pathOpacity": "0"
+      },
+      {
+        "label": "Лимиты",
+        "beam": null,
+        "svgs": 1,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/activity.png\")",
+        "bg": "rgb(242, 250, 248)",
+        "pathOpacity": "0"
+      }
+    ],
+    "themes": [
+      {
+        "label": "Светлая",
+        "beam": null,
+        "mask": "none"
+      },
+      {
+        "label": "Тёмная",
+        "beam": null,
+        "mask": "none"
+      },
+      {
+        "label": "Системная",
+        "beam": null,
+        "mask": "none"
+      }
+    ],
+    "rings": {
+      "mask": "none",
+      "stroke": "rgba(255, 255, 255, 0.1)"
+    }
+  }
+}

@@ -1,0 +1,215 @@
+PATH: c:\Users\Alexa\OneDrive\Documents\Beam Agent\desktop\bridge\server.js
+OLD_LEN: 99
+NEW_LEN: 7542
+FILE: 56060078-52c5-434f-8167-f7ee39f2d5cc.jsonl L15
+---OLD---
+  return { upstream, openaiBody, errText }
+}
+
+function openAIToolCallsToAnthropic(toolCalls = []) {
+---NEW---
+  return { upstream, openaiBody, errText }
+}
+
+/** Append assistant partial + continue user turn for invisible output continuation. */
+function buildContinuationOpenAIBody(openaiBody, partialText, budget = KUMO_SAFE_BUDGET) {
+  const base = {
+    ...openaiBody,
+    messages: [
+      ...(Array.isArray(openaiBody.messages) ? openaiBody.messages : []),
+      { role: 'assistant', content: String(partialText || '') },
+      { role: 'user', content: OUTPUT_CONTINUE_PROMPT },
+    ],
+  }
+  // Continuations drop tools — text-only resume; keeps payload under Kumo 1 MiB.
+  delete base.tools
+  delete base.tool_choice
+  base.messages = compactOpenAIMessages(base.messages, budget)
+  if (payloadBytes(base) > budget) {
+    base.messages = compactOpenAIMessages(base.messages, Math.floor(budget * 0.85))
+  }
+  return base
+}
+
+/**
+ * Read one OpenAI SSE upstream into Anthropic-shaped SSE writes.
+ * Returns { stopReason, usage, text, hadTools }.
+ */
+async function pipeOpenAiSseToAnthropic(upstream, res, state) {
+  const reader = upstream.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  let stopReason = 'end_turn'
+  let usage = { ...state.usage }
+  let textChunk = ''
+
+  const ensureTextBlock = () => {
+    if (state.textStarted) return
+    state.textStarted = true
+    sseWrite(res, 'content_block_start', {
+      type: 'content_block_start',
+      index: state.blockIndex,
+      content_block: { type: 'text', text: '' },
+    })
+  }
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    const parts = buffer.split('\n')
+    buffer = parts.pop() || ''
+    for (const line of parts) {
+      const trimmed = line.trim()
+      if (!trimmed.startsWith('data:')) continue
+      const payload = trimmed.slice(5).trim()
+      if (payload === '[DONE]') continue
+      let chunk
+      try { chunk = JSON.parse(payload) } catch { continue }
+      if (chunk.usage) usage = { ...usage, ...chunk.usage }
+      const delta = chunk.choices?.[0]?.delta || {}
+      const finish = chunk.choices?.[0]?.finish_reason
+      if (delta.content) {
+        const scrubbed = scrubBrandLeak(delta.content)
+        textChunk += scrubbed
+        ensureTextBlock()
+        sseWrite(res, 'content_block_delta', {
+          type: 'content_block_delta',
+          index: state.blockIndex,
+          delta: { type: 'text_delta', text: scrubbed },
+        })
+      }
+      if (delta.tool_calls) {
+        if (state.textStarted) {
+          sseWrite(res, 'content_block_stop', { type: 'content_block_stop', index: state.blockIndex })
+          state.blockIndex += 1
+          state.textStarted = false
+        }
+        for (const tc of delta.tool_calls) {
+          const idx = tc.index ?? 0
+          if (!state.toolBuf.has(idx)) {
+            const id = tc.id || `tool_${crypto.randomBytes(6).toString('hex')}`
+            state.toolBuf.set(idx, { id, name: tc.function?.name || '', args: '', anthropicIndex: state.blockIndex })
+            sseWrite(res, 'content_block_start', {
+              type: 'content_block_start',
+              index: state.blockIndex,
+              content_block: { type: 'tool_use', id, name: tc.function?.name || '', input: {} },
+            })
+            state.blockIndex += 1
+          }
+          const entry = state.toolBuf.get(idx)
+          if (tc.function?.name) entry.name = tc.function.name
+          if (tc.function?.arguments) {
+            entry.args += tc.function.arguments
+            sseWrite(res, 'content_block_delta', {
+              type: 'content_block_delta',
+              index: entry.anthropicIndex,
+              delta: { type: 'input_json_delta', partial_json: tc.function.arguments },
+            })
+          }
+        }
+        stopReason = 'tool_use'
+      }
+      if (finish === 'length') stopReason = 'max_tokens'
+      if (finish === 'tool_calls') stopReason = 'tool_use'
+    }
+  }
+
+  state.usage = usage
+  return {
+    stopReason,
+    usage,
+    text: textChunk,
+    hadTools: state.toolBuf.size > 0,
+  }
+}
+
+/** Non-stream: keep requesting continuation until end/tool or safe cap. */
+async function completeWithOutputContinues(body, tier, kumoOpts) {
+  let { upstream, openaiBody, errText } = await callKumoSanitized(body, tier, { stream: false, ...kumoOpts })
+  if (!upstream.ok) return { upstream, openaiBody, errText, content: null, stop: null, usage: null, continues: 0 }
+
+  const text = errText != null ? errText : await upstream.text()
+  let data
+  try { data = JSON.parse(text) } catch {
+    return { upstream, openaiBody, errText: text, content: null, stop: null, usage: null, continues: 0, badJson: true }
+  }
+  if (!upstream.ok) {
+    return { upstream, openaiBody, errText: text, content: null, stop: null, usage: null, continues: 0 }
+  }
+
+  const choice = data.choices?.[0] || {}
+  const msg = choice.message || {}
+  let fullText = typeof msg.content === 'string' ? scrubBrandLeak(msg.content) : ''
+  let toolCalls = msg.tool_calls || null
+  let stop = toolCalls?.length ? 'tool_use' : (choice.finish_reason === 'length' ? 'max_tokens' : 'end_turn')
+  let usage = data.usage || { prompt_tokens: 0, completion_tokens: 0 }
+  let continues = 0
+  let lastId = data.id
+
+  while (stop === 'max_tokens' && !toolCalls?.length && continues < MAX_OUTPUT_CONTINUES) {
+    continues += 1
+    const contBody = buildContinuationOpenAIBody(openaiBody, fullText, KUMO_SAFE_BUDGET)
+    bridgeLog(`output_continue sync round=${continues} chars=${fullText.length}`)
+    let contUp
+    try {
+      contUp = await callKumo(contBody, { stream: false, backends: kumoOpts.backends || tier.backends || [tier.backend] })
+    } catch (e) {
+      bridgeLog(`output_continue sync_fail ${e?.message || e}`)
+      break
+    }
+    const contText = await contUp.text()
+    if (!contUp.ok) {
+      bridgeLog(`output_continue sync_http status=${contUp.status} body=${contText.slice(0, 200)}`)
+      break
+    }
+    let contData
+    try { contData = JSON.parse(contText) } catch {
+      bridgeLog('output_continue sync_bad_json')
+      break
+    }
+    const cChoice = contData.choices?.[0] || {}
+    const cMsg = cChoice.message || {}
+    const piece = typeof cMsg.content === 'string' ? scrubBrandLeak(cMsg.content) : ''
+    if (piece) fullText += piece
+    if (cMsg.tool_calls?.length) {
+      toolCalls = cMsg.tool_calls
+      stop = 'tool_use'
+    } else {
+      stop = cChoice.finish_reason === 'length' ? 'max_tokens' : 'end_turn'
+    }
+    if (contData.usage) {
+      usage = {
+        prompt_tokens: (usage.prompt_tokens || 0) + (contData.usage.prompt_tokens || 0),
+        completion_tokens: (usage.completion_tokens || 0) + (contData.usage.completion_tokens || 0),
+        total_tokens: (usage.total_tokens || 0) + (contData.usage.total_tokens || 0),
+      }
+    }
+    lastId = contData.id || lastId
+    openaiBody = contBody
+  }
+
+  // After seamless continues, never surface max_tokens to the desktop (orange banner).
+  if (stop === 'max_tokens') {
+    bridgeLog(`output_continue sync_cap_reached rounds=${continues} chars=${fullText.length}`)
+    stop = 'end_turn'
+  }
+
+  const content = []
+  if (fullText) content.push({ type: 'text', text: fullText })
+  if (toolCalls?.length) content.push(...openAIToolCallsToAnthropic(toolCalls))
+  if (!content.length) content.push({ type: 'text', text: '…' })
+
+  return {
+    upstream: { ok: true, status: 200 },
+    openaiBody,
+    errText: null,
+    content,
+    stop,
+    usage,
+    continues,
+    id: lastId,
+  }
+}
+
+function openAIToolCallsToAnthropic(toolCalls = []) {

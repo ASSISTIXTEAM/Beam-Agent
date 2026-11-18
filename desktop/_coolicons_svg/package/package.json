@@ -1,0 +1,39 @@
+{
+  "name": "@coolicons/svg",
+  "version": "5.4.0",
+  "description": "coolicons as SVG files with a manifest in five styles and three corner radii",
+  "keywords": [
+    "coolicons",
+    "icons",
+    "svg",
+    "svg-icons",
+    "icon-set"
+  ],
+  "homepage": "https://coolicons.cool/?ref=npm-svg",
+  "bugs": "https://github.com/krystonschwarze/coolicons/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/krystonschwarze/coolicons.git",
+    "directory": "packages/svg"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Kryston Schwarze",
+    "url": "https://krystonschwarze.com"
+  },
+  "type": "module",
+  "files": [
+    "line",
+    "duocolor",
+    "duotone",
+    "fill",
+    "bulk",
+    "manifest.json",
+    "data"
+  ],
+  "exports": {
+    "./manifest.json": "./manifest.json",
+    "./package.json": "./package.json",
+    "./*": "./*"
+  }
+}

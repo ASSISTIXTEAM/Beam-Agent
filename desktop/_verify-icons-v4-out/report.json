@@ -1,0 +1,472 @@
+{
+  "cssBust": "beam-app://app/assets/beam-override.css?v=coolicons-everywhere-v4",
+  "ringAudit": {
+    "ok": true,
+    "count": 3,
+    "info": [
+      {
+        "mask": "none",
+        "bg": "rgba(0, 0, 0, 0)",
+        "stroke": "rgba(255, 255, 255, 0.1)",
+        "opacity": "1",
+        "fill": "none"
+      },
+      {
+        "mask": "none",
+        "bg": "rgba(0, 0, 0, 0)",
+        "stroke": "rgba(255, 255, 255, 0.1)",
+        "opacity": "1",
+        "fill": "none"
+      },
+      {
+        "mask": "none",
+        "bg": "rgba(0, 0, 0, 0)",
+        "stroke": "rgba(255, 255, 255, 0.1)",
+        "opacity": "1",
+        "fill": "none"
+      }
+    ]
+  },
+  "settingsAudit": {
+    "totalTagged": 49,
+    "settingsTagged": [
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "settings",
+        "label": "Настройки",
+        "inDialog": true,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/settings.png\")"
+      },
+      {
+        "role": "model",
+        "label": "Model, current Flare, effort High Flare",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/cpu.png\")"
+      }
+    ],
+    "sample": [
+      {
+        "role": "automation",
+        "label": "Automation tasks Задачи автоматизации",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/clock.png\")"
+      },
+      {
+        "role": "search",
+        "label": "Поиск сессий",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/search.png\")"
+      },
+      {
+        "role": "plus",
+        "label": "Новая сессия in SORBINO",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/plus.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "plus",
+        "label": "Новая сессия in 1",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/plus.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "more",
+        "label": "Show 7 more sessions",
+        "inDialog": false,
+        "mask": null
+      },
+      {
+        "role": "plus",
+        "label": "Новая сессия in 12",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/plus.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "plus",
+        "label": "Новая сессия in Реферат",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/plus.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "more",
+        "label": "Show 6 more sessions",
+        "inDialog": false,
+        "mask": null
+      },
+      {
+        "role": "plus",
+        "label": "Новая сессия in 123",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/plus.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "more",
+        "label": "Show 2 more sessions",
+        "inDialog": false,
+        "mask": null
+      },
+      {
+        "role": "plus",
+        "label": "Новая сессия in Beam Agent",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/plus.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "archive",
+        "label": "Archive session",
+        "inDialog": false,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      {
+        "role": "more",
+        "label": "Show 4 more sessions",
+        "inDialog": false,
+        "mask": null
+      },
+      {
+        "role": "login",
+        "label": "Войти Войти",
+        "inDialog": true,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/log-in.png\")"
+      },
+      {
+        "role": "settings",
+        "label": "Настройки",
+        "inDialog": true,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/settings.png\")"
+      }
+    ]
+  },
+  "profileAudit": {
+    "profileModalOpen": false,
+    "dialogText": "Профиль\nОбщие\nПрофиль\nЛимиты\nЗакрыть\nAlessandro\nalessandro_calandrini@mail.ru\nПрофиль ASSISTIX ID\nПродукт\nBeam Agent\nАккаунт\nASSISTIX ID\nИмя\nAlessandro\nEmail\nalessandro_calandrini@mail.ru\nСтатус email",
+    "icons": [
+      {
+        "role": "login",
+        "label": "Войти Войти",
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/log-in.png\")"
+      },
+      {
+        "role": "settings",
+        "label": "Настройки",
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/settings.png\")"
+      }
+    ]
+  },
+  "modelsAudit": {
+    "modelIcons": [],
+    "openText": true
+  },
+  "ring2": {
+    "ok": true,
+    "maskNone": true,
+    "bg": "rgba(0, 0, 0, 0)",
+    "stroke": "rgba(255, 255, 255, 0.1)",
+    "strokeOpacity": "1"
+  }
+}

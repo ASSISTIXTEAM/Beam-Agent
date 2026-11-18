@@ -1,0 +1,9 @@
+DirectoryIndex index.php login.php
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # Keep API/ingest/quota reachable
+  RewriteRule ^api/beam-ingest\.php$ - [L]
+  RewriteRule ^api/beam-quota\.php$ - [L]
+</IfModule>

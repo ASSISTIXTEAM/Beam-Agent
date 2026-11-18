@@ -1,0 +1,61 @@
+PATH: C:\Users\Alexa\OneDrive\Documents\Beam Agent\desktop\bridge\server.js
+OLD_LEN: 499
+NEW_LEN: 1967
+FILE: eaa28309-7b3b-481c-be81-935f61a9b72f.jsonl L13
+---OLD---
+    if (url.pathname === '/assistix/login' && req.method === 'POST') {
+      const state = loadState()
+      if (!state.oauth_nonce) state.oauth_nonce = crypto.randomBytes(16).toString('hex')
+      state.authWaiting = true
+      state.lastAuthError = null
+      saveState(state)
+      return sendJson(res, 200, { ok: true, authUrl: buildAuthUrl(state.oauth_nonce), loginUrl: `http://127.0.0.1:${PORT}/assistix/login` })
+    }
+
+    if (url.pathname === '/assistix/confirm' && req.method === 'POST') {
+---NEW---
+    if (url.pathname === '/assistix/login' && req.method === 'POST') {
+      const state = loadState()
+      if (!state.oauth_nonce) state.oauth_nonce = crypto.randomBytes(16).toString('hex')
+      state.authWaiting = true
+      state.lastAuthError = null
+      saveState(state)
+      return sendJson(res, 200, { ok: true, authUrl: buildAuthUrl(state.oauth_nonce), loginUrl: `http://127.0.0.1:${PORT}/assistix/login` })
+    }
+
+    // Backup: email+password against real ASSISTIX ID (no local guests)
+    if (url.pathname === '/assistix/login-password' && req.method === 'POST') {
+      const raw = await readBody(req)
+      let body = {}
+      try { body = JSON.parse(raw.toString('utf8') || '{}') } catch { body = {} }
+      const email = String(body.email || '').trim()
+      const password = String(body.password || '')
+      try {
+        const data = await loginWithPassword(email, password)
+        if (!isRealIdUser(data?.user)) {
+          return sendJson(res, 401, { ok: false, error: 'no_real_user' })
+        }
+        const state = loadState()
+        state.pendingSession = sessionFromIdUser(data.user, {
+          token: data.access_token || data.token || null,
+        })
+        state.lastAuthError = null
+        state.authWaiting = false
+        state.oauth_nonce = crypto.randomBytes(16).toString('hex')
+        saveState(state)
+        return sendJson(res, 200, {
+          ok: true,
+          pendingUser: publicUser(state.pendingSession),
+        })
+      } catch (e) {
+        const st = loadState()
+        st.lastAuthError = String(e.message || e)
+        st.authWaiting = false
+        saveState(st)
+        try { fs.appendFileSync(path.join(DATA_DIR, 'bridge.log'), '[auth-password] ' + st.lastAuthError + '\n') } catch {}
+        const status = Number(e.status) || 401
+        return sendJson(res, status, { ok: false, error: String(e.message || e) })
+      }
+    }
+
+    if (url.pathname === '/assistix/confirm' && req.method === 'POST') {

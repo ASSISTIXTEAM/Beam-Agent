@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASSISTIX A&gt;ID — Вход и регистрация</title>
+  <meta name="description" content="Войдите в ASSISTIX A&gt;ID или создайте аккаунт — один вход для CHAT, Agent и всех сервисов экосистемы.">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/assets/favicon.png">
+  <meta name="theme-color" content="#7B5CFE">
+  <meta name="robots" content="noindex">
+  <link rel="preload" href="/assets/fonts/savona/Savona-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/savona/Savona-Bold.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/assets/id.css?v=20261107usage3">
+</head>
+<body class="yid-auth">
+<div class="aid-auth-wrap">
+
+  <!-- Brand panel -->
+  <aside class="aid-auth-aside">
+    <a class="aid-brand" href="/">
+      <span class="aid-brand-mark">A<span>&gt;</span></span>
+      <span class="aid-brand-word">ASSISTIX <em>ID</em></span>
+    </a>
+
+    <div class="aid-auth-aside-body">
+      <h2>Один вход —<br>вся экосистема.</h2>
+      <p>CHAT, Agent и будущие сервисы ASSISTIX доверяют вашему A&gt;ID. Пароль остаётся здесь — сервисы получают только подписанный токен.</p>
+      <ul class="aid-auth-points">
+        <li>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          <div><strong>Единый профиль</strong><span>Имя и аватар синхронизируются во всех продуктах</span></div>
+        </li>
+        <li>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          <div><strong>Подтверждение почты</strong><span>Код из письма защищает аккаунт при регистрации</span></div>
+        </li>
+        <li>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          <div><strong>Безопасные токены</strong><span>OAuth 2.0 и JWT с коротким сроком жизни</span></div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="aid-auth-aside-foot">
+      <a href="https://assistix.org">assistix.org</a>
+      <a href="/#ecosystem">Сервисы</a>
+      <span>© ASSISTIX</span>
+    </div>
+  </aside>
+
+  <!-- Form panel -->
+  <main class="aid-auth-main">
+    <div class="aid-auth-main-top">
+      <a class="aid-brand" href="/">
+        <span class="aid-brand-mark">A<span>&gt;</span></span>
+        <span class="aid-brand-word">ASSISTIX <em>ID</em></span>
+      </a>
+      <a class="aid-auth-back" href="/">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+        На сайт
+      </a>
+      <button type="button" class="aid-icon-btn" data-aid-theme-toggle aria-label="Тема" style="width:34px;height:34px"></button>
+    </div>
+
+    <div class="aid-auth-card">
+      <!-- Already signed in -->
+      <div id="sessionResumePanel" class="session-resume-panel" role="region" aria-label="Текущая сессия">
+        <div class="session-resume-title">Вы уже вошли в A&gt;ID</div>
+        <div class="session-resume-user">
+          <div class="session-resume-avatar-wrap">
+            <img id="sessionResumeAvatarImg" class="session-resume-avatar-img hidden" alt="" width="56" height="56" />
+            <span id="sessionResumeAvatarFallback" class="session-resume-avatar-fallback">?</span>
+          </div>
+          <div style="min-width:0">
+            <div id="sessionResumeName" class="session-resume-name"></div>
+            <div id="sessionResumeEmail" class="session-resume-email"></div>
+          </div>
+        </div>
+        <p id="sessionResumeHint" class="session-resume-hint hidden"></p>
+        <div class="session-resume-actions">
+          <form id="oauthFinishForm" class="oauth-finish-form hidden" method="post" action="/api/oauth-finish.php">
+            <input type="hidden" name="redirect_uri" id="oauthFinishRedirectUri" value="" />
+            <input type="hidden" name="client_id" id="oauthFinishClientId" value="" />
+            <input type="hidden" name="state" id="oauthFinishState" value="" />
+            <button type="submit" id="oauthContinueBtn" class="submit-button hidden">Продолжить</button>
+          </form>
+          <div id="sessionResumeProfileRow" class="session-resume-link-profile" data-beam-cabinet="1"><!-- BEAM_HIDE_CABINET -->
+            <a id="sessionResumeProfileLink" href="/profile/">Открыть кабинет</a>
+          </div>
+          <button type="button" class="back-button" id="sessionResumeSwitchBtn">Войти другим аккаунтом</button>
+        </div>
+      </div>
+
+      <!-- Guest -->
+      <div id="authGuestBlock">
+        <h1 class="yid-auth-heading">Войдите в A&gt;ID</h1>
+        <p class="yid-auth-sub">Единый ключ к CHAT, Agent и сервисам ASSISTIX</p>
+
+        <div class="aid-tabs" role="tablist">
+          <button class="tab-button active" id="loginTab" type="button" role="tab">Вход</button>
+          <button class="tab-button" id="signupTab" type="button" role="tab">Регистрация</button>
+        </div>
+
+        <!-- Login -->
+        <form id="loginForm" method="post" action="#" onsubmit="return false">
+          <div id="loginStep1">
+            <div class="form-group">
+              <label for="loginEmail">Email</label>
+              <div class="input-wrapper">
+                <input type="email" id="loginEmail" name="email" placeholder="you@example.com" required autocomplete="username">
+                <div class="error-message" id="loginEmailError">Неверный формат email</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="loginPassword">Пароль</label>
+              <div class="input-wrapper">
+                <input type="password" id="loginPassword" name="password" placeholder="Ваш пароль" required autocomplete="current-password">
+                <div class="error-message" id="loginPasswordError">Введите пароль</div>
+              </div>
+            </div>
+            <div class="forgot-link-row">
+              <button type="button" class="forgot-link" id="forgotPasswordBtn">Забыли пароль?</button>
+            </div>
+            <button type="submit" class="submit-button" id="loginSubmitBtn">Войти</button>
+          </div>
+        </form>
+
+        <!-- Signup -->
+        <form id="signupForm" class="hidden" onsubmit="return false">
+          <div id="regStep1">
+            <p class="step-hint">Укажите email — пришлём код. Без кода аккаунт не создаётся: так мы убеждаемся, что почта ваша.</p>
+            <div class="form-group">
+              <label for="signupEmail">Email</label>
+              <div class="input-wrapper">
+                <input type="email" id="signupEmail" placeholder="you@example.com" required autocomplete="email">
+                <div class="error-message" id="signupEmailError">Неверный формат email</div>
+              </div>
+            </div>
+            <button type="button" class="submit-button" id="regSendCodeBtn">Получить код на почту</button>
+          </div>
+
+          <div id="regStep2" class="hidden">
+            <p class="step-hint">Введите 6-значный код из письма на <strong id="regEmailDisplay"></strong></p>
+            <div class="form-group">
+              <label for="signupOtpCode">Код из письма</label>
+              <div class="input-wrapper">
+                <input type="text" id="signupOtpCode" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="000000" autocomplete="one-time-code" style="letter-spacing:.3em;font-weight:600">
+                <div class="error-message" id="signupOtpError">Введите код</div>
+              </div>
+            </div>
+            <button type="button" class="submit-button" id="regVerifyCodeBtn">Подтвердить код</button>
+            <button type="button" class="back-button" id="regBackToEmailBtn">Другой email</button>
+            <button type="button" class="forgot-link" id="regResendCodeBtn" style="display:block;width:100%;text-align:center;margin-top:14px">Отправить код ещё раз</button>
+          </div>
+
+          <div id="regStep3" class="hidden">
+            <p class="step-hint">Придумайте пароль для входа.</p>
+            <div class="form-group">
+              <label for="signupPassword">Пароль</label>
+              <div class="input-wrapper">
+                <input type="password" id="signupPassword" placeholder="Минимум 8 символов" minlength="8" required autocomplete="new-password">
+                <div class="error-message" id="signupPasswordError">Пароль минимум 8 символов</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="signupPasswordConfirm">Подтвердите пароль</label>
+              <div class="input-wrapper">
+                <input type="password" id="signupPasswordConfirm" placeholder="Повторите пароль" minlength="8" required autocomplete="new-password">
+                <div class="error-message" id="signupPasswordConfirmError">Пароли не совпадают</div>
+              </div>
+            </div>
+            <button type="button" class="submit-button" id="regPasswordNextBtn">Далее</button>
+          </div>
+
+          <div id="regStep4" class="hidden">
+            <p class="step-hint">Как к вам обращаться в ASSISTIX?</p>
+            <div class="form-group">
+              <label for="regDisplayName">Ваше имя</label>
+              <div class="input-wrapper">
+                <input type="text" id="regDisplayName" placeholder="Например: Алексей" required autocomplete="name">
+                <div class="error-message" id="regDisplayNameError">Введите имя</div>
+              </div>
+            </div>
+            <button type="button" class="submit-button" id="regFinalSubmitBtn">Создать аккаунт</button>
+          </div>
+        </form>
+
+        <div class="divider">
+          <div class="divider-line"></div>
+          <span class="divider-text">или</span>
+          <div class="divider-line"></div>
+        </div>
+
+        <div class="social-buttons" id="oauthBox">
+          <a href="#" class="social-button oauth-link oauth-disabled" data-p="google" aria-disabled="true" title="Продолжить с Google">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" opacity=".95"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" opacity=".78"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" opacity=".6"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" opacity=".9"/>
+            </svg>
+            <span>Продолжить с Google</span>
+          </a>
+          <a href="#" class="social-button oauth-link oauth-disabled" data-p="github" aria-disabled="true" title="Продолжить с GitHub">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+            </svg>
+            <span>Продолжить с GitHub</span>
+          </a>
+          <a href="#" class="social-button oauth-link oauth-disabled" data-p="yandex" aria-disabled="true" title="Продолжить с Яндекс">
+            <svg width="19" height="19" viewBox="0 0 1263.68 1900.64" fill="currentColor">
+              <path d="M932.8 256.96H784.96C513.92 256.96 371.36 394.24 371.36 596.64C371.36 825.44 469.92 932.64 672.32 1070.08L839.52 1182.72L359.04 1900.64H0L431.2 1258.4C183.2 1080.64 44 908 44 616C44 249.92 299.2 0 783.2 0H1263.68V1898.88H932.8V256.96Z"/>
+            </svg>
+            <span>Продолжить с Яндекс</span>
+          </a>
+          <a href="#" class="social-button oauth-link oauth-disabled" data-p="facebook" aria-disabled="true" title="Продолжить с Facebook">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+            </svg>
+            <span>Продолжить с Facebook</span>
+          </a>
+        </div>
+      </div>
+
+      <p class="footer-text" id="footerTextWrap">
+        <span id="footerText">Нет аккаунта? <button id="footerButton" type="button">Зарегистрируйтесь</button></span>
+      </p>
+    </div>
+
+    <p class="yid-auth-footer">© ASSISTIX A&gt;ID · <a href="https://assistix.org">assistix.org</a></p>
+  </main>
+</div>
+
+<!-- Forgot password modal -->
+<div class="modal-overlay" id="forgotPasswordModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="forgotTitle">
+    <div class="modal-header">
+      <h3 class="modal-title" id="forgotTitle">Восстановление пароля</h3>
+      <button type="button" class="modal-close" onclick="closeForgotPasswordModal()" aria-label="Закрыть">×</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-text" id="resetIntroText">Укажите email — отправим код. Затем введите код и новый пароль.</p>
+
+      <div id="resetStep1">
+        <form id="forgotPasswordForm" onsubmit="return false">
+          <div class="form-group">
+            <label for="resetEmail">Email</label>
+            <div class="input-wrapper">
+              <input type="email" id="resetEmail" placeholder="you@example.com" required autocomplete="email">
+              <div class="error-message" id="resetEmailError">Неверный формат email</div>
+            </div>
+          </div>
+          <button type="submit" class="submit-button" id="resetSubmitBtn">Отправить код</button>
+        </form>
+      </div>
+
+      <div id="resetStep2" class="hidden">
+        <p class="step-hint">Код отправлен на <strong id="resetEmailDisplay"></strong></p>
+        <p class="step-hint-spam">Проверьте папку «Спам», если письма нет во входящих.</p>
+        <div class="form-group">
+          <label for="resetCode">Код из письма</label>
+          <div class="input-wrapper">
+            <input type="text" id="resetCode" maxlength="8" inputmode="numeric" placeholder="000000" autocomplete="one-time-code" style="letter-spacing:.3em;font-weight:600">
+            <div class="error-message" id="resetCodeError">Введите код</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="resetNewPassword">Новый пароль</label>
+          <div class="input-wrapper">
+            <input type="password" id="resetNewPassword" minlength="8" placeholder="Минимум 8 символов" autocomplete="new-password">
+            <div class="error-message" id="resetNewPasswordError">Минимум 8 символов</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="resetNewPassword2">Повторите пароль</label>
+          <div class="input-wrapper">
+            <input type="password" id="resetNewPassword2" minlength="8" placeholder="Повторите пароль" autocomplete="new-password">
+            <div class="error-message" id="resetNewPassword2Error">Пароли не совпадают</div>
+          </div>
+        </div>
+        <button type="button" class="submit-button" id="resetCompleteBtn">Сохранить и войти</button>
+        <button type="button" class="back-button" id="resetBackBtn">← Другой email</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <svg class="toast-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+  </svg>
+  <div class="toast-message" id="toastMessage"></div>
+</div>
+
+<script src="/assets/id.js?v=20261107nochat1"></script>
+<script src="/auth/auth-app.js?v=20261105a"></script>
+<script>/* BEAM_HIDE_CABINET */
+(function(){try{var sp=new URLSearchParams(location.search);var r=sp.get('redirect_uri')||'';var c=(sp.get('client_id')||'').toLowerCase();var loop=/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?\/assistix\/callback/i.test(r);if(loop&&(c==='assistix-chat'||c==='assistix-agent')){var el=document.getElementById('sessionResumeProfileRow');if(el)el.style.display='none';}}catch(e){}})();
+</script></body>
+</html>

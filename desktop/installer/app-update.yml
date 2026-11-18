@@ -1,0 +1,4 @@
+provider: generic
+url: https://agent.assistix.org/download/
+channel: nightly
+updaterCacheDirName: beam-agent-desktop-updater

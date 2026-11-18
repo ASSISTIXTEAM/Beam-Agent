@@ -1,0 +1,30 @@
+{
+  "name": "@assistix/beam-agent-desktop",
+  "description": "Beam Agent — Assistix desktop AI agent (Early Alpha)",
+  "version": "0.1.5",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "main": "lib/main.js",
+  "dependencies": {
+    "electron-updater": "^6.8.9",
+    "semver": "^7.8.5",
+    "ws": "^8.21.3",
+    "@assistix/beam-api-gateway": "workspace:*",
+    "@assistix/cordis": "workspace:~"
+  },
+  "dshDesktopAppId": "org.assistix.beam-agent",
+  "dshDesktopUpdateChannel": "nightly",
+  "dshMandatoryUpdatePolicy": {
+    "origin": "https://agent.assistix.org",
+    "allowedPageOrigins": [
+      "https://agent.assistix.org",
+      "https://id.assistix.org",
+      "https://assistix.org"
+    ],
+    "authentication": "anonymous"
+  },
+  "dshBuildCommit": "d4db512a969fccf0c5cc7ec8fe38e9c1d27af916",
+  "dshBuildDirty": false,
+  "productName": "Beam Agent"
+}

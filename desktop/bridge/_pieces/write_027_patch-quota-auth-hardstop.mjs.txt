@@ -1,0 +1,294 @@
+/**
+ * Beam Agent: fix false ACCOUNT_SIGN_IN_REQUIRED + hard-stop weekly quota UX.
+ *
+ * Root cause: agent-default-model / some sessions used provider `assistix-account`
+ * (DeepSeek platform grant). Beam auth is Assistix ID via local bridge +
+ * `assistix-official` + BEAM_API_KEY — so resolveToken() returned undefined.
+ *
+ * Also: bridge weekly quota returned HTTP 429/rate_limit_error (retryable) instead
+ * of 402/insufficient_quota → QUOTA notice path.
+ */
+import fs from "node:fs";
+import path from "node:path";
+import os from "node:os";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(__dirname, "..");
+const BEAM_HOME = process.env.BEAM_HOME || path.join(os.homedir(), ".beam");
+const report = [];
+
+function patchFile(file, fn) {
+  if (!fs.existsSync(file)) return false;
+  const before = fs.readFileSync(file, "utf8");
+  const after = fn(before);
+  if (after == null || after === before) return false;
+  fs.writeFileSync(file, after);
+  report.push(path.relative(ROOT, file).replace(/\\/g, "/"));
+  return true;
+}
+
+function appRoots() {
+  return [
+    path.join(ROOT, "runtime", "app"),
+    path.join(ROOT, "dist", "Beam Agent", "resources", "app"),
+  ].filter((p) => fs.existsSync(p));
+}
+
+function llmIndexFiles() {
+  const out = [];
+  for (const app of appRoots()) {
+    for (const ns of ["@assistix/beam-llm", "@deepseek-ai/dsh-llm"]) {
+      const f = path.join(app, "beam", "node_modules", ns, "lib", "index.js");
+      if (fs.existsSync(f)) out.push(f);
+      const f2 = path.join(app, "dsh", "node_modules", ns, "lib", "index.js");
+      if (fs.existsSync(f2)) out.push(f2);
+    }
+  }
+  return [...new Set(out)];
+}
+
+function chatClientFiles() {
+  const out = [];
+  for (const app of appRoots()) {
+    for (const ns of [
+      "@assistix/beam-client-ui-chat",
+      "@deepseek-ai/dsh-client-ui-chat",
+    ]) {
+      for (const base of ["beam", "dsh"]) {
+        const f = path.join(app, base, "node_modules", ns, "lib", "client.js");
+        if (fs.existsSync(f)) out.push(f);
+      }
+    }
+  }
+  return [...new Set(out)];
+}
+
+function accountClientFiles() {
+  const out = [];
+  for (const app of appRoots()) {
+    for (const ns of [
+      "@assistix/beam-client-ui-settings-account",
+      "@deepseek-ai/dsh-client-ui-settings-account",
+    ]) {
+      for (const base of ["beam", "dsh"]) {
+        const f = path.join(app, base, "node_modules", ns, "lib", "client.js");
+        if (fs.existsSync(f)) out.push(f);
+      }
+    }
+  }
+  return [...new Set(out)];
+}
+
+function accountLlmFiles() {
+  const out = [];
+  for (const app of appRoots()) {
+    for (const ns of [
+      "@assistix/beam-llm-assistix-account",
+      "@assistix/beam-llm-deepseek-account",
+      "@deepseek-ai/dsh-llm-deepseek-account",
+    ]) {
+      for (const base of ["beam", "dsh"]) {
+        const f = path.join(app, base, "node_modules", ns, "lib", "index.js");
+        if (fs.existsSync(f)) out.push(f);
+      }
+    }
+  }
+  return [...new Set(out)];
+}
+
+/** Remap assistix-account → assistix-official (Beam uses bridge API key, not platform grant). */
+for (const file of llmIndexFiles()) {
+  patchFile(file, (s) => {
+    const bad =
+      'if (lower === "assistix-account" || lower === "deepseek-account") return this.adapters.has("assistix-account") ? "assistix-account" : p;';
+    const good =
+      'if (lower === "assistix-account" || lower === "deepseek-account") return this.adapters.has("assistix-official") ? "assistix-official" : (this.adapters.has("assistix-account") ? "assistix-account" : p); /* Beam: account→official (Assistix ID + bridge) */';
+    if (s.includes("account→official")) return s;
+    if (s.includes(bad)) return s.replace(bad, good);
+    // Also patch shell-dialogs style if slightly different
+    return s.replace(
+      /if \(lower === "assistix-account" \|\| lower === "deepseek-account"\) return this\.adapters\.has\("assistix-account"\) \? "assistix-account" : p;/,
+      good,
+    );
+  });
+}
+
+/** Safety: local bridge chat must never throw ACCOUNT_SIGN_IN_REQUIRED when Assistix ID session exists. */
+for (const file of accountLlmFiles()) {
+  patchFile(file, (s) => {
+    if (s.includes("Beam Agent: bridge session auth")) return s;
+    const needle =
+      'const token = await account()?.resolveToken(connection.baseURL);\n\t\tif (token === void 0) throw new LlmError("Sign in to ASSISTIX to use the account provider. The request destination must allow account authentication.", "ACCOUNT_SIGN_IN_REQUIRED");';
+    const repl = `const token = await account()?.resolveToken(connection.baseURL);\n\t\t/* Beam Agent: bridge session auth — Assistix ID + local bridge; never require DeepSeek platform grant. */\n\t\tif (token === void 0) {\n\t\t\tlet bridgeOk = false;\n\t\t\ttry {\n\t\t\t\tconst origin = new URL(connection.baseURL).origin;\n\t\t\t\tif (/^https?:\\/\\/(127\\.0\\.0\\.1|localhost|\\[::1\\])(:\\d+)?$/i.test(origin)) {\n\t\t\t\t\tconst st = await fetch(origin + "/assistix/status", { signal: AbortSignal.timeout(2500) }).then((r) => r.json()).catch(() => null);\n\t\t\t\t\tbridgeOk = !!st?.signedIn;\n\t\t\t\t}\n\t\t\t} catch {}\n\t\t\tif (!bridgeOk) throw new LlmError("Sign in to ASSISTIX to use the account provider. The request destination must allow account authentication.", "ACCOUNT_SIGN_IN_REQUIRED");\n\t\t\treturn {\n\t\t\t\theaders: { [TOKEN_HEADER]: "beam-assistix-local" },\n\t\t\t\tonRequestError: async (error) => {\n\t\t\t\t\tif (!(error instanceof LlmError)) return error;\n\t\t\t\t\tif (error.code === QUOTA_EXCEEDED_CODE) return new LlmError(error.message, ACCOUNT_QUOTA_EXCEEDED_CODE, { ...error.failure, cause: error });\n\t\t\t\t\treturn error;\n\t\t\t\t}\n\t\t\t};\n\t\t}`;
+    if (!s.includes(needle)) return s;
+    return s.replace(needle, repl);
+  });
+}
+
+/** Chat UX: hide Failed/turn-error for quota; nicer notices; RU copy. */
+for (const file of chatClientFiles()) {
+  patchFile(file, (s) => {
+    let out = s;
+
+    // TurnErrorItem: suppress red Failed row for quota (toast/banner owns it)
+    if (!out.includes("Beam Agent: suppress turn-error for weekly quota")) {
+      out = out.replace(
+        "function TurnErrorItem({ node, t }) {\n\t\t\treturn (0, react_jsx_runtime.jsxs)(\"div\", {\n\t\t\t\tclassName: MessageItem_module_css_default.turnErrorRow,",
+        `function TurnErrorItem({ node, t }) {\n\t\t\t/* Beam Agent: suppress turn-error for weekly quota — shell notice owns UX. */\n\t\t\tif (node.code === "QUOTA" || node.code === "ACCOUNT_QUOTA") return null;\n\t\t\treturn (0, react_jsx_runtime.jsxs)("div", {\n\t\t\t\tclassName: MessageItem_module_css_default.turnErrorRow,`,
+      );
+    }
+
+    // Turn process header: no "Failed" label for quota
+    if (!out.includes("Beam Agent: calm process label for quota")) {
+      out = out.replace(
+        "const reason = turn.end?.data.reason.kind;\n\t\t\tconst stopped = reason === \"aborted\" || reason === \"interrupted\";\n\t\t\tconst elapsedMs = turn.start === void 0 || turn.end === void 0 ? void 0 : Math.max(1e3, turn.end.time - turn.start.time);\n\t\t\tconst duration = elapsedMs === void 0 || stopped || reason === \"error\" ? void 0 : formatRunDuration(elapsedMs, t);\n\t\t\tconst label = stopped ? t(\"message.stopped\") : reason === \"error\" ? t(\"message.turnProcess.failed\") : duration === void 0 ? t(\"message.turnProcess.worked\") : t(\"message.turnProcess.took\");\n\t\t\tconst announcement = stopped ? t(\"message.stopped\") : reason === \"error\" ? t(\"message.turnProcess.failed\") : t(\"message.turnProcess.worked\");",
+        `const reason = turn.end?.data.reason.kind;\n\t\t\t/* Beam Agent: calm process label for quota */\n\t\t\tconst errCode = reason === "error" ? turn.end?.data.reason.error?.code : void 0;\n\t\t\tconst quotaFail = errCode === "QUOTA" || errCode === "ACCOUNT_QUOTA";\n\t\t\tif (quotaFail) return null;\n\t\t\tconst stopped = reason === "aborted" || reason === "interrupted";\n\t\t\tconst elapsedMs = turn.start === void 0 || turn.end === void 0 ? void 0 : Math.max(1e3, turn.end.time - turn.start.time);\n\t\t\tconst duration = elapsedMs === void 0 || stopped || reason === "error" ? void 0 : formatRunDuration(elapsedMs, t);\n\t\t\tconst label = stopped ? t("message.stopped") : reason === "error" ? t("message.turnProcess.failed") : duration === void 0 ? t("message.turnProcess.worked") : t("message.turnProcess.took");\n\t\t\tconst announcement = stopped ? t("message.stopped") : reason === "error" ? t("message.turnProcess.failed") : t("message.turnProcess.worked");`,
+      );
+    }
+
+    // Quota notice: keep bridge message + renew wording
+    if (!out.includes("Beam Agent: weekly quota notice text")) {
+      out = out.replace(
+        "if (quotaNoticeHolds.size > 0 || code !== \"QUOTA\" && code !== \"ACCOUNT_QUOTA\") continue;\n\t\t\t\t\t\t\t\tquotaNotice.set({\n\t\t\t\t\t\t\t\t\tcode,\n\t\t\t\t\t\t\t\t\tseq: ++quotaNoticeSeq\n\t\t\t\t\t\t\t\t});",
+        `if (quotaNoticeHolds.size > 0 || code !== "QUOTA" && code !== "ACCOUNT_QUOTA") continue;\n\t\t\t\t\t\t\t\tquotaNotice.set({\n\t\t\t\t\t\t\t\t\tcode,\n\t\t\t\t\t\t\t\t\tmessage: event.data.reason.error?.message,\n\t\t\t\t\t\t\t\t\tseq: ++quotaNoticeSeq\n\t\t\t\t\t\t\t\t});`,
+      );
+      out = out.replace(
+        "function QuotaNoticeHost({ useNotice, dismissNotice, keepNoticeOpen, renderSlotChain, t }) {\n\t\t\tconst notice = useNotice((current) => current);\n\t\t\tif (notice === null) return null;\n\t\t\tconst owner = {\n\t\t\t\tcode: notice.code,\n\t\t\t\tmessage: t(\"message.failure.quota\"),\n\t\t\t\tdismiss: dismissNotice,\n\t\t\t\tkeepOpen: keepNoticeOpen\n\t\t\t};",
+        `function QuotaNoticeHost({ useNotice, dismissNotice, keepNoticeOpen, renderSlotChain, t }) {\n\t\t\tconst notice = useNotice((current) => current);\n\t\t\tif (notice === null) return null;\n\t\t\t/* Beam Agent: weekly quota notice text */\n\t\t\tconst weeklyMsg = (() => {\n\t\t\t\tconst raw = typeof notice.message === "string" && notice.message.trim() ? notice.message.trim() : "";\n\t\t\t\tif (raw) return raw;\n\t\t\t\tconst next = (() => {\n\t\t\t\t\tconst d = new Date();\n\t\t\t\t\tconst day = d.getUTCDay() || 7;\n\t\t\t\t\tconst add = day === 1 && d.getUTCHours() === 0 && d.getUTCMinutes() === 0 ? 0 : (8 - day);\n\t\t\t\t\tconst n = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + (add === 0 ? 7 : add)));\n\t\t\t\t\ttry { return new Intl.DateTimeFormat("ru-RU", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(n) + " (UTC)"; }\n\t\t\t\t\tcatch { return n.toISOString().slice(0, 10) + " UTC"; }\n\t\t\t\t})();\n\t\t\t\treturn t("message.failure.quotaWeekly", { when: next });\n\t\t\t})();\n\t\t\tconst owner = {\n\t\t\t\tcode: notice.code,\n\t\t\t\tmessage: weeklyMsg,\n\t\t\t\tdismiss: dismissNotice,\n\t\t\t\tkeepOpen: keepNoticeOpen\n\t\t\t};`,
+      );
+    }
+
+    // Locale strings
+    const localePatches = [
+      [
+        '"message.failure.quota": "当前请求的额度已用尽"',
+        '"message.failure.quota": "当前请求的额度已用尽","message.failure.quotaWeekly": "本周额度已用尽。将于 {when} 更新。"',
+      ],
+      [
+        '"message.failure.quota": "Request quota exhausted."',
+        '"message.failure.quota": "This model\'s weekly limit is exhausted.","message.failure.quotaWeekly": "Weekly limit exhausted. Renews {when}."',
+      ],
+      [
+        '"message.failure.accountSignInRequired": "Sign in to ASSISTIX and ensure the request destination supports account authentication."',
+        '"message.failure.accountSignInRequired": "Sign in with ASSISTIX ID to continue."',
+      ],
+      [
+        '"message.failure.accountSignInRequired": "Войти to ASSISTIX and ensure the request destination supports account authentication."',
+        '"message.failure.accountSignInRequired": "Войдите через ASSISTIX ID, чтобы продолжить."',
+      ],
+      [
+        '"message.failure.quota": "Request quota exhausted."',
+        '"message.failure.quota": "Лимит модели на этой неделе исчерпан.","message.failure.quotaWeekly": "Лимит модели на этой неделе исчерпан. Обновится {when}."',
+      ],
+    ];
+    // Apply carefully: RU block has same English quota string as EN — fix RU specifically after accountSignInRequired RU line context
+    if (!out.includes("message.failure.quotaWeekly")) {
+      out = out.replace(
+        '"message.failure.accountSignInRequired": "请先登录 ASSISTIX，并确认请求地址支持账号认证。",\n\t\t\t"message.failure.quota": "当前请求的额度已用尽"',
+        '"message.failure.accountSignInRequired": "请先登录 ASSISTIX ID。",\n\t\t\t"message.failure.quota": "当前请求的额度已用尽",\n\t\t\t"message.failure.quotaWeekly": "本周额度已用尽。将于 {when} 更新。"',
+      );
+      out = out.replace(
+        '"message.failure.accountSignInRequired": "Sign in to ASSISTIX and ensure the request destination supports account authentication.",\n\t\t\t"message.failure.quota": "Request quota exhausted."',
+        '"message.failure.accountSignInRequired": "Sign in with ASSISTIX ID to continue.",\n\t\t\t"message.failure.quota": "This model\'s weekly limit is exhausted.",\n\t\t\t"message.failure.quotaWeekly": "Weekly limit exhausted. Renews {when}."',
+      );
+      out = out.replace(
+        '"message.failure.accountSignInRequired": "Войти to ASSISTIX and ensure the request destination supports account authentication.",\n\t\t\t"message.failure.quota": "Request quota exhausted."',
+        '"message.failure.accountSignInRequired": "Войдите через ASSISTIX ID, чтобы продолжить.",\n\t\t\t"message.failure.quota": "Лимит модели на этой неделе исчерпан.",\n\t\t\t"message.failure.quotaWeekly": "Лимит модели на этой неделе исчерпан. Обновится {when}."',
+      );
+    }
+
+    void localePatches;
+    return out === s ? s : out;
+  });
+}
+
+/** Cleaner sign-in toast when truly unsigned (not false positive). */
+for (const file of accountClientFiles()) {
+  patchFile(file, (s) => {
+    let out = s;
+    out = out.replace(
+      'modelSignInRequired: "Model unavailable. Please sign in and try again."',
+      'modelSignInRequired: "Войдите через ASSISTIX ID, чтобы пользоваться моделями."',
+    );
+    out = out.replace(
+      '"modelSignInRequired": "Model unavailable. Please sign in and try again."',
+      '"modelSignInRequired": "Войдите через ASSISTIX ID, чтобы пользоваться моделями."',
+    );
+    return out === s ? s : out;
+  });
+}
+
+/** Live desktop profile: default provider must be assistix-official. */
+const profilePatch = path.join(BEAM_HOME, "profiles", "desktop", "cordis.patch.yml");
+patchFile(profilePatch, (s) => {
+  let out = s;
+  out = out.replace(
+    /(- id: agent-default-model\n[\s\S]*?provider:\s*)assistix-account(\n)/,
+    "$1assistix-official$2",
+  );
+  out = out.replace(
+    /(- id: agent-default-model\n[\s\S]*?provider:\s*)deepseek-account(\n)/,
+    "$1assistix-official$2",
+  );
+  return out;
+});
+
+/** Migrate stored sessions stuck on assistix-account. */
+function migrateSessions(dir) {
+  if (!fs.existsSync(dir)) return;
+  for (const name of fs.readdirSync(dir)) {
+    const full = path.join(dir, name);
+    let st;
+    try {
+      st = fs.statSync(full);
+    } catch {
+      continue;
+    }
+    if (st.isDirectory()) {
+      migrateSessions(full);
+      continue;
+    }
+    if (!name.endsWith(".json")) continue;
+    patchFile(full, (s) => {
+      if (!s.includes('"assistix-account"') && !s.includes('"deepseek-account"')) return s;
+      return s
+        .replaceAll('"provider": "assistix-account"', '"provider": "assistix-official"')
+        .replaceAll('"provider":"assistix-account"', '"provider":"assistix-official"')
+        .replaceAll('"provider": "deepseek-account"', '"provider": "assistix-official"')
+        .replaceAll('"provider":"deepseek-account"', '"provider":"assistix-official"');
+    });
+  }
+}
+migrateSessions(path.join(BEAM_HOME, "storages"));
+migrateSessions(path.join(BEAM_HOME, "sessions"));
+
+/** Bridge: real weekly quota → 402 insufficient_quota (hard stop, maps to QUOTA). */
+function patchBridge(file) {
+  patchFile(file, (s) => {
+    if (s.includes("Beam Agent: weekly quota exhausted response")) return s;
+    if (!s.includes("function quotaWeekId")) return s;
+
+    let out = s;
+    if (!out.includes("function nextQuotaResetAt")) {
+      out = out.replace(
+        "/** Monday-based UTC week id (YYYY-MM-DD of that Monday). */\nfunction quotaWeekId(d = new Date()) {\n  const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))\n  const day = t.getUTCDay() || 7\n  if (day !== 1) t.setUTCDate(t.getUTCDate() - (day - 1))\n  return t.toISOString().slice(0, 10)\n}",
+        `/** Monday-based UTC week id (YYYY-MM-DD of that Monday). */\nfunction quotaWeekId(d = new Date()) {\n  const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))\n  const day = t.getUTCDay() || 7\n  if (day !== 1) t.setUTCDate(t.getUTCDate() - (day - 1))\n  return t.toISOString().slice(0, 10)\n}\n\n/** Next Monday 00:00 UTC (weekly quota renew). */\nfunction nextQuotaResetAt(d = new Date()) {\n  const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))\n  const day = t.getUTCDay() || 7\n  const add = day === 1 ? 7 : (8 - day)\n  t.setUTCDate(t.getUTCDate() + add)\n  return t\n}\n\nfunction formatQuotaResetRu(d = nextQuotaResetAt()) {\n  try {\n    return new Intl.DateTimeFormat('ru-RU', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }).format(d) + ' (UTC)'\n  } catch {\n    return d.toISOString().slice(0, 10) + ' UTC'\n  }\n}\n\n/** Beam Agent: weekly quota exhausted response (402 → client QUOTA; never auth). */\nfunction sendQuotaExhausted(res, tier, used, limit) {\n  const resetAt = nextQuotaResetAt()\n  const when = formatQuotaResetRu(resetAt)\n  return sendJson(res, 402, {\n    type: 'error',\n    error: {\n      type: 'insufficient_quota',\n      code: 'insufficient_quota',\n      message: \`Лимит \${tier.name} на этой неделе исчерпан (\${used}/\${limit}). Обновится \${when}.\`,\n      model: tier.id,\n      model_name: tier.name,\n      used,\n      limit,\n      reset_at: resetAt.toISOString(),\n    },\n  })\n}`,
+      );
+    }
+
+    out = out.replace(
+      `if (used >= limit) {\n    return sendJson(res, 429, {\n      type: 'error',\n      error: { type: 'rate_limit_error', message: \`Лимит \${tier.name} исчерпан (\${used}/\${limit}). Обновится со следующей неделей.\` },\n    })\n  }`,
+      `if (used >= limit) {\n    return sendQuotaExhausted(res, tier, used, limit)\n  }`,
+    );
+
+    return out === s ? s : out;
+  });
+}
+
+patchBridge(path.join(ROOT, "desktop", "bridge", "server.js"));
+patchBridge(path.join(ROOT, "dist", "Beam Agent", "bridge", "server.js"));
+
+console.log("patch-quota-auth-hardstop:");
+for (const f of report) console.log(" -", f);
+console.log(`done (${report.length} files)`);

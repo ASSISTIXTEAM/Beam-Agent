@@ -1,0 +1,57 @@
+#status, #version { margin-top: 12px; color: #9bb8b3; }
+#status:empty, #version:empty { display: none; }
+#error { margin-top: 12px; color: #f07178; }
+#address {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 8px;
+  border: 1px solid #1f3d38;
+  border-radius: 8px;
+  background: #05100f;
+  font: 12px/20px ui-monospace, Consolas, monospace;
+  color: #9bb8b3;
+  overflow-wrap: anywhere;
+  resize: vertical;
+}
+#actions button:not(.primary) {
+  min-height: 32px;
+  padding: 5px 8px;
+  color: #9bb8b3;
+  background: transparent;
+}
+#update, #refresh { border-radius: 12px; }
+#fallback {
+  border-top: 1px solid #1f3d38;
+  margin-top: 12px;
+  padding-top: 12px;
+}
+#fallback p, #manual-copy {
+  font-size: 12px;
+  line-height: 20px;
+  color: #9bb8b3;
+}
+#copy {
+  min-height: 32px;
+  padding: 3px 0;
+  background: transparent;
+  color: #00B3BC;
+  font-size: 12px;
+}
+#copy-message { color: #f07178 !important; }
+#manual-copy { display: block; margin-top: 8px; }
+#progress {
+  display: block;
+  width: 100%;
+  height: 4px;
+  margin-top: 12px;
+  border: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background: #1f3d38;
+  accent-color: #00B3BC;
+}
+
+#progress::-webkit-progress-bar { background: #1f3d38; }
+#progress::-webkit-progress-value { background: #00B3BC; }
+#progress::-moz-progress-bar { background: #00B3BC; }

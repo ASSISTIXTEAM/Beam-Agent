@@ -1,0 +1,188 @@
+/**
+ * Open ASSISTIX ID inside an Electron BrowserWindow (not dead-end profile),
+ * force "Continue in Beam Agent", intercept localhost callback → back to app.
+ */
+import fs from "node:fs";
+
+const MAIN =
+  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/lib/main.js";
+const BRIDGE_SRC =
+  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/desktop/bridge/server.js";
+const BRIDGE_DIST =
+  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/bridge/server.js";
+
+const AUTH_HELPER = `
+let assistixAuthWindow;
+function notifyBeamAuthReturn() {
+\ttry {
+\t\tconst win = typeof currentMainWindow === "function" ? currentMainWindow() : mainWindow;
+\t\tif (win && !win.isDestroyed()) {
+\t\t\twin.show();
+\t\t\twin.focus();
+\t\t\twin.webContents.executeJavaScript("window.dispatchEvent(new CustomEvent('beam-auth-return'))").catch(() => {});
+\t\t}
+\t} catch {}
+\tfocusPrimaryWindow();
+}
+function isAssistixAuthUrl(raw) {
+\ttry {
+\t\tconst u = new URL(raw);
+\t\treturn u.protocol === "https:" && u.hostname === "id.assistix.org";
+\t} catch {
+\t\treturn false;
+\t}
+}
+function isAssistixCallbackUrl(raw) {
+\ttry {
+\t\tconst u = new URL(raw);
+\t\treturn (u.hostname === "127.0.0.1" || u.hostname === "localhost") && u.port === "17865" && u.pathname.startsWith("/assistix/callback");
+\t} catch {
+\t\treturn false;
+\t}
+}
+function openAssistixAuthWindow(authUrl) {
+\tif (!isAssistixAuthUrl(authUrl)) {
+\t\tshell.openExternal(authUrl);
+\t\treturn;
+\t}
+\tif (assistixAuthWindow && !assistixAuthWindow.isDestroyed()) {
+\t\tassistixAuthWindow.focus();
+\t\tassistixAuthWindow.loadURL(authUrl).catch(() => {});
+\t\treturn;
+\t}
+\tconst win = new BrowserWindow({
+\t\twidth: 980,
+\t\theight: 720,
+\t\tminWidth: 420,
+\t\tminHeight: 560,
+\t\ttitle: "ASSISTIX ID — Beam Agent",
+\t\tautoHideMenuBar: true,
+\t\tbackgroundColor: "#041210",
+\t\twebPreferences: {
+\t\t\tnodeIntegration: false,
+\t\t\tcontextIsolation: true,
+\t\t\tsandbox: true,
+\t\t\twebSecurity: true
+\t\t}
+\t});
+\tassistixAuthWindow = win;
+\tconst finishWithCallback = (callbackUrl) => {
+\t\tif (win.isDestroyed()) return;
+\t\twin.loadURL(callbackUrl).catch(() => {});
+\t\tsetTimeout(() => {
+\t\t\tif (!win.isDestroyed()) win.close();
+\t\t\tnotifyBeamAuthReturn();
+\t\t}, 700);
+\t};
+\tconst onNav = (event, url) => {
+\t\tif (!isAssistixCallbackUrl(url)) return;
+\t\tevent.preventDefault();
+\t\tfinishWithCallback(url);
+\t};
+\twin.webContents.on("will-redirect", onNav);
+\twin.webContents.on("will-navigate", onNav);
+\twin.webContents.setWindowOpenHandler(({ url }) => {
+\t\tif (isAssistixCallbackUrl(url)) {
+\t\t\tfinishWithCallback(url);
+\t\t\treturn { action: "deny" };
+\t\t}
+\t\tif (isAssistixAuthUrl(url)) return { action: "allow" };
+\t\tif (["http:", "https:"].includes(new URL(url).protocol)) shell.openExternal(url);
+\t\treturn { action: "deny" };
+\t});
+\twin.webContents.on("did-finish-load", () => {
+\t\tconst page = win.webContents.getURL();
+\t\tif (isAssistixCallbackUrl(page)) {
+\t\t\tsetTimeout(() => {
+\t\t\t\tif (!win.isDestroyed()) win.close();
+\t\t\t\tnotifyBeamAuthReturn();
+\t\t\t}, 500);
+\t\t\treturn;
+\t\t}
+\t\tif (!isAssistixAuthUrl(page)) return;
+\t\twin.webContents.executeJavaScript(\`(async () => {
+  try {
+    const sp = new URLSearchParams(location.search);
+    const redirectUri = sp.get('redirect_uri') || '';
+    const clientId = sp.get('client_id') || '';
+    const state = sp.get('state') || '';
+    if (!redirectUri || !clientId) return;
+    const bj = await fetch('/api/bootstrap-login.php?' + sp.toString(), { credentials: 'include' }).then((r) => r.json());
+    const form = document.getElementById('oauthFinishForm');
+    const btn = document.getElementById('oauthContinueBtn');
+    const redir = document.getElementById('oauthFinishRedirectUri');
+    const client = document.getElementById('oauthFinishClientId');
+    const st = document.getElementById('oauthFinishState');
+    const cab = document.getElementById('sessionResumeProfileRow');
+    const hint = document.getElementById('sessionResumeHint');
+    if (cab) cab.style.display = 'none';
+    if (!(bj && bj.logged_in && bj.user && form && btn && redir && client && st)) return;
+    redir.value = (bj.oauth_finish && bj.oauth_finish.redirect_uri) || redirectUri;
+    client.value = (bj.oauth_finish && bj.oauth_finish.client_id) || clientId;
+    st.value = (bj.oauth_finish && bj.oauth_finish.state) || state;
+    form.classList.remove('hidden');
+    btn.classList.remove('hidden');
+    btn.textContent = 'Продолжить в Beam Agent';
+    if (hint) {
+      hint.classList.remove('hidden');
+      hint.textContent = 'Beam Agent ждёт вход под этим аккаунтом. Сейчас вернём вас в приложение…';
+    }
+    // Auto-continue into Beam — no cabinet dead-end
+    setTimeout(() => { try { form.requestSubmit ? form.requestSubmit() : form.submit(); } catch (e) {} }, 250);
+  } catch (e) {}
+})();\`).catch(() => {});
+\t});
+\twin.on("closed", () => {
+\t\tif (assistixAuthWindow === win) assistixAuthWindow = void 0;
+\t\tnotifyBeamAuthReturn();
+\t});
+\twin.loadURL(authUrl).catch(() => {
+\t\tshell.openExternal(authUrl);
+\t});
+}
+`;
+
+let main = fs.readFileSync(MAIN, "utf8");
+
+if (!main.includes("function openAssistixAuthWindow")) {
+  main = main.replace(
+    "function createWindow(preload, show = false, primary = false) {",
+    AUTH_HELPER + "\nfunction createWindow(preload, show = false, primary = false) {"
+  );
+}
+
+main = main.replace(
+  `window.webContents.setWindowOpenHandler(({ url }) => {
+\t\tif (["http:", "https:"].includes(new URL(url).protocol)) shell.openExternal(url);
+\t\treturn { action: "deny" };
+\t});`,
+  `window.webContents.setWindowOpenHandler(({ url }) => {
+\t\ttry {
+\t\t\tconst parsed = new URL(url);
+\t\t\tif (parsed.protocol === "https:" && parsed.hostname === "id.assistix.org") {
+\t\t\t\topenAssistixAuthWindow(url);
+\t\t\t\treturn { action: "deny" };
+\t\t\t}
+\t\t\tif (["http:", "https:"].includes(parsed.protocol)) shell.openExternal(url);
+\t\t} catch {
+\t\t\tshell.openExternal(url);
+\t\t}
+\t\treturn { action: "deny" };
+\t});`
+);
+
+fs.writeFileSync(MAIN, main);
+console.log("main auth window", main.includes("openAssistixAuthWindow"));
+
+// Keep assistix-chat (exchange works). Ensure state marks beam desktop.
+for (const file of [BRIDGE_SRC, BRIDGE_DIST]) {
+  let s = fs.readFileSync(file, "utf8");
+  s = s.replace(
+    "const state = Buffer.from(JSON.stringify({ app: 'beam-agent', nonce: stateToken }), 'utf8').toString('base64url')",
+    "const state = Buffer.from(JSON.stringify({ app: 'beam-agent', product: 'Beam Agent', nonce: stateToken }), 'utf8').toString('base64url')"
+  );
+  fs.writeFileSync(file, s);
+  console.log("bridge state", file.includes("dist") ? "dist" : "src");
+}
+
+console.log("✓ assistix auth window patch applied");

@@ -1,0 +1,48 @@
+PATH: c:\Users\Alexa\OneDrive\Documents\Beam Agent\desktop\bridge\server.js
+OLD_LEN: 152
+NEW_LEN: 1755
+FILE: 56060078-52c5-434f-8167-f7ee39f2d5cc.jsonl L46
+---OLD---
+  t = t.replace(/\bя\s+(?:модель\s+)?(?:DeepSeek|ChatGPT|Claude|GPT|Grok|Gemini|Qwen)\b/gi, 'я Assistix')
+  return t
+}
+// #endregion beam-persona-bridge
+---NEW---
+  t = t.replace(/\bя\s+(?:модель\s+)?(?:DeepSeek|ChatGPT|Claude|GPT|Grok|Gemini|Qwen)\b/gi, 'я Assistix')
+  return stripDsmlMarkup(t)
+}
+
+/**
+ * Strip DeepSeek DSML / tool-XML soup from chat-visible text.
+ * Coordinates with dump-hiding: tool markup must not land in the transcript.
+ */
+function stripDsmlMarkup(text) {
+  if (!text || typeof text !== 'string') return text
+  let t = text
+  // Closed tags: </ | DSML | parameter>, < | DSML | invoke …>, <|DSML|…>
+  t = t.replace(/<\/?\s*\|\s*DSML\s*\|[^>]*>/gi, '')
+  t = t.replace(/<\|\s*DSML\s*\|[^>]*>/gi, '')
+  t = t.replace(/<\/?\s*\|?\s*DSML\s*\|?\s*(?:parameter|invoke|function_calls|calls|tool_calls)[^>]*>/gi, '')
+  // Incomplete trailing DSML dump — cut from first marker so chat stays clean
+  const cut = t.search(/(?:\|\s*DSML\s*\||<\|DSML\||<\/\s*\|\s*DSML)/i)
+  if (cut >= 0) t = t.slice(0, cut)
+  return t
+}
+
+/** Heuristic: reply was interrupted mid-thought / mid-tool / mid-fence. */
+function looksTruncated(text) {
+  const raw = String(text || '')
+  if (!raw.trim()) return false
+  // Raw DSML still present (strip should have removed closed tags)
+  if (/(?:\|\s*DSML\s*\||<\|DSML\|)/i.test(raw)) return true
+  const fences = (raw.match(/```/g) || []).length
+  if (fences % 2 === 1) return true
+  const tail = raw.trimEnd().slice(-120)
+  if (/[=:,\(\[\{\\]\s*$/.test(tail)) return true
+  if (/\b(?:def|class|function|return|import|from|const|let|var|async|await|if|for|while|with)\s*$/.test(tail)) return true
+  if (/(?:незакончен|to be continued|\.\.\.|…)\s*$/i.test(tail)) return true
+  // Ends mid-identifier / mid-string often seen on length stops
+  if (/["'`]$/.test(tail) && (tail.match(/["'`]/g) || []).length % 2 === 1) return true
+  return false
+}
+// #endregion beam-persona-bridge

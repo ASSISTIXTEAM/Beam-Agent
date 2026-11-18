@@ -1,0 +1,38 @@
+{
+  "css": "beam-app://app/assets/beam-override.css?v=coolicons-everywhere-v4c",
+  "themes": [
+    {
+      "label": "Светлая",
+      "beam": null,
+      "mask": "none"
+    },
+    {
+      "label": "Тёмная",
+      "beam": null,
+      "mask": "none"
+    },
+    {
+      "label": "Системная",
+      "beam": null,
+      "mask": "none"
+    }
+  ],
+  "cells": [
+    {
+      "label": "Общие",
+      "mask": "url(\"beam-app://app/assets/beam-icons/bold/settings.png\")"
+    },
+    {
+      "label": "Профиль",
+      "mask": "url(\"beam-app://app/assets/beam-icons/bold/user.png\")"
+    },
+    {
+      "label": "Лимиты",
+      "mask": "url(\"beam-app://app/assets/beam-icons/bold/activity.png\")"
+    }
+  ],
+  "ring": {
+    "mask": "none",
+    "stroke": "rgba(255, 255, 255, 0.1)"
+  }
+}

@@ -1,0 +1,73 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+.npm/
+.cache/
+
+# Secrets — never commit live passwords/tokens/keys
+.env
+.env.*
+!.env.example
+!.env.*.example
+secrets.local.env
+secrets.local.json
+**/.credentials.yaml
+**/.credentials.yml
+**/credentials.json
+*.pem
+*.pfx
+*.p12
+*.key
+
+# Local Beam profile / userdata
+.beam/
+
+# Build outputs (rebuild with package-installer)
+/dist/
+*.exe
+
+# Temp / logs / scratch
+_tmp_*/
+_tmp_*
+_tmp_app/
+_tmp_lo_test/
+*.log
+*.out
+*.tmp
+desktop/bridge/boot.err
+desktop/bridge/boot.out
+desktop/bridge/_boot.err
+desktop/bridge/_boot.out
+desktop/_tmp_bootstrap.json
+_boot-*.log
+_boot-*.out
+_host-boot-*.log
+_host-boot-*.out
+_vbs-like.log
+beam-stderr.log
+beam-stdout.log
+_beam-stderr.log
+_beam-stdout.log
+_ui-*.png
+
+# Huge upstream extract (optional; source of truth is runtime/ + desktop/)
+_beam_upstream_src/
+
+# Local config snaps that may contain secrets
+desktop/_id_site_snap/
+**/*.bak
+**/*.bak-*
+cloud/**/config.local.php
+
+# OS / editor
+Thumbs.db
+/[Dd]esktop.ini
+.DS_Store
+.vscode/
+.idea/
+*.canvas.tsx
+
+__pycache__/
+*.pyc
+*.pyo
+

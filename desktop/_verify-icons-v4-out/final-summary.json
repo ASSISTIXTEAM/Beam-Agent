@@ -1,0 +1,156 @@
+{
+  "ringColors": [
+    {
+      "i": 0,
+      "mask": "none",
+      "bg": "rgba(0, 0, 0, 0)",
+      "parts": [
+        {
+          "tag": "circle",
+          "stroke": "rgba(255, 255, 255, 0.1)",
+          "strokeAttr": "rgba(255,255,255,.10)",
+          "opacity": "1",
+          "className": ""
+        },
+        {
+          "tag": "circle",
+          "stroke": "rgb(249, 115, 22)",
+          "strokeAttr": "#f97316",
+          "opacity": "1",
+          "className": ""
+        }
+      ]
+    },
+    {
+      "i": 1,
+      "mask": "none",
+      "bg": "rgba(0, 0, 0, 0)",
+      "parts": [
+        {
+          "tag": "circle",
+          "stroke": "rgba(255, 255, 255, 0.1)",
+          "strokeAttr": "rgba(255,255,255,.10)",
+          "opacity": "1",
+          "className": ""
+        },
+        {
+          "tag": "circle",
+          "stroke": "rgb(167, 139, 250)",
+          "strokeAttr": "#a78bfa",
+          "opacity": "1",
+          "className": ""
+        }
+      ]
+    },
+    {
+      "i": 2,
+      "mask": "none",
+      "bg": "rgba(0, 0, 0, 0)",
+      "parts": [
+        {
+          "tag": "circle",
+          "stroke": "rgba(255, 255, 255, 0.1)",
+          "strokeAttr": "rgba(255,255,255,.10)",
+          "opacity": "1",
+          "className": ""
+        },
+        {
+          "tag": "circle",
+          "stroke": "rgb(52, 211, 153)",
+          "strokeAttr": "#34d399",
+          "opacity": "1",
+          "className": ""
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "css": "beam-app://app/assets/beam-override.css?v=coolicons-everywhere-v4d",
+    "byRole": {
+      "automation": {
+        "count": 1,
+        "masked": 1,
+        "sample": "url(\"beam-app://app/assets/beam-icons/bold/clock.png\")"
+      },
+      "search": {
+        "count": 1,
+        "masked": 1,
+        "sample": "url(\"beam-app://app/assets/beam-icons/bold/search.png\")"
+      },
+      "plus": {
+        "count": 6,
+        "masked": 6,
+        "sample": "url(\"beam-app://app/assets/beam-icons/bold/plus.png\")"
+      },
+      "archive": {
+        "count": 27,
+        "masked": 27,
+        "sample": "url(\"beam-app://app/assets/beam-icons/bold/archive.png\")"
+      },
+      "more": {
+        "count": 6,
+        "masked": 6,
+        "sample": "url(\"beam-app://app/assets/beam-icons/bold/menu-dots.png\")"
+      },
+      "login": {
+        "count": 1,
+        "masked": 1,
+        "sample": "url(\"beam-app://app/assets/beam-icons/bold/log-in.png\")"
+      },
+      "settings": {
+        "count": 1,
+        "masked": 1,
+        "sample": "url(\"beam-app://app/assets/beam-icons/bold/settings.png\")"
+      },
+      "attach": {
+        "count": 2,
+        "masked": 1,
+        "sample": "url(\"beam-app://app/assets/beam-icons/bold/clip.png\")"
+      },
+      "copy": {
+        "count": 6,
+        "masked": 6,
+        "sample": "url(\"beam-app://app/assets/beam-icons/bold/copy.png\")"
+      },
+      "model": {
+        "count": 1,
+        "masked": 1,
+        "sample": "url(\"beam-app://app/assets/beam-icons/bold/cpu.png\")"
+      },
+      "general": {
+        "count": 1,
+        "masked": 1,
+        "sample": "url(\"beam-app://app/assets/beam-icons/bold/settings.png\")"
+      },
+      "user": {
+        "count": 1,
+        "masked": 1,
+        "sample": "url(\"beam-app://app/assets/beam-icons/bold/user.png\")"
+      },
+      "limits": {
+        "count": 1,
+        "masked": 1,
+        "sample": "url(\"beam-app://app/assets/beam-icons/bold/activity.png\")"
+      }
+    },
+    "gearMask": "url(\"beam-app://app/assets/beam-icons/bold/settings.png\")",
+    "nav": [
+      {
+        "label": "Общие",
+        "beam": "general",
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/settings.png\")"
+      },
+      {
+        "label": "Профиль",
+        "beam": "user",
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/user.png\")"
+      },
+      {
+        "label": "Лимиты",
+        "beam": "limits",
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/activity.png\")"
+      }
+    ],
+    "themes": []
+  }
+}

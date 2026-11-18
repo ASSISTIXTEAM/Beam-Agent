@@ -1,0 +1,41 @@
+# @coolicons/cli
+
+<a href="https://coolicons.cool/?ref=npm-cli"><img src="https://raw.githubusercontent.com/krystonschwarze/coolicons/main/.github/assets/banner.png" alt="coolicons: Every icon for your next project. Free, wherever you build." width="100%"></a>
+
+Search [coolicons](https://coolicons.cool/?ref=npm-cli) and copy them into your project from the terminal: 1,751 icons in five styles and three corner radii. No install, no dependencies, no network. The whole set ships inside the package.
+
+```sh
+npx @coolicons/cli search date
+npx @coolicons/cli show calendar --style fill > calendar.svg
+npx @coolicons/cli add calendar bell --style bulk --radius round --out src/icons
+```
+
+## Commands
+
+| Command | |
+| --- | --- |
+| `search <query>` | Find icons by name or meaning, ranked like the search on coolicons.cool. Corrects typos like `calender` when nothing matches |
+| `show <name>` | Print one icon's SVG to stdout |
+| `add <name...>` | Write SVG files into a folder |
+| `list` | Print every icon name |
+
+| Option | |
+| --- | --- |
+| `-s, --style` | `line`, `duocolor`, `duotone`, `fill` or `bulk`. Default `line` |
+| `-r, --radius` | `sharp`, `regular` or `round`. Default `regular` |
+| `-o, --out` | Folder for `add`. Default `./icons` |
+| `-l, --limit` | Results for `search`. Default 20 |
+| `-c, --category` | Only one category, for `list` |
+| `--size`, `--stroke` | Size and stroke width of the SVG. Default 24 and 2 |
+| `--json` | Machine readable output for `search` and `list` |
+
+`show` and `list` write only their result to stdout, everything else goes to stderr, so you can pipe them:
+
+```sh
+npx @coolicons/cli list | grep chart
+npx @coolicons/cli show mail --style fill | pbcopy
+```
+
+A name that does not exist suggests the closest ones: `show chekc` answers with `check`.
+
+More in the [coolicons repository](https://github.com/krystonschwarze/coolicons#readme). MIT license.

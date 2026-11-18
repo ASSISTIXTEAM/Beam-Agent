@@ -1,0 +1,95 @@
+PATH: c:\Users\Alexa\OneDrive\Documents\Beam Agent\desktop\bridge\server.js
+OLD_LEN: 1682
+NEW_LEN: 1791
+FILE: 56060078-52c5-434f-8167-f7ee39f2d5cc.jsonl L24
+---OLD---
+  let continues = 0
+  let lastId = data.id
+
+  while (stop === 'max_tokens' && !toolCalls?.length && continues < MAX_OUTPUT_CONTINUES) {
+    continues += 1
+    const contBody = buildContinuationOpenAIBody(openaiBody, fullText, KUMO_SAFE_BUDGET)
+    bridgeLog(`output_continue sync round=${continues} chars=${fullText.length}`)
+    let contUp
+    try {
+      contUp = await callKumo(contBody, { stream: false, backends: kumoOpts.backends || tier.backends || [tier.backend] })
+    } catch (e) {
+      bridgeLog(`output_continue sync_fail ${e?.message || e}`)
+      break
+    }
+    const contText = await contUp.text()
+    if (!contUp.ok) {
+      bridgeLog(`output_continue sync_http status=${contUp.status} body=${contText.slice(0, 200)}`)
+      break
+    }
+    let contData
+    try { contData = JSON.parse(contText) } catch {
+      bridgeLog('output_continue sync_bad_json')
+      break
+    }
+    const cChoice = contData.choices?.[0] || {}
+    const cMsg = cChoice.message || {}
+    const piece = typeof cMsg.content === 'string' ? scrubBrandLeak(cMsg.content) : ''
+    if (piece) fullText += piece
+    if (cMsg.tool_calls?.length) {
+      toolCalls = cMsg.tool_calls
+      stop = 'tool_use'
+    } else {
+      stop = cChoice.finish_reason === 'length' ? 'max_tokens' : 'end_turn'
+    }
+    if (contData.usage) {
+      usage = {
+        prompt_tokens: (usage.prompt_tokens || 0) + (contData.usage.prompt_tokens || 0),
+        completion_tokens: (usage.completion_tokens || 0) + (contData.usage.completion_tokens || 0),
+        total_tokens: (usage.total_tokens || 0) + (contData.usage.total_tokens || 0),
+      }
+    }
+    lastId = contData.id || lastId
+    openaiBody = contBody
+  }
+---NEW---
+  let continues = 0
+  let lastId = data.id
+  const baseOpenAIBody = openaiBody
+
+  while (stop === 'max_tokens' && !toolCalls?.length && continues < MAX_OUTPUT_CONTINUES) {
+    continues += 1
+    // Always resume from the original request + full accumulated text (not nested continues).
+    const contBody = buildContinuationOpenAIBody(baseOpenAIBody, fullText, KUMO_SAFE_BUDGET)
+    bridgeLog(`output_continue sync round=${continues} chars=${fullText.length}`)
+    let contUp
+    try {
+      contUp = await callKumo(contBody, { stream: false, backends: kumoOpts.backends || tier.backends || [tier.backend] })
+    } catch (e) {
+      bridgeLog(`output_continue sync_fail ${e?.message || e}`)
+      break
+    }
+    const contText = await contUp.text()
+    if (!contUp.ok) {
+      bridgeLog(`output_continue sync_http status=${contUp.status} body=${contText.slice(0, 200)}`)
+      break
+    }
+    let contData
+    try { contData = JSON.parse(contText) } catch {
+      bridgeLog('output_continue sync_bad_json')
+      break
+    }
+    const cChoice = contData.choices?.[0] || {}
+    const cMsg = cChoice.message || {}
+    const piece = typeof cMsg.content === 'string' ? scrubBrandLeak(cMsg.content) : ''
+    if (piece) fullText += piece
+    if (cMsg.tool_calls?.length) {
+      toolCalls = cMsg.tool_calls
+      stop = 'tool_use'
+    } else {
+      stop = cChoice.finish_reason === 'length' ? 'max_tokens' : 'end_turn'
+    }
+    if (contData.usage) {
+      usage = {
+        prompt_tokens: (usage.prompt_tokens || 0) + (contData.usage.prompt_tokens || 0),
+        completion_tokens: (usage.completion_tokens || 0) + (contData.usage.completion_tokens || 0),
+        total_tokens: (usage.total_tokens || 0) + (contData.usage.total_tokens || 0),
+      }
+    }
+    lastId = contData.id || lastId
+  }

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#041210" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Beam Agent</title>
+  <meta name="description" content="Beam Agent by Assistix — cloud AI agent with Tide, Flare and Pine. ASSISTIX ID required." />
+  <link rel="canonical" href="https://agent.assistix.org/" />
+  <link rel="icon" type="image/png" href="/agent-icon.png?v=20261118m" />
+  <link rel="apple-touch-icon" href="/agent-icon.png?v=20261118m" />
+  <link rel="preload" href="/assets/fonts/savona/Savona-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/savona/Savona-Semibold.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/assets/beam-cloud.css?v=20261118m" />
+</head>
+<body>
+  <div id="app" class="ba-app" data-state="booting" data-tab="chat">
+    <!-- Auth gate -->
+    <section id="authGate" class="ba-gate" hidden>
+      <div class="ba-gate-bg" aria-hidden="true"></div>
+      <div class="ba-gate-card">
+        <img class="ba-gate-mark" src="/assets/beam-mark.svg" width="56" height="56" alt="" />
+        <img class="ba-gate-word" src="/assets/beam-wordmark.svg" alt="Beam Agent" height="36" />
+        <p class="ba-gate-lead">Облачный агент Assistix. Сессии и проекты на сервере. Вход только через ASSISTIX ID.</p>
+        <a class="ba-btn ba-btn-primary" id="loginBtn" href="/auth/login.php">Войти с ASSISTIX ID</a>
+        <p class="ba-gate-note">Гостевого режима нет · доступ по инвайту · <a href="https://agent.assistix.org/download/">Desktop</a></p>
+      </div>
+    </section>
+
+    <!-- Main shell -->
+    <div id="shell" class="ba-shell" hidden>
+      <aside class="ba-side" id="sidebar">
+        <div class="ba-side-top">
+          <a class="ba-brand" href="/" aria-label="Beam Agent">
+            <img src="/assets/beam-mark.svg" width="28" height="28" alt="" />
+            <img class="ba-brand-word" src="/assets/beam-wordmark.svg" alt="Beam Agent" height="18" />
+          </a>
+          <button type="button" class="ba-iconbtn" id="btnNewSession" title="Новая сессия" aria-label="Новая сессия">+</button>
+        </div>
+
+        <div class="ba-side-section">
+          <div class="ba-sec-head">
+            <span>Projects</span>
+            <button type="button" class="ba-textbtn" id="btnNewProject">+ New</button>
+          </div>
+          <div class="ba-project-list" id="projectList"></div>
+        </div>
+
+        <div class="ba-side-section ba-side-grow">
+          <div class="ba-sec-head"><span>Sessions</span></div>
+          <div class="ba-session-list acx-scroll" id="sessionList"></div>
+        </div>
+
+        <div class="ba-side-foot ba-desktop-only">
+          <button type="button" class="ba-usage-mini" id="btnLimits" title="Limits">
+            <span id="usageMini">Limits</span>
+          </button>
+          <button type="button" class="ba-userchip" id="btnProfile">
+            <span class="ba-av" id="userAv">?</span>
+            <span class="ba-usertext">
+              <span class="ba-username" id="userName">—</span>
+              <span class="ba-useremail" id="userEmail"></span>
+            </span>
+          </button>
+        </div>
+      </aside>
+
+      <main class="ba-main" id="mainChat">
+        <header class="ba-main-head">
+          <div class="ba-head-left">
+            <button type="button" class="ba-proj-chip" id="btnProjectSwitch" aria-haspopup="listbox" aria-label="Project">
+              <span class="ba-proj-chip-label" id="projectChipLabel">All</span>
+              <span class="ba-proj-chip-caret" aria-hidden="true">▾</span>
+            </button>
+            <div class="ba-proj-menu" id="projectMenu" hidden role="listbox"></div>
+          </div>
+          <h1 class="ba-chat-title" id="chatTitle">Новая сессия</h1>
+          <div class="ba-head-actions">
+            <div class="ba-model" id="modelPicker">
+              <button type="button" class="ba-model-btn" id="modelBtn" aria-haspopup="listbox">Tide</button>
+              <div class="ba-model-menu" id="modelMenu" hidden role="listbox"></div>
+            </div>
+            <button type="button" class="ba-chip" id="modeAgent" data-mode="agent" title="Agent mode">Agent</button>
+            <button type="button" class="ba-chip ba-desktop-only" id="modeWeb" data-mode="web" title="Web search">Web</button>
+            <button type="button" class="ba-iconbtn ba-desktop-only" id="btnToggleProcess" title="Process" aria-label="Process">⧉</button>
+          </div>
+        </header>
+
+        <div class="ba-cloud-bar" id="cloudBar" hidden>
+          <span class="ba-cloud-dot" aria-hidden="true"></span>
+          <span id="cloudBarText">Cloud workspace</span>
+        </div>
+
+        <div class="ba-chat-scroll acx-scroll" id="chatScroll">
+          <div class="ba-empty" id="emptyState">
+            <img src="/assets/beam-mark.svg" width="48" height="48" alt="" />
+            <h2>Beam Agent</h2>
+            <p>Cloud workspace · Tide / Flare / Pine · ASSISTIX Environment</p>
+          </div>
+          <div class="ba-messages" id="messages"></div>
+        </div>
+
+        <footer class="ba-composer">
+          <div class="ba-composer-box">
+            <textarea id="composer" rows="1" placeholder="Сообщение или задача…" autocomplete="off" enterkeyhint="send"></textarea>
+            <div class="ba-composer-bar">
+              <label class="ba-attach" title="Attach file">
+                <input type="file" id="fileInput" hidden multiple />
+                <span aria-hidden="true">📎</span>
+              </label>
+              <button type="button" class="ba-chip ba-mobile-only" id="modeWebMobile" data-mode="web" title="Web">Web</button>
+              <span class="ba-attach-list" id="attachList"></span>
+              <button type="button" class="ba-btn ba-btn-primary ba-send" id="btnSend" disabled>Отправить</button>
+            </div>
+          </div>
+          <p class="ba-disclaimer ba-desktop-only">Beam Agent может ошибаться. Computer use — только в desktop.</p>
+        </footer>
+      </main>
+
+      <aside class="ba-process" id="processPanel" hidden>
+        <div class="ba-process-head">
+          <h2>Process</h2>
+          <button type="button" class="ba-iconbtn ba-desktop-only" id="btnCloseProcess" aria-label="Close">×</button>
+        </div>
+        <div class="ba-process-body acx-scroll">
+          <div class="ba-cloud-card" id="cloudSessionCard">
+            <strong>Cloud session</strong>
+            <p id="cloudSessionLabel">Durable workspace · files persist on server</p>
+          </div>
+          <div class="ba-stub">
+            <strong>Computer use</strong>
+            <p>Недоступен в облаке. Для управления компьютером — <a href="https://agent.assistix.org/download/">desktop Beam Agent</a>.</p>
+          </div>
+          <div class="ba-sec-head"><span>Agent steps</span></div>
+          <div id="processSteps" class="ba-steps"><p class="ba-muted">Пока нет шагов.</p></div>
+          <div class="ba-sec-head"><span>Deliverables</span></div>
+          <div id="processFiles" class="ba-files"><p class="ba-muted">Файлы появятся после agent-задачи.</p></div>
+        </div>
+      </aside>
+
+      <!-- Mobile full-screen panels -->
+      <section class="ba-m-panel" id="panelLimits" hidden>
+        <header class="ba-m-panel-head">
+          <h2>Limits</h2>
+        </header>
+        <div class="ba-m-panel-body acx-scroll" id="limitsBodyMobile"></div>
+      </section>
+
+      <section class="ba-m-panel" id="panelProfile" hidden>
+        <header class="ba-m-panel-head">
+          <h2>Profile</h2>
+        </header>
+        <div class="ba-m-panel-body acx-scroll" id="profileBodyMobile"></div>
+      </section>
+
+      <nav class="ba-bottom-nav ba-mobile-only" id="bottomNav" aria-label="Primary">
+        <button type="button" class="ba-nav-btn is-active" data-tab="chat" aria-label="Chat">
+          <span class="ba-nav-ico" aria-hidden="true">💬</span>
+          <span>Chat</span>
+        </button>
+        <button type="button" class="ba-nav-btn" data-tab="projects" aria-label="Projects">
+          <span class="ba-nav-ico" aria-hidden="true">📁</span>
+          <span>Projects</span>
+        </button>
+        <button type="button" class="ba-nav-btn" data-tab="process" aria-label="Process">
+          <span class="ba-nav-ico" aria-hidden="true">⧉</span>
+          <span>Process</span>
+        </button>
+        <button type="button" class="ba-nav-btn" data-tab="limits" aria-label="Limits">
+          <span class="ba-nav-ico" aria-hidden="true">◉</span>
+          <span>Limits</span>
+        </button>
+        <button type="button" class="ba-nav-btn" data-tab="profile" aria-label="Profile">
+          <span class="ba-nav-ico" aria-hidden="true">👤</span>
+          <span>Profile</span>
+        </button>
+      </nav>
+
+      <div class="ba-side-scrim ba-mobile-only" id="sideScrim" hidden></div>
+    </div>
+
+    <!-- Desktop modals -->
+    <div class="ba-modal" id="limitsModal" hidden>
+      <div class="ba-modal-mask" data-close="limitsModal"></div>
+      <div class="ba-modal-panel" role="dialog" aria-labelledby="limitsTitle">
+        <div class="ba-modal-top">
+          <h2 id="limitsTitle">Limits</h2>
+          <button type="button" class="ba-iconbtn" data-close="limitsModal">×</button>
+        </div>
+        <div class="ba-modal-body" id="limitsBody"></div>
+      </div>
+    </div>
+
+    <div class="ba-modal" id="profileModal" hidden>
+      <div class="ba-modal-mask" data-close="profileModal"></div>
+      <div class="ba-modal-panel" role="dialog" aria-labelledby="profileTitle">
+        <div class="ba-modal-top">
+          <h2 id="profileTitle">Profile</h2>
+          <button type="button" class="ba-iconbtn" data-close="profileModal">×</button>
+        </div>
+        <div class="ba-modal-body" id="profileBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/assets/acx-core.js?v=20261118m"></script>
+  <script src="/assets/beam-cloud.js?v=20261118m"></script>
+</body>
+</html>

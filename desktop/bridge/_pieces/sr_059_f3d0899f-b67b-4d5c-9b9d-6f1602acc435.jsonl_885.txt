@@ -1,0 +1,91 @@
+PATH: C:\Users\Alexa\OneDrive\Documents\Beam Agent\desktop\bridge\server.js
+OLD_LEN: 992
+NEW_LEN: 2129
+FILE: f3d0899f-b67b-4d5c-9b9d-6f1602acc435.jsonl L885
+---OLD---
+async function callKumo(payload, { stream }) {
+  const body = JSON.stringify({ ...payload, stream: !!stream })
+  const headers = {
+    Authorization: `Bearer ${KUMO_KEY}`,
+    'Content-Type': 'application/json',
+    Accept: stream ? 'text/event-stream' : 'application/json',
+  }
+  let lastErr
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const res = await fetch(KUMO_URL, {
+        method: 'POST',
+        headers,
+        body,
+        signal: AbortSignal.timeout(180_000),
+      })
+      return res
+    } catch (e) {
+      lastErr = e
+      const cause = e?.cause?.code || e?.cause?.message || e?.code || e?.message || e
+      bridgeLog(`kumo_fetch_fail attempt=${attempt} model=${payload?.model || '?'} cause=${cause}`)
+      if (attempt < 3) await new Promise((r) => setTimeout(r, 400 * attempt))
+    }
+  }
+  const err = new Error(
+    'Нет связи с модельным API (сеть/VPN). Проверьте интернет и повторите.'
+  )
+  err.cause = lastErr
+  err.status = 502
+  throw err
+}
+---NEW---
+async function callKumoOnce(payload, { stream }) {
+  return fetch(KUMO_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${KUMO_KEY}`,
+      'Content-Type': 'application/json',
+      Accept: stream ? 'text/event-stream' : 'application/json',
+    },
+    body: JSON.stringify({ ...payload, stream: !!stream }),
+    signal: AbortSignal.timeout(180_000),
+  })
+}
+
+function isRetryableKumoFailure(err, status) {
+  if (status && status >= 500) return true
+  const cause = String(err?.cause?.code || err?.code || err?.message || err || '')
+  return /UND_ERR_SOCKET|ECONNRESET|ETIMEDOUT|ENOTFOUND|FETCH_FAILED|terminated|socket|SSL|EOF|closed/i.test(cause)
+}
+
+async function callKumo(payload, { stream, backends }) {
+  const modelList = (Array.isArray(backends) && backends.length ? backends : [payload.model]).filter(Boolean)
+  let lastErr
+  for (const model of modelList) {
+    const nextPayload = { ...payload, model }
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        const res = await callKumoOnce(nextPayload, { stream })
+        if (!res.ok && res.status >= 500 && attempt < 2) {
+          bridgeLog(`kumo_http_${res.status} model=${model} attempt=${attempt}`)
+          await new Promise((r) => setTimeout(r, 350 * attempt))
+          continue
+        }
+        if (!res.ok && res.status >= 500 && model !== modelList[modelList.length - 1]) {
+          bridgeLog(`kumo_fallback_http status=${res.status} from=${model}`)
+          break // try next backend
+        }
+        if (model !== payload.model) bridgeLog(`kumo_using_fallback model=${model}`)
+        return res
+      } catch (e) {
+        lastErr = e
+        const cause = e?.cause?.code || e?.cause?.message || e?.code || e?.message || e
+        bridgeLog(`kumo_fetch_fail attempt=${attempt} model=${model} cause=${cause}`)
+        if (!isRetryableKumoFailure(e) || attempt >= 2) break
+        await new Promise((r) => setTimeout(r, 400 * attempt))
+      }
+    }
+  }
+  const err = new Error(
+    'Нет связи с модельным API (сеть/VPN). Проверьте интернет и повторите.'
+  )
+  err.cause = lastErr
+  err.status = 502
+  throw err
+}

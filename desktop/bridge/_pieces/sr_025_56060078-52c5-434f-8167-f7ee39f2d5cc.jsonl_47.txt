@@ -1,0 +1,112 @@
+PATH: c:\Users\Alexa\OneDrive\Documents\Beam Agent\desktop\bridge\server.js
+OLD_LEN: 1952
+NEW_LEN: 2362
+FILE: 56060078-52c5-434f-8167-f7ee39f2d5cc.jsonl L47
+---OLD---
+  while (stop === 'max_tokens' && !toolCalls?.length && continues < MAX_OUTPUT_CONTINUES) {
+    continues += 1
+    // Always resume from the original request + full accumulated text (not nested continues).
+    const contBody = buildContinuationOpenAIBody(baseOpenAIBody, fullText, KUMO_SAFE_BUDGET)
+    bridgeLog(`output_continue sync round=${continues} chars=${fullText.length}`)
+    let contUp
+    try {
+      contUp = await callKumo(contBody, { stream: false, backends: kumoOpts.backends || tier.backends || [tier.backend] })
+    } catch (e) {
+      bridgeLog(`output_continue sync_fail ${e?.message || e}`)
+      break
+    }
+    const contText = await contUp.text()
+    if (!contUp.ok) {
+      bridgeLog(`output_continue sync_http status=${contUp.status} body=${contText.slice(0, 200)}`)
+      break
+    }
+    let contData
+    try { contData = JSON.parse(contText) } catch {
+      bridgeLog('output_continue sync_bad_json')
+      break
+    }
+    const cChoice = contData.choices?.[0] || {}
+    const cMsg = cChoice.message || {}
+    const piece = typeof cMsg.content === 'string' ? scrubBrandLeak(cMsg.content) : ''
+    if (piece) fullText += piece
+    if (cMsg.tool_calls?.length) {
+      toolCalls = cMsg.tool_calls
+      stop = 'tool_use'
+    } else {
+      stop = cChoice.finish_reason === 'length' ? 'max_tokens' : 'end_turn'
+    }
+    if (contData.usage) {
+      usage = {
+        prompt_tokens: (usage.prompt_tokens || 0) + (contData.usage.prompt_tokens || 0),
+        completion_tokens: (usage.completion_tokens || 0) + (contData.usage.completion_tokens || 0),
+        total_tokens: (usage.total_tokens || 0) + (contData.usage.total_tokens || 0),
+      }
+    }
+    lastId = contData.id || lastId
+  }
+
+  // After seamless continues, never surface max_tokens to the desktop (orange banner).
+  if (stop === 'max_tokens') {
+    bridgeLog(`output_continue sync_cap_reached rounds=${continues} chars=${fullText.length}`)
+    stop = 'end_turn'
+  }
+---NEW---
+  while (
+    !toolCalls?.length &&
+    continues < MAX_OUTPUT_CONTINUES &&
+    (stop === 'max_tokens' || looksTruncated(fullText))
+  ) {
+    continues += 1
+    const beforeLen = fullText.length
+    // Always resume from the original request + full accumulated text (not nested continues).
+    const contBody = buildContinuationOpenAIBody(baseOpenAIBody, fullText, KUMO_SAFE_BUDGET)
+    bridgeLog(`output_continue sync round=${continues} chars=${fullText.length} reason=${stop === 'max_tokens' ? 'max_tokens' : 'heuristic'}`)
+    let contUp
+    try {
+      contUp = await callKumo(contBody, { stream: false, backends: kumoOpts.backends || tier.backends || [tier.backend] })
+    } catch (e) {
+      bridgeLog(`output_continue sync_fail ${e?.message || e}`)
+      break
+    }
+    const contText = await contUp.text()
+    if (!contUp.ok) {
+      bridgeLog(`output_continue sync_http status=${contUp.status} body=${contText.slice(0, 200)}`)
+      break
+    }
+    let contData
+    try { contData = JSON.parse(contText) } catch {
+      bridgeLog('output_continue sync_bad_json')
+      break
+    }
+    const cChoice = contData.choices?.[0] || {}
+    const cMsg = cChoice.message || {}
+    const piece = typeof cMsg.content === 'string' ? scrubBrandLeak(cMsg.content) : ''
+    if (piece) fullText += piece
+    if (cMsg.tool_calls?.length) {
+      toolCalls = cMsg.tool_calls
+      stop = 'tool_use'
+    } else {
+      stop = cChoice.finish_reason === 'length' ? 'max_tokens' : 'end_turn'
+    }
+    if (contData.usage) {
+      usage = {
+        prompt_tokens: (usage.prompt_tokens || 0) + (contData.usage.prompt_tokens || 0),
+        completion_tokens: (usage.completion_tokens || 0) + (contData.usage.completion_tokens || 0),
+        total_tokens: (usage.total_tokens || 0) + (contData.usage.total_tokens || 0),
+      }
+    }
+    lastId = contData.id || lastId
+    if (fullText.length <= beforeLen) {
+      bridgeLog('output_continue sync_no_progress')
+      break
+    }
+  }
+
+  fullText = scrubBrandLeak(fullText)
+  // Keep max_tokens when still truncated so the client can offer «Продолжить».
+  if (stop === 'max_tokens' || looksTruncated(fullText)) {
+    bridgeLog(`output_continue sync_needs_user rounds=${continues} chars=${fullText.length} truncated=${looksTruncated(fullText)}`)
+    stop = 'max_tokens'
+  } else if (stop !== 'tool_use') {
+    stop = 'end_turn'
+  }

@@ -1,0 +1,242 @@
+/**
+ * Real ASSISTIX ID only:
+ * - wipe fake sessions
+ * - accept pending/session only with numeric id_user_id + email from exchange
+ * - reliable external open of id.assistix.org
+ * - surface auth errors in-app
+ */
+import fs from "node:fs";
+import path from "node:path";
+
+const ROOT = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
+const bridges = [
+  path.join(ROOT, "desktop/bridge/server.js"),
+  path.join(ROOT, "dist/Beam Agent/bridge/server.js"),
+];
+const indexes = [
+  path.join(
+    ROOT,
+    "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html"
+  ),
+  path.join(
+    ROOT,
+    "runtime/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html"
+  ),
+].filter((p) => fs.existsSync(p));
+
+const statePath = path.join(
+  process.env.USERPROFILE || "",
+  ".beam/bridge/state.json"
+);
+
+console.log("1) Wipe local fake/test auth state");
+{
+  if (fs.existsSync(statePath)) {
+    const st = JSON.parse(fs.readFileSync(statePath, "utf8"));
+    st.session = null;
+    st.pendingSession = null;
+    st.lastAuthError = null;
+    fs.writeFileSync(statePath, JSON.stringify(st, null, 2));
+    console.log("  state cleared");
+  }
+}
+
+function patchBridge(file) {
+  let s = fs.readFileSync(file, "utf8");
+
+  // Strict signed-in check
+  s = s.replace(
+    /function isSignedIn\(state = loadState\(\)\) \{\s*const u = state\.session\s*return !!\(u && \(u\.id_user_id \|\| u\.id \|\| u\.email\) && u\.provider !== 'local-guest'\)\s*\}/,
+    `function isSignedIn(state = loadState()) {
+  const u = state.session
+  return !!(
+    u
+    && Number(u.id_user_id) > 0
+    && String(u.email || '').includes('@')
+    && u.provider === 'assistix-id'
+    && u.from_exchange === true
+  )
+}
+
+function isRealIdUser(user) {
+  if (!user || typeof user !== 'object') return false
+  const id = Number(user.id || user.id_user_id || 0)
+  const email = String(user.email || '').trim().toLowerCase()
+  return id > 0 && email.includes('@')
+}`
+  );
+
+  // sessionFromIdUser marks from_exchange
+  s = s.replace(
+    /function sessionFromIdUser\(idUser, meta = \{\}\) \{\s*const display = String\(idUser\.display_name \|\| idUser\.name \|\| ''\)\.trim\(\)\s*\|\| String\(idUser\.email \|\| ''\)\.split\('@'\)\[0\]\s*\|\| 'ASSISTIX User'\s*return \{[\s\S]*?provider: 'assistix-id',\s*at: new Date\(\)\.toISOString\(\),\s*\.\.\.meta,\s*\}\s*\}/,
+    `function sessionFromIdUser(idUser, meta = {}) {
+  if (!isRealIdUser(idUser)) throw new Error('invalid_assistix_user')
+  const id = Number(idUser.id || idUser.id_user_id)
+  const email = String(idUser.email || '').trim().toLowerCase()
+  const display = String(idUser.display_name || idUser.name || '').trim()
+    || email.split('@')[0]
+    || 'ASSISTIX User'
+  let avatar = String(idUser.avatar_url || idUser.avatar || '').trim()
+  if (avatar && avatar.startsWith('/')) avatar = ID_BASE.replace(/\\/$/, '') + avatar
+  return {
+    id_user_id: id,
+    email,
+    name: display,
+    display_name: display,
+    avatar_url: avatar,
+    email_verified: !!(idUser.email_verified ?? true),
+    provider: 'assistix-id',
+    from_exchange: true,
+    at: new Date().toISOString(),
+    ...meta,
+  }
+}`
+  );
+
+  // exchange: require real user
+  s = s.replace(
+    "if (!data?.user || typeof data.user !== 'object') throw new Error('no_user')\n  return data",
+    `if (!isRealIdUser(data?.user)) throw new Error('no_real_user')
+  return data`
+  );
+
+  // status includes lastAuthError
+  if (!s.includes("lastAuthError")) {
+    s = s.replace(
+      "pendingUser: (!signed && state.pendingSession) ? publicUser(state.pendingSession) : null,",
+      `pendingUser: (!signed && state.pendingSession && state.pendingSession.from_exchange && Number(state.pendingSession.id_user_id) > 0) ? publicUser(state.pendingSession) : null,
+        lastAuthError: state.lastAuthError || null,`
+    );
+  }
+
+  // callback stores error on failure
+  s = s.replace(
+    "return serveCallbackBounce(res, false, e.message || e)",
+    `const st = loadState()
+        st.pendingSession = null
+        st.lastAuthError = String(e.message || e)
+        saveState(st)
+        try { fs.appendFileSync(path.join(DATA_DIR, 'bridge.log'), '[auth] ' + st.lastAuthError + '\\n') } catch {}
+        return serveCallbackBounce(res, false, e.message || e)`
+  );
+
+  // success clears lastAuthError
+  s = s.replace(
+    "state.pendingSession = sessionFromIdUser(data.user, { token: data.access_token || data.token || null })\n        state.oauth_nonce = crypto.randomBytes(16).toString('hex')\n        saveState(state)",
+    `state.pendingSession = sessionFromIdUser(data.user, { token: data.access_token || data.token || null })
+        state.lastAuthError = null
+        state.oauth_nonce = crypto.randomBytes(16).toString('hex')
+        saveState(state)`
+  );
+
+  // confirm only real pending
+  s = s.replace(
+    "if (!state.pendingSession) return sendJson(res, 400, { ok: false, error: 'no_pending' })\n      state.session = state.pendingSession",
+    `if (!state.pendingSession || !state.pendingSession.from_exchange || !(Number(state.pendingSession.id_user_id) > 0)) {
+        return sendJson(res, 400, { ok: false, error: 'no_pending' })
+      }
+      state.session = state.pendingSession`
+  );
+
+  // boot wipe: drop anything not from exchange
+  if (!s.includes("from_exchange !== true")) {
+    s = s.replace(
+      "if (!state.oauth_nonce) state.oauth_nonce = crypto.randomBytes(16).toString('hex')\n  saveState(state)\n}",
+      `if (state.session && state.session.from_exchange !== true) state.session = null
+  if (state.pendingSession && state.pendingSession.from_exchange !== true) state.pendingSession = null
+  if (!state.oauth_nonce) state.oauth_nonce = crypto.randomBytes(16).toString('hex')
+  saveState(state)
+}`
+    );
+  }
+
+  fs.writeFileSync(file, s);
+  console.log("  bridge", path.relative(ROOT, file));
+}
+
+function patchIndex(file) {
+  let html = fs.readFileSync(file, "utf8");
+
+  // Replace openAssistix with fetch-fresh + <a> click
+  html = html.replace(
+    /const openAssistix = \(data\) => \{[\s\S]*?\n  \};/,
+    `const openAssistix = async () => {
+    try {
+      const r = await fetch(BRIDGE + "/assistix/status");
+      const d = await r.json();
+      lastData = d;
+      const url = d && d.authUrl;
+      if (!url || !/^https:\\/\\/id\\.assistix\\.org\\b/i.test(url)) return;
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (e) {
+      console.warn("[beam] open assistix", e);
+    }
+  };`
+  );
+
+  // Fix ensureAuthGate login/other handlers to use new openAssistix()
+  html = html.replace(
+    "refresh().then(() => openAssistix(lastData));",
+    "refresh().then(() => openAssistix());"
+  );
+  html = html.replace(
+    'gate.querySelector(\'[data-act="login"]\')?.addEventListener("click", () => openAssistix(data || lastData));',
+    'gate.querySelector(\'[data-act="login"]\')?.addEventListener("click", () => openAssistix());'
+  );
+  html = html.replace(
+    'el.querySelector(\'[data-act="login"]\')?.addEventListener("click", () => openAssistix(data || lastData));',
+    'el.querySelector(\'[data-act="login"]\')?.addEventListener("click", () => openAssistix());'
+  );
+
+  // Show lastAuthError on gate when present
+  if (!html.includes("lastAuthError")) {
+    html = html.replace(
+      "gate.innerHTML = '<div class=\"bag-card\"><div class=\"bag-mark\" aria-hidden=\"true\"></div><h1>ASSISTIX ID</h1><p>Войдите в аккаунт, чтобы пользоваться Beam Agent. Без входа доступ закрыт.</p><button type=\"button\" data-act=\"login\">Войти через ASSISTIX ID</button><div class=\"bag-note\">Откроется безопасная страница id.assistix.org. После входа вернёмся в Beam Agent.</div></div>';",
+      `const err = data?.lastAuthError ? '<div class="bag-error">Не удалось войти: '+String(data.lastAuthError).replace(/</g,'')+'</div>' : '';
+    gate.innerHTML = '<div class="bag-card"><div class="bag-mark" aria-hidden="true"></div><h1>ASSISTIX ID</h1><p>Войдите в аккаунт, чтобы пользоваться Beam Agent. Без входа доступ закрыт.</p>'+err+'<button type="button" data-act="login">Войти через ASSISTIX ID</button><div class="bag-note">Откроется безопасная страница id.assistix.org. После входа вернёмся в Beam Agent с вашим реальным профилем.</div></div>';`
+    );
+  }
+
+  // Absolute avatar on confirm if relative
+  html = html.replace(
+    "const av = pending.avatar_url\n        ? '<div class=\"bag-avatar\"><img src=\"'+String(pending.avatar_url).replace(/\"/g,'&quot;')+'\" alt=\"\"></div>'",
+    `let avUrl = String(pending.avatar_url || '').trim();
+      if (avUrl && avUrl.charAt(0) === '/') avUrl = 'https://id.assistix.org' + avUrl;
+      const av = avUrl
+        ? '<div class="bag-avatar"><img src="'+avUrl.replace(/"/g,'&quot;')+'" alt=""></div>'`
+  );
+
+  fs.writeFileSync(file, html);
+  console.log("  index", path.relative(ROOT, file));
+}
+
+for (const b of bridges) patchBridge(b);
+for (const i of indexes) patchIndex(i);
+
+// CSS error style
+const cssPath = path.join(
+  ROOT,
+  "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/beam-override.css"
+);
+let css = fs.readFileSync(cssPath, "utf8");
+if (!css.includes("#beam-auth-gate .bag-error")) {
+  css = css.replace(
+    "#beam-auth-gate .bag-note { margin-top: 12px; font-size: 12px; color: #7aaba4; }",
+    `#beam-auth-gate .bag-note { margin-top: 12px; font-size: 12px; color: #7aaba4; }
+#beam-auth-gate .bag-error {
+  margin: 0 0 14px; padding: 10px 12px; border-radius: 10px;
+  background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.35);
+  color: #fecaca; font-size: 12px; line-height: 1.4;
+}`
+  );
+  fs.writeFileSync(cssPath, css);
+  console.log("  css error style");
+}
+
+console.log("✓ real ASSISTIX-only auth hardened");

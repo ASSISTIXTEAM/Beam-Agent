@@ -1,0 +1,233 @@
+PATH: C:\Users\Alexa\OneDrive\Documents\Beam Agent\desktop\bridge\server.js
+OLD_LEN: 711
+NEW_LEN: 6207
+FILE: eaa28309-7b3b-481c-be81-935f61a9b72f.jsonl L12
+---OLD---
+async function exchangeCode(code) {
+  const payload = {
+    code,
+    client_id: OAUTH_CLIENT_ID,
+    client_secret: OAUTH_CLIENT_SECRET,
+    redirect_uri: OAUTH_REDIRECT(),
+  }
+  const res = await fetch(`${ID_BASE}/api/exchange.php`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  const text = await res.text()
+  let data
+  try { data = JSON.parse(text) } catch { data = { error: text.slice(0, 200) } }
+  if (!res.ok) {
+    const err = new Error(data?.error || `exchange_http_${res.status}`)
+    err.detail = data
+    throw err
+  }
+  if (!isRealIdUser(data?.user)) throw new Error('no_real_user')
+  return data
+}
+---NEW---
+async function exchangeCode(code) {
+  const payload = {
+    code,
+    client_id: OAUTH_CLIENT_ID,
+    client_secret: OAUTH_CLIENT_SECRET,
+    redirect_uri: OAUTH_REDIRECT(),
+  }
+  const res = await fetch(`${ID_BASE}/api/exchange.php`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  const text = await res.text()
+  let data
+  try { data = JSON.parse(text) } catch { data = { error: text.slice(0, 200) } }
+  if (!res.ok) {
+    const err = new Error(data?.error || `exchange_http_${res.status}`)
+    err.detail = data
+    throw err
+  }
+  if (!isRealIdUser(data?.user)) throw new Error('no_real_user')
+  return data
+}
+
+/** Minimal cookie jar for server-side ASSISTIX ID login (Node fetch has no jar). */
+function createCookieJar() {
+  const jar = new Map()
+  return {
+    store(res) {
+      let list = []
+      try {
+        if (typeof res.headers.getSetCookie === 'function') list = res.headers.getSetCookie() || []
+      } catch {}
+      if (!list.length) {
+        const single = res.headers.get('set-cookie')
+        if (single) list = [single]
+      }
+      for (const raw of list) {
+        const part = String(raw || '').split(';')[0] || ''
+        const eq = part.indexOf('=')
+        if (eq <= 0) continue
+        const name = part.slice(0, eq).trim()
+        const value = part.slice(eq + 1).trim()
+        if (name) jar.set(name, value)
+      }
+    },
+    header() {
+      if (!jar.size) return ''
+      return [...jar.entries()].map(([k, v]) => `${k}=${v}`).join('; ')
+    },
+  }
+}
+
+function absIdUrl(pathOrUrl) {
+  const u = String(pathOrUrl || '').trim()
+  if (!u) return ''
+  if (/^https?:\/\//i.test(u)) return u
+  return `${ID_BASE.replace(/\/$/, '')}${u.startsWith('/') ? u : `/${u}`}`
+}
+
+function extractOAuthCode(urlOrText) {
+  const raw = String(urlOrText || '')
+  if (!raw) return ''
+  try {
+    const u = new URL(raw, ID_BASE)
+    const code = u.searchParams.get('code') || ''
+    if (code) return code
+  } catch {}
+  const m = raw.match(/[?&#]code=([^&#\s"']+)/i)
+  return m ? decodeURIComponent(m[1]) : ''
+}
+
+function oauthStateToken(nonce) {
+  return Buffer.from(
+    JSON.stringify({ app: 'beam-agent', product: 'Beam Agent', nonce }),
+    'utf8',
+  ).toString('base64url')
+}
+
+/**
+ * Backup password login against real ASSISTIX ID:
+ * login-actions.php (sets AID session cookie) → oauth-finish → exchange.php.
+ */
+async function loginWithPassword(email, password) {
+  const emailNorm = String(email || '').trim().toLowerCase()
+  const pass = String(password || '')
+  if (!emailNorm.includes('@') || !pass) {
+    const err = new Error('email_password_required')
+    err.status = 400
+    throw err
+  }
+
+  const state = loadState()
+  if (!state.oauth_nonce) {
+    state.oauth_nonce = crypto.randomBytes(16).toString('hex')
+    saveState(state)
+  }
+  const oauthState = oauthStateToken(state.oauth_nonce)
+  const redirectUri = OAUTH_REDIRECT()
+  const jar = createCookieJar()
+
+  const fd = new FormData()
+  fd.append('action', 'login_password')
+  fd.append('email', emailNorm)
+  fd.append('password', pass)
+  fd.append('redirect_uri', redirectUri)
+  fd.append('client_id', OAUTH_CLIENT_ID)
+  fd.append('state', oauthState)
+
+  const loginRes = await fetch(`${ID_BASE}/api/login-actions.php`, {
+    method: 'POST',
+    body: fd,
+    headers: { Accept: 'application/json' },
+    redirect: 'manual',
+  })
+  jar.store(loginRes)
+  const loginText = await loginRes.text()
+  let loginJson
+  try { loginJson = JSON.parse(loginText) } catch { loginJson = null }
+
+  if (!loginJson || loginJson.ok !== true) {
+    const err = new Error(loginJson?.error || `login_http_${loginRes.status}`)
+    err.status = loginRes.status >= 400 ? loginRes.status : 401
+    throw err
+  }
+
+  // Prefer any real user/token/code the ID API already returned (no inventing).
+  if (loginJson.code) return exchangeCode(String(loginJson.code))
+  if (isRealIdUser(loginJson.user) && (loginJson.access_token || loginJson.token)) {
+    return {
+      user: loginJson.user,
+      access_token: loginJson.access_token || loginJson.token || null,
+      token: loginJson.token || loginJson.access_token || null,
+    }
+  }
+
+  let code = extractOAuthCode(loginJson.redirect) || extractOAuthCode(loginRes.headers.get('location') || '')
+
+  const cookieHeader = jar.header()
+  if (!code) {
+    const finishBody = new URLSearchParams({
+      redirect_uri: redirectUri,
+      client_id: OAUTH_CLIENT_ID,
+      state: oauthState,
+    })
+    const finishRes = await fetch(`${ID_BASE}/api/oauth-finish.php`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: 'application/json, text/html',
+        ...(cookieHeader ? { Cookie: cookieHeader } : {}),
+      },
+      body: finishBody,
+      redirect: 'manual',
+    })
+    jar.store(finishRes)
+    const finishLoc = finishRes.headers.get('location') || ''
+    code = extractOAuthCode(finishLoc)
+    if (!code) {
+      const finishText = await finishRes.text()
+      try {
+        const fj = JSON.parse(finishText)
+        if (fj.code) code = String(fj.code)
+        else if (fj.redirect) code = extractOAuthCode(fj.redirect)
+        else if (isRealIdUser(fj.user)) {
+          return {
+            user: fj.user,
+            access_token: fj.access_token || fj.token || null,
+            token: fj.token || fj.access_token || null,
+          }
+        }
+      } catch {
+        code = extractOAuthCode(finishText)
+      }
+    }
+  }
+
+  if (!code && loginJson.redirect) {
+    const followUrl = absIdUrl(loginJson.redirect)
+    if (followUrl) {
+      const followRes = await fetch(followUrl, {
+        method: 'GET',
+        headers: {
+          Accept: 'text/html, application/json',
+          ...(jar.header() ? { Cookie: jar.header() } : {}),
+        },
+        redirect: 'manual',
+      })
+      jar.store(followRes)
+      code = extractOAuthCode(followRes.headers.get('location') || '')
+      if (!code) {
+        const ft = await followRes.text()
+        code = extractOAuthCode(ft)
+      }
+    }
+  }
+
+  if (!code) {
+    const err = new Error('no_oauth_code')
+    err.status = 502
+    throw err
+  }
+  return exchangeCode(code)
+}

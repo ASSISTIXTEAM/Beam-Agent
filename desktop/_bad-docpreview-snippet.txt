@@ -1,0 +1,14 @@
+1719|		}
+1720|		/**
+1721|		* Register locale, metadata, and the document body for the owning plugin lifetime.
+1722|		* @param ctx - plugin context carrying locale, document registry, and slots.
+1723|		*/
+1724|		function apply$8(ctx) {
+1725|			const t = ctx.locale.bind("documentMarkdown");
+1726|			ctx.effect(() => ctx.locale.register("documentMarkdown", { : $6,
+1727|				en, ru: en$6 }), "document-markdown: dictionaries");
+1728|			ctx.effect(() => ctx.documentPreviews.register(markdownDefinition(() => t("viewer.label"))), "document-markdown: metadata");
+1729|			ctx.effect(() => ctx.slots.inject("sidebar.right.tab.document", () => ctx.slots.register({
+1730|				name: "sidebar.right.tab.document",
+1731|				key: MARKDOWN_BODY_ID,
+1732|				locale: "documentMarkdown"

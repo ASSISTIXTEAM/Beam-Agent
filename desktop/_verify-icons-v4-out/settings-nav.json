@@ -1,0 +1,126 @@
+{
+  "dialogs": [
+    {
+      "cls": "wtg9ga_settingsArea",
+      "role": null,
+      "text": "Войти"
+    },
+    {
+      "cls": "AnXs9G_panel",
+      "role": "dialog",
+      "text": "Настройки\nОбщие\nПрофиль\nЛимиты\nЗакрыть\nДоступ\nЧто Beam Agent может делать в новых чатах по умолчанию\nПравки в проекте\nЯз"
+    }
+  ],
+  "hits": [
+    {
+      "tag": "DIV",
+      "hostTag": "DIV",
+      "hostCls": "AnXs9G_navList",
+      "label": "Общие",
+      "beamIcon": null,
+      "hasSvg": true,
+      "svgChildCount": 2,
+      "mask": "none",
+      "bg": "rgba(0, 0, 0, 0)",
+      "pathStroke": "currentColor",
+      "pathD": "M8 9.75012C8.9665 9.75012 9.75 8.96662 9.75 8.0001"
+    },
+    {
+      "tag": "BUTTON",
+      "hostTag": "BUTTON",
+      "hostCls": "AnXs9G_navCell AnXs9G_active",
+      "label": "Общие",
+      "beamIcon": null,
+      "hasSvg": true,
+      "svgChildCount": 2,
+      "mask": "none",
+      "bg": "rgba(0, 0, 0, 0)",
+      "pathStroke": "currentColor",
+      "pathD": "M8 9.75012C8.9665 9.75012 9.75 8.96662 9.75 8.0001"
+    },
+    {
+      "tag": "SPAN",
+      "hostTag": "SPAN",
+      "hostCls": "AnXs9G_navLabel",
+      "label": "Общие",
+      "beamIcon": null,
+      "hasSvg": true,
+      "svgChildCount": 2,
+      "mask": "none",
+      "bg": "rgba(0, 0, 0, 0)",
+      "pathStroke": "currentColor",
+      "pathD": "M8 9.75012C8.9665 9.75012 9.75 8.96662 9.75 8.0001"
+    },
+    {
+      "tag": "BUTTON",
+      "hostTag": "BUTTON",
+      "hostCls": "AnXs9G_navCell",
+      "label": "Профиль",
+      "beamIcon": null,
+      "hasSvg": true,
+      "svgChildCount": 2,
+      "mask": "none",
+      "bg": "rgba(0, 0, 0, 0)",
+      "pathStroke": "currentColor",
+      "pathD": "M8 8.25C9.51878 8.25 10.75 7.01878 10.75 5.5C10.75"
+    },
+    {
+      "tag": "SPAN",
+      "hostTag": "SPAN",
+      "hostCls": "AnXs9G_navLabel",
+      "label": "Профиль",
+      "beamIcon": null,
+      "hasSvg": true,
+      "svgChildCount": 2,
+      "mask": "none",
+      "bg": "rgba(0, 0, 0, 0)",
+      "pathStroke": "currentColor",
+      "pathD": "M8 8.25C9.51878 8.25 10.75 7.01878 10.75 5.5C10.75"
+    },
+    {
+      "tag": "BUTTON",
+      "hostTag": "BUTTON",
+      "hostCls": "AnXs9G_navCell",
+      "label": "Лимиты",
+      "beamIcon": null,
+      "hasSvg": true,
+      "svgChildCount": 2,
+      "mask": "none",
+      "bg": "rgba(0, 0, 0, 0)",
+      "pathStroke": null,
+      "pathD": "M7.8667 0.349609C8.96906 0.349634 10.0601 0.481272"
+    },
+    {
+      "tag": "SPAN",
+      "hostTag": "SPAN",
+      "hostCls": "AnXs9G_navLabel",
+      "label": "Лимиты",
+      "beamIcon": null,
+      "hasSvg": true,
+      "svgChildCount": 2,
+      "mask": "none",
+      "bg": "rgba(0, 0, 0, 0)",
+      "pathStroke": null,
+      "pathD": "M7.8667 0.349609C8.96906 0.349634 10.0601 0.481272"
+    }
+  ],
+  "theme": [
+    {
+      "label": "Светлая",
+      "beamIcon": null,
+      "mask": "none"
+    },
+    {
+      "label": "Тёмная",
+      "beamIcon": null,
+      "mask": "none"
+    },
+    {
+      "label": "Системная",
+      "beamIcon": null,
+      "mask": "none"
+    }
+  ],
+  "gearMask": "url(\"beam-app://app/assets/beam-icons/bold/settings.png\")",
+  "cssHref": "beam-app://app/assets/beam-override.css?v=coolicons-everywhere-v4"
+}

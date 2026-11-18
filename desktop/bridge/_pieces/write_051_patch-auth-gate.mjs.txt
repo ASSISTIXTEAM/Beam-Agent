@@ -1,0 +1,518 @@
+/**
+ * Mandatory ASSISTIX ID login for Beam Agent.
+ * - Real OAuth via id.assistix.org/auth + /api/exchange.php
+ * - Blocks models/messages without session
+ * - Full-screen gate + profile (name/email/avatar) from ID
+ */
+import fs from "node:fs";
+import path from "node:path";
+
+const ROOT = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
+const BRIDGE_SRC = path.join(ROOT, "desktop/bridge/server.js");
+const BRIDGE_DIST = path.join(ROOT, "dist/Beam Agent/bridge/server.js");
+const WEB = path.join(
+  ROOT,
+  "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist"
+);
+const ASSETS = path.join(WEB, "assets");
+const STATE = path.join(
+  process.env.USERPROFILE || "",
+  ".beam/bridge/state.json"
+);
+
+const OAUTH = {
+  clientId: process.env.ASSISTIX_OAUTH_CLIENT_ID || "assistix-chat",
+  // Same client as CHAT — ID accepts loopback redirect for this client.
+  clientSecret:
+    process.env.ASSISTIX_OAUTH_CLIENT_SECRET ||
+    "assistix-chat-oauth-local-20260514-do-not-commit-public-repos",
+};
+
+function patchBridge(file) {
+  let s = fs.readFileSync(file, "utf8");
+
+  // Inject oauth constants after ID_BASE
+  if (!s.includes("OAUTH_CLIENT_ID")) {
+    s = s.replace(
+      "const ID_BASE = process.env.ASSISTIX_ID_URL || 'https://id.assistix.org'",
+      `const ID_BASE = process.env.ASSISTIX_ID_URL || 'https://id.assistix.org'
+const OAUTH_CLIENT_ID = process.env.ASSISTIX_OAUTH_CLIENT_ID || ${JSON.stringify(OAUTH.clientId)}
+const OAUTH_CLIENT_SECRET = process.env.ASSISTIX_OAUTH_CLIENT_SECRET || ${JSON.stringify(OAUTH.clientSecret)}
+const OAUTH_REDIRECT = () => \`http://127.0.0.1:\${PORT}/assistix/callback\``
+    );
+  }
+
+  // Helpers for session + oauth
+  if (!s.includes("function isSignedIn")) {
+    s = s.replace(
+      "function resolveTier(modelId) {",
+      `function isSignedIn(state = loadState()) {
+  const u = state.session
+  return !!(u && (u.id_user_id || u.id || u.email) && u.provider !== 'local-guest')
+}
+
+function publicUser(session) {
+  if (!session) return null
+  return {
+    id: session.id_user_id || session.id || null,
+    id_user_id: session.id_user_id || session.id || null,
+    email: session.email || '',
+    name: session.name || session.display_name || '',
+    display_name: session.display_name || session.name || '',
+    avatar_url: session.avatar_url || '',
+    email_verified: !!session.email_verified,
+    provider: session.provider || 'assistix-id',
+    at: session.at || null,
+  }
+}
+
+function buildAuthUrl(stateToken) {
+  const state = Buffer.from(JSON.stringify({ app: 'beam-agent', nonce: stateToken }), 'utf8').toString('base64url')
+  const q = new URLSearchParams({
+    redirect_uri: OAUTH_REDIRECT(),
+    client_id: OAUTH_CLIENT_ID,
+    state,
+  })
+  return \`\${ID_BASE}/auth/?\${q.toString()}\`
+}
+
+async function exchangeCode(code) {
+  const payload = {
+    code,
+    client_id: OAUTH_CLIENT_ID,
+    client_secret: OAUTH_CLIENT_SECRET,
+    redirect_uri: OAUTH_REDIRECT(),
+  }
+  const res = await fetch(\`\${ID_BASE}/api/exchange.php\`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  const text = await res.text()
+  let data
+  try { data = JSON.parse(text) } catch { data = { error: text.slice(0, 200) } }
+  if (!res.ok) {
+    const err = new Error(data?.error || \`exchange_http_\${res.status}\`)
+    err.detail = data
+    throw err
+  }
+  if (!data?.user || typeof data.user !== 'object') throw new Error('no_user')
+  return data
+}
+
+function sessionFromIdUser(idUser, meta = {}) {
+  const display = String(idUser.display_name || idUser.name || '').trim()
+    || String(idUser.email || '').split('@')[0]
+    || 'ASSISTIX User'
+  return {
+    id_user_id: Number(idUser.id || idUser.id_user_id || 0) || null,
+    email: String(idUser.email || '').toLowerCase(),
+    name: display,
+    display_name: display,
+    avatar_url: String(idUser.avatar_url || idUser.avatar || ''),
+    email_verified: !!(idUser.email_verified ?? true),
+    provider: 'assistix-id',
+    at: new Date().toISOString(),
+    ...meta,
+  }
+}
+
+function requireAuth(res, state) {
+  if (isSignedIn(state)) return true
+  sendJson(res, 401, {
+    type: 'error',
+    error: { type: 'authentication_error', message: 'Sign in with ASSISTIX ID to use Beam Agent.' },
+  })
+  return false
+}
+
+function resolveTier(modelId) {`
+    );
+  }
+
+  // Replace serveLoginPage with clean OAuth-only page
+  const loginStart = s.indexOf("function serveLoginPage(res) {");
+  const loginEnd = s.indexOf("const server = http.createServer", loginStart);
+  if (loginStart >= 0 && loginEnd > loginStart) {
+    const newLogin = `function serveLoginPage(res) {
+  const logo = fs.readFileSync(path.join(ROOT, 'logo-beam-agent.svg'), 'utf8')
+  const state = loadState()
+  if (!state.oauth_nonce) {
+    state.oauth_nonce = crypto.randomBytes(16).toString('hex')
+    saveState(state)
+  }
+  const authUrl = buildAuthUrl(state.oauth_nonce)
+  const html = \`<!doctype html>
+<html lang="ru"><head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Войти — Beam Agent · ASSISTIX ID</title>
+<style>
+  :root { --brand:#00B3BC; --bg:#05100f; --card:#0b1a18; --ink:#eaf5f3; --muted:#8fbab4; --line:#1f3d38; }
+  *{box-sizing:border-box} body{margin:0;min-height:100vh;font-family:"Segoe UI",system-ui,sans-serif;background:
+    radial-gradient(900px 500px at 10% -10%, rgba(0,179,188,.25), transparent 55%),
+    radial-gradient(700px 400px at 100% 0%, rgba(45,212,191,.12), transparent 50%),
+    var(--bg); color:var(--ink); display:grid; place-items:center; padding:24px}
+  .card{width:min(420px,100%); background:var(--card); border:1px solid var(--line); border-radius:20px; padding:32px 28px; box-shadow:0 20px 60px rgba(0,0,0,.35); text-align:center}
+  .logo{display:flex;justify-content:center;margin-bottom:18px}
+  .logo svg{width:min(260px,100%); height:auto}
+  h1{margin:0 0 8px; font-size:22px}
+  p{margin:0 0 22px; color:var(--muted); line-height:1.45; font-size:14px}
+  a.btn, button.btn{display:block;width:100%;border:0;border-radius:12px;padding:14px 16px;font-weight:700;font-size:15px;color:#042f2e;background:linear-gradient(135deg,#2dd4bf,#00B3BC 55%,#0f766e);cursor:pointer;text-decoration:none}
+  .hint{margin-top:16px;font-size:12px;color:var(--muted);line-height:1.4}
+</style></head>
+<body>
+  <div class="card">
+    <div class="logo">\${logo}</div>
+    <h1>ASSISTIX ID</h1>
+    <p>Войдите в свой аккаунт, чтобы пользоваться Beam Agent. Без входа приложение недоступно.</p>
+    <a class="btn" href="\${authUrl}">Войти через ASSISTIX ID</a>
+    <div class="hint">Откроется безопасная страница id.assistix.org.<br/>После входа вы автоматически вернётесь в Beam Agent.</div>
+  </div>
+</body></html>\`
+  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' })
+  res.end(html)
+}
+
+`;
+    s = s.slice(0, loginStart) + newLogin + s.slice(loginEnd);
+  }
+
+  // Gate models listing
+  if (!s.includes("requireAuth(res, state)") && s.includes("url.pathname === '/models'")) {
+    s = s.replace(
+      `if (
+      (url.pathname === '/models' ||
+        url.pathname === '/v1/models' ||
+        url.pathname === '/anthropic/v1/models' ||
+        url.pathname === '/anthropic/models') &&
+      req.method === 'GET'
+    ) {
+      const data = Object.values(MODELS).map((m) => ({`,
+      `if (
+      (url.pathname === '/models' ||
+        url.pathname === '/v1/models' ||
+        url.pathname === '/anthropic/v1/models' ||
+        url.pathname === '/anthropic/models') &&
+      req.method === 'GET'
+    ) {
+      const state = loadState()
+      if (!requireAuth(res, state)) return
+      const data = Object.values(MODELS).map((m) => ({`
+    );
+  }
+
+  // Status endpoint — richer user
+  s = s.replace(
+    /if \(url\.pathname === '\/assistix\/me' \|\| url\.pathname === '\/assistix\/status'\) \{[\s\S]*?return sendJson\(res, 200, \{[\s\S]*?\}\)\n    \}/,
+    `if (url.pathname === '/assistix/me' || url.pathname === '/assistix/status') {
+      const state = loadState()
+      const signed = isSignedIn(state)
+      return sendJson(res, 200, {
+        signedIn: signed,
+        user: signed ? publicUser(state.session) : null,
+        authUrl: buildAuthUrl(state.oauth_nonce || (state.oauth_nonce = crypto.randomBytes(16).toString('hex'), saveState(state), state.oauth_nonce)),
+        loginUrl: \`http://127.0.0.1:\${PORT}/assistix/login\`,
+        quotas: state.quotas,
+        models: Object.values(MODELS).map((m) => ({
+          id: m.id,
+          name: m.name,
+          limit: m.limit,
+          used: state.quotas[m.id]?.used || 0,
+        })),
+      })
+    }`
+  );
+
+  // Remove POST fake login — replace with start oauth helper
+  s = s.replace(
+    /if \(url\.pathname === '\/assistix\/login' && req\.method === 'POST'\) \{[\s\S]*?return sendJson\(res, 200, \{ ok: true, user: state\.session, quotas: state\.quotas \}\)\n    \}/,
+    `if (url.pathname === '/assistix/login' && req.method === 'POST') {
+      // Desktop no longer accepts local email invent — return OAuth URL only
+      const state = loadState()
+      if (!state.oauth_nonce) {
+        state.oauth_nonce = crypto.randomBytes(16).toString('hex')
+        saveState(state)
+      }
+      return sendJson(res, 200, { ok: true, authUrl: buildAuthUrl(state.oauth_nonce), loginUrl: \`http://127.0.0.1:\${PORT}/assistix/login\` })
+    }`
+  );
+
+  // Real callback with exchange
+  s = s.replace(
+    /if \(url\.pathname === '\/assistix\/callback'\) \{[\s\S]*?return res\.end\(\)\n    \}/,
+    `if (url.pathname === '/assistix/callback') {
+      const code = url.searchParams.get('code') || ''
+      const oauthErr = url.searchParams.get('oauth_error') || url.searchParams.get('error') || ''
+      if (oauthErr && !code) {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+        return res.end(\`<html><body style="font-family:Segoe UI;background:#05100f;color:#eaf5f3;display:grid;place-items:center;height:100vh;text-align:center;padding:24px"><div><h2>Не удалось войти</h2><p>\${String(oauthErr)}</p><p><a style="color:#2dd4bf" href="/assistix/login">Попробовать снова</a></p></div></body></html>\`)
+      }
+      if (!code) {
+        res.writeHead(302, { Location: '/assistix/login' })
+        return res.end()
+      }
+      try {
+        const data = await exchangeCode(code)
+        const state = loadState()
+        state.session = sessionFromIdUser(data.user, { token: data.access_token || data.token || null })
+        state.oauth_nonce = crypto.randomBytes(16).toString('hex')
+        // Fresh quotas for signed-in account pool if empty
+        if (!state.quotas) {
+          state.quotas = {
+            tide: { used: 0, limit: MODELS.tide.limit },
+            flare: { used: 0, limit: MODELS.flare.limit },
+            pine: { used: 0, limit: MODELS.pine.limit },
+          }
+        }
+        saveState(state)
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' })
+        return res.end(\`<html><body style="font-family:Segoe UI;background:#05100f;color:#eaf5f3;display:grid;place-items:center;height:100vh;text-align:center;padding:24px">
+<div>
+  <div style="width:64px;height:64px;border-radius:50%;overflow:hidden;margin:0 auto 14px;background:linear-gradient(135deg,#2dd4bf,#0d9488);display:grid;place-items:center;font-weight:800">\${state.session.avatar_url ? \`<img src="\${state.session.avatar_url}" style="width:100%;height:100%;object-fit:cover"/>\` : (state.session.name||'A').slice(0,2).toUpperCase()}</div>
+  <h2 style="margin:0 0 8px">Добро пожаловать, \${state.session.display_name}</h2>
+  <p style="color:#8fbab4">\${state.session.email}</p>
+  <p>Можно вернуться в Beam Agent — окно можно закрыть.</p>
+  <script>try{localStorage.setItem('beam-auth-ok', String(Date.now()))}catch(e){}; setTimeout(()=>{ window.close?.() }, 800)</script>
+</div></body></html>\`)
+      } catch (e) {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+        return res.end(\`<html><body style="font-family:Segoe UI;background:#05100f;color:#eaf5f3;display:grid;place-items:center;height:100vh;text-align:center;padding:24px"><div><h2>Ошибка входа</h2><p>\${String(e.message || e)}</p><p><a style="color:#2dd4bf" href="/assistix/login">Попробовать снова</a></p></div></body></html>\`)
+      }
+    }`
+  );
+
+  // Gate messages
+  if (!s.includes("if (!requireAuth(res, state)) return") || !s.includes("handleMessages")) {
+    // inside handleMessages after loadState
+    s = s.replace(
+      `async function handleMessages(req, res) {
+  const raw = await readBody(req)
+  let body
+  try { body = JSON.parse(raw.toString('utf8') || '{}') } catch {
+    return sendJson(res, 400, { type: 'error', error: { type: 'invalid_request_error', message: 'Invalid JSON' } })
+  }
+
+  const state = loadState()
+  const tier = resolveTier(body.model)`,
+      `async function handleMessages(req, res) {
+  const raw = await readBody(req)
+  let body
+  try { body = JSON.parse(raw.toString('utf8') || '{}') } catch {
+    return sendJson(res, 400, { type: 'error', error: { type: 'invalid_request_error', message: 'Invalid JSON' } })
+  }
+
+  const state = loadState()
+  if (!requireAuth(res, state)) return
+  const tier = resolveTier(body.model)`
+    );
+  }
+
+  // Gate openai passthrough too
+  s = s.replace(
+    `if (url.pathname === '/v1/chat/completions' && req.method === 'POST') {
+      const raw = await readBody(req)
+      const body = JSON.parse(raw.toString('utf8') || '{}')
+      const tier = resolveTier(body.model)`,
+    `if (url.pathname === '/v1/chat/completions' && req.method === 'POST') {
+      const st = loadState()
+      if (!requireAuth(res, st)) return
+      const raw = await readBody(req)
+      const body = JSON.parse(raw.toString('utf8') || '{}')
+      const tier = resolveTier(body.model)`
+  );
+
+  // On boot: wipe fake/local sessions without real id
+  s = s.replace(
+    `ensureData()
+const state = loadState()
+if (!state.session) {
+  // Auto-provision a local Assistix session so first launch is ready after UI login,
+  // but do not invent a user until login — quotas still exist.
+  saveState(state)
+}`,
+    `ensureData()
+{
+  const state = loadState()
+  // Drop invented local guests — Beam requires real ASSISTIX ID
+  if (state.session && (!state.session.id_user_id && !state.session.avatar_url && (state.session.provider === 'assistix-id' || state.session.provider === 'assistix-id-oauth' || state.session.provider === 'local-guest') && (state.session.email === 'user@assistix.org' || !state.session.email))) {
+    state.session = null
+  }
+  if (state.session && state.session.provider === 'assistix-id-oauth' && !state.session.id_user_id && state.session.email === 'user@assistix.org') {
+    state.session = null
+  }
+  // Also clear sessions that were created by the old fake login form
+  if (state.session && !state.session.id_user_id && state.session.provider === 'assistix-id' && !state.session.avatar_url) {
+    // keep only if exchange-shaped; fake logins had random uuid id and no id_user_id
+    if (state.session.id && !state.session.id_user_id) state.session = null
+  }
+  if (!state.oauth_nonce) state.oauth_nonce = crypto.randomBytes(16).toString('hex')
+  saveState(state)
+}`
+  );
+
+  fs.writeFileSync(file, s);
+  console.log("patched bridge", file);
+}
+
+for (const f of [BRIDGE_SRC, BRIDGE_DIST]) {
+  if (fs.existsSync(f)) patchBridge(f);
+}
+
+// Clear current fake session on disk
+if (fs.existsSync(STATE)) {
+  try {
+    const st = JSON.parse(fs.readFileSync(STATE, "utf8"));
+    if (st.session && !st.session.id_user_id) {
+      st.session = null;
+      fs.writeFileSync(STATE, JSON.stringify(st, null, 2));
+      console.log("cleared fake local session");
+    }
+  } catch {}
+}
+
+// --- UI gate in injector ---
+console.log("patching UI auth gate");
+{
+  const htmlPath = path.join(WEB, "index.html");
+  let html = fs.readFileSync(htmlPath, "utf8");
+
+  // Add gate CSS into override
+  const cssPath = path.join(ASSETS, "beam-override.css");
+  let css = fs.readFileSync(cssPath, "utf8");
+  css = css.replace(/\/\* ===== BEAM auth gate ===== \*\/[\s\S]*$/g, "");
+  css += `
+/* ===== BEAM auth gate ===== */
+#beam-auth-gate {
+  position: fixed; inset: 0; z-index: 2147483646;
+  display: grid; place-items: center;
+  background:
+    radial-gradient(900px 500px at 10% -10%, rgba(0,179,188,.22), transparent 55%),
+    radial-gradient(700px 400px at 100% 0%, rgba(45,212,191,.10), transparent 50%),
+    rgba(4,18,16,.92);
+  backdrop-filter: blur(10px);
+  color: #e8f7f5;
+  font-family: "Savona", "Segoe UI", system-ui, sans-serif;
+  padding: 24px;
+}
+#beam-auth-gate[hidden] { display: none !important; }
+#beam-auth-gate .bag-card {
+  width: min(420px, 100%);
+  background: rgba(10,25,23,.96);
+  border: 1px solid rgba(0,179,188,.35);
+  border-radius: 20px;
+  padding: 28px 24px;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0,0,0,.45);
+}
+#beam-auth-gate h1 { margin: 0 0 8px; font-size: 22px; }
+#beam-auth-gate p { margin: 0 0 18px; color: #9ec9c3; font-size: 14px; line-height: 1.45; }
+#beam-auth-gate button {
+  width: 100%; border: 0; border-radius: 12px; padding: 13px 16px;
+  font-weight: 800; font-size: 14px; cursor: pointer;
+  background: linear-gradient(135deg, #2dd4bf, #00B3BC 55%, #0f766e); color: #042f2e;
+  font-family: inherit;
+}
+#beam-auth-gate .bag-note { margin-top: 12px; font-size: 12px; color: #7aaba4; }
+
+#beam-side-limits .bsl-avatar {
+  width: 28px; height: 28px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+  background: linear-gradient(135deg, #2dd4bf, #0d9488);
+  display: grid; place-items: center; font-size: 11px; font-weight: 800; color: #042f2e;
+}
+#beam-side-limits .bsl-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+#beam-side-limits .bsl-userrow { display: flex; align-items: center; gap: 8px; min-width: 0; }
+#beam-side-limits .bsl-usercol { min-width: 0; text-align: left; }
+#beam-side-limits .bsl-name { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#beam-side-limits .bsl-email { font-size: 10px; color: var(--beam-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+`;
+  fs.writeFileSync(cssPath, css);
+
+  // Inject auth gate helpers into existing script — replace renderSide user header + add gate
+  if (!html.includes("beam-auth-gate") && html.includes("const renderSide = ")) {
+    html = html.replace(
+      "const renderSide = (data) => {",
+      `const ensureAuthGate = (data) => {
+    let gate = document.getElementById("beam-auth-gate");
+    const signed = !!data?.signedIn && !!data?.user;
+    if (signed) {
+      if (gate) gate.hidden = true;
+      document.documentElement.style.overflow = "";
+      return true;
+    }
+    if (!gate) {
+      gate = document.createElement("div");
+      gate.id = "beam-auth-gate";
+      gate.innerHTML = '<div class="bag-card"><h1>ASSISTIX ID</h1><p>Войдите в аккаунт, чтобы пользоваться Beam Agent. Без входа доступ закрыт.</p><button type="button" data-act="login">Войти через ASSISTIX ID</button><div class="bag-note">Откроется id.assistix.org — после входа вернитесь в приложение.</div></div>';
+      document.documentElement.appendChild(gate);
+      gate.querySelector('[data-act="login"]')?.addEventListener("click", () => {
+        const url = data?.authUrl || data?.loginUrl || (BRIDGE + "/assistix/login");
+        window.open(url, "_blank", "noopener,noreferrer");
+      });
+    }
+    gate.hidden = false;
+    document.documentElement.style.overflow = "hidden";
+    gate.querySelector('[data-act="login"]')?.onclick && (gate.querySelector('[data-act="login"]').onclick = () => {
+      const url = lastData?.authUrl || lastData?.loginUrl || (BRIDGE + "/assistix/login");
+      window.open(url, "_blank", "noopener,noreferrer");
+    });
+    return false;
+  };
+
+  const renderSide = (data) => {`
+    );
+
+    // Call ensureAuthGate at start of refresh/render
+    html = html.replace(
+      "renderSide(lastData);\n      enhanceLimitsPage(lastData);",
+      "ensureAuthGate(lastData);\n      renderSide(lastData);\n      enhanceLimitsPage(lastData);"
+    );
+    html = html.replace(
+      "renderSide(lastData || { quotas: {} });\n      enhanceLimitsPage(lastData || { quotas: {} });",
+      "ensureAuthGate(lastData || { signedIn: false });\n      renderSide(lastData || { quotas: {} });\n      enhanceLimitsPage(lastData || { quotas: {} });"
+    );
+  }
+
+  // Upgrade sidebar profile to show avatar
+  if (html.includes("bsl-user") && !html.includes("bsl-avatar")) {
+    html = html.replace(
+      /const html = '<div class="bsl-head"><span class="bsl-title">'\+tr\.limits\+'<\/span><span class="bsl-user">'\+\(signed \? \(user\.name \|\| user\.email \|\| "ASSISTIX"\) : tr\.guest\)\+'<\/span><\/div>/,
+      `const av = signed && user.avatar_url
+      ? '<div class="bsl-avatar"><img src="'+String(user.avatar_url).replace(/"/g,'&quot;')+'" alt=""></div>'
+      : '<div class="bsl-avatar">'+(signed ? String(user.name||user.email||'A').trim().slice(0,2).toUpperCase() : 'AX')+'</div>';
+    const who = signed
+      ? '<div class="bsl-userrow">'+av+'<div class="bsl-usercol"><div class="bsl-name">'+(user.display_name||user.name||'ASSISTIX')+'</div><div class="bsl-email">'+(user.email||'')+'</div></div></div>'
+      : '<span class="bsl-user">'+tr.guest+'</span>';
+    const html = '<div class="bsl-head"><span class="bsl-title">'+tr.limits+'</span></div><div style="margin-bottom:10px">'+who+'</div>`
+    );
+  }
+
+  // Faster poll while gated
+  if (!html.includes("authPoll")) {
+    html = html.replace(
+      "setInterval(refresh, 15000);",
+      `setInterval(refresh, 15000);
+    let authPoll = setInterval(() => {
+      if (lastData?.signedIn) { clearInterval(authPoll); return; }
+      refresh();
+    }, 2500);
+    window.addEventListener("storage", (e) => { if (e.key === "beam-auth-ok") refresh(); });
+    window.addEventListener("focus", () => refresh());`
+    );
+  }
+
+  fs.writeFileSync(htmlPath, html);
+}
+
+// syntax check bridges
+for (const f of [BRIDGE_SRC, BRIDGE_DIST]) {
+  const { spawnSync } = await import("node:child_process");
+  const r = spawnSync(process.execPath, ["--check", f], { encoding: "utf8" });
+  if (r.status !== 0) {
+    console.error(r.stderr);
+    process.exit(1);
+  }
+  console.log("syntax ok", path.basename(path.dirname(f)) + "/server.js");
+}
+
+console.log("✓ mandatory ASSISTIX ID auth ready");

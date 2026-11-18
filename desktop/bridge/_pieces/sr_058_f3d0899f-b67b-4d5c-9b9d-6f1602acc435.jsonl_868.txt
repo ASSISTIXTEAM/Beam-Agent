@@ -1,0 +1,173 @@
+PATH: C:\Users\Alexa\OneDrive\Documents\Beam Agent\desktop\bridge\server.js
+OLD_LEN: 2889
+NEW_LEN: 3752
+FILE: f3d0899f-b67b-4d5c-9b9d-6f1602acc435.jsonl L868
+---OLD---
+async function handleMessages(req, res) {
+  const raw = await readBody(req)
+  let body
+  try { body = JSON.parse(raw.toString('utf8') || '{}') } catch {
+    return sendJson(res, 400, { type: 'error', error: { type: 'invalid_request_error', message: 'Invalid JSON' } })
+  }
+
+  const state = loadState()
+  if (!requireAuth(res, state)) return
+  const tier = resolveTier(body.model)
+  const quota = state.quotas[tier.id] || { used: 0, limit: tier.limit }
+  if (quota.used >= quota.limit) {
+    return sendJson(res, 429, {
+      type: 'error',
+      error: { type: 'rate_limit_error', message: `${tier.name} token quota exhausted (${quota.used}/${quota.limit})` },
+    })
+  }
+
+  const openaiBody = {
+    model: tier.backend,
+    messages: anthropicToOpenAIMessages(body.messages, [__BRIDGE_PERSONA, typeof body.system === 'string' ? body.system : (Array.isArray(body.system) ? body.system.map(x => x?.text || '').join('\n') : '')].filter(Boolean).join('\n\n')),
+    max_tokens: body.max_tokens || 4096,
+    temperature: body.temperature,
+    tools: anthropicToolsToOpenAI(body.tools),
+  }
+  if (body.tool_choice) openaiBody.tool_choice = body.tool_choice
+
+  const wantStream = body.stream === true
+
+  if (!wantStream) {
+    const upstream = await callKumo(openaiBody, { stream: false })
+    const text = await upstream.text()
+    let data
+    try { data = JSON.parse(text) } catch {
+      return sendJson(res, 502, { type: 'error', error: { type: 'api_error', message: text.slice(0, 500) } })
+    }
+    if (!upstream.ok) {
+      return sendJson(res, upstream.status, {
+        type: 'error',
+        error: { type: 'api_error', message: data?.error?.message || text.slice(0, 500) },
+      })
+    }
+    const choice = data.choices?.[0] || {}
+    const msg = choice.message || {}
+    const content = []
+    if (msg.content) content.push({ type: 'text', text: scrubBrandLeak(msg.content) })
+    if (msg.tool_calls?.length) content.push(...openAIToolCallsToAnthropic(msg.tool_calls))
+    const stop = msg.tool_calls?.length ? 'tool_use' : (choice.finish_reason === 'length' ? 'max_tokens' : 'end_turn')
+    chargeTokens(state, tier.id, data.usage)
+    return sendJson(res, 200, {
+      id: data.id || `msg_${crypto.randomBytes(8).toString('hex')}`,
+      type: 'message',
+      role: 'assistant',
+      model: tier.id,
+      content: content.length ? content : [{ type: 'text', text: '' }],
+      stop_reason: stop,
+      stop_sequence: null,
+      usage: {
+        input_tokens: data.usage?.prompt_tokens || 0,
+        output_tokens: data.usage?.completion_tokens || 0,
+      },
+    })
+  }
+
+  // Streaming Anthropic-compatible SSE
+  const upstream = await callKumo(openaiBody, { stream: true })
+  if (!upstream.ok) {
+    const text = await upstream.text()
+    return sendJson(res, upstream.status, {
+      type: 'error',
+      error: { type: 'api_error', message: text.slice(0, 500) },
+    })
+  }
+---NEW---
+async function handleMessages(req, res) {
+  try {
+  const raw = await readBody(req)
+  let body
+  try { body = JSON.parse(raw.toString('utf8') || '{}') } catch {
+    return sendJson(res, 400, { type: 'error', error: { type: 'invalid_request_error', message: 'Некорректный JSON запроса' } })
+  }
+
+  const state = loadState()
+  if (!requireAuth(res, state)) return
+  const tier = resolveTier(body.model)
+  const quota = state.quotas[tier.id] || { used: 0, limit: tier.limit }
+  if (quota.used >= quota.limit) {
+    return sendJson(res, 429, {
+      type: 'error',
+      error: { type: 'rate_limit_error', message: `Лимит ${tier.name} исчерпан (${quota.used}/${quota.limit}). Обновится со следующей неделей.` },
+    })
+  }
+
+  const openaiBody = {
+    model: tier.backend,
+    messages: anthropicToOpenAIMessages(body.messages, [__BRIDGE_PERSONA, typeof body.system === 'string' ? body.system : (Array.isArray(body.system) ? body.system.map(x => x?.text || '').join('\n') : '')].filter(Boolean).join('\n\n')),
+    max_tokens: body.max_tokens || 4096,
+    temperature: body.temperature,
+    tools: anthropicToolsToOpenAI(body.tools),
+  }
+  if (body.tool_choice) openaiBody.tool_choice = body.tool_choice
+
+  const wantStream = body.stream === true
+
+  if (!wantStream) {
+    let upstream
+    try {
+      upstream = await callKumo(openaiBody, { stream: false })
+    } catch (e) {
+      return sendJson(res, 502, {
+        type: 'error',
+        error: { type: 'api_error', message: e.message || 'Нет связи с модельным API' },
+      })
+    }
+    const text = await upstream.text()
+    let data
+    try { data = JSON.parse(text) } catch {
+      bridgeLog(`kumo_bad_json status=${upstream.status} body=${text.slice(0, 200)}`)
+      return sendJson(res, 502, { type: 'error', error: { type: 'api_error', message: 'Модели вернули некорректный ответ. Попробуйте ещё раз.' } })
+    }
+    if (!upstream.ok) {
+      return sendJson(res, upstream.status >= 400 ? upstream.status : 502, {
+        type: 'error',
+        error: { type: 'api_error', message: data?.error?.message || 'Ошибка модельного API. Попробуйте ещё раз.' },
+      })
+    }
+    const choice = data.choices?.[0] || {}
+    const msg = choice.message || {}
+    const content = []
+    if (msg.content) content.push({ type: 'text', text: scrubBrandLeak(msg.content) })
+    if (msg.tool_calls?.length) content.push(...openAIToolCallsToAnthropic(msg.tool_calls))
+    const stop = msg.tool_calls?.length ? 'tool_use' : (choice.finish_reason === 'length' ? 'max_tokens' : 'end_turn')
+    // Avoid EMPTY_RESPONSE → SERVER in desktop: never return zero content blocks
+    if (!content.length) content.push({ type: 'text', text: '…' })
+    chargeTokens(state, tier.id, data.usage)
+    return sendJson(res, 200, {
+      id: data.id || `msg_${crypto.randomBytes(8).toString('hex')}`,
+      type: 'message',
+      role: 'assistant',
+      model: tier.id,
+      content,
+      stop_reason: stop,
+      stop_sequence: null,
+      usage: {
+        input_tokens: data.usage?.prompt_tokens || 0,
+        output_tokens: data.usage?.completion_tokens || 0,
+      },
+    })
+  }
+
+  // Streaming Anthropic-compatible SSE
+  let upstream
+  try {
+    upstream = await callKumo(openaiBody, { stream: true })
+  } catch (e) {
+    return sendJson(res, 502, {
+      type: 'error',
+      error: { type: 'api_error', message: e.message || 'Нет связи с модельным API' },
+    })
+  }
+  if (!upstream.ok) {
+    const text = await upstream.text()
+    bridgeLog(`kumo_stream_http status=${upstream.status} body=${text.slice(0, 200)}`)
+    return sendJson(res, upstream.status >= 400 ? upstream.status : 502, {
+      type: 'error',
+      error: { type: 'api_error', message: 'Ошибка модельного API при потоке. Попробуйте ещё раз.' },
+    })
+  }

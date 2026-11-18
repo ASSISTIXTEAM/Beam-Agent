@@ -1,0 +1,95 @@
+PATH: c:\Users\Alexa\OneDrive\Documents\Beam Agent\desktop\bridge\server.js
+OLD_LEN: 620
+NEW_LEN: 1960
+FILE: 4f991df2-4b44-4740-99c3-069050625abd.jsonl L8
+---OLD---
+function ensureData() {
+  fs.mkdirSync(DATA_DIR, { recursive: true })
+  if (!fs.existsSync(STATE_FILE)) {
+    const initial = {
+      session: null,
+      quotas: {
+        tide: { used: 0, limit: MODELS.tide.limit },
+        flare: { used: 0, limit: MODELS.flare.limit },
+        pine: { used: 0, limit: MODELS.pine.limit },
+      },
+    }
+    fs.writeFileSync(STATE_FILE, JSON.stringify(initial, null, 2))
+  }
+}
+
+function loadState() {
+  ensureData()
+  return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'))
+}
+
+function saveState(state) {
+  ensureData()
+  fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2))
+}
+---NEW---
+/** Monday-based UTC week id (YYYY-MM-DD of that Monday). */
+function quotaWeekId(d = new Date()) {
+  const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
+  const day = t.getUTCDay() || 7
+  if (day !== 1) t.setUTCDate(t.getUTCDate() - (day - 1))
+  return t.toISOString().slice(0, 10)
+}
+
+/** Keep stored weekly token quotas aligned with MODELS caps; reset used each week. */
+function normalizeQuotas(state) {
+  let changed = false
+  const week = quotaWeekId()
+  if (!state.quotas || typeof state.quotas !== 'object') {
+    state.quotas = {}
+    changed = true
+  }
+  if (state.quotaWeek == null) {
+    state.quotaWeek = week
+    changed = true
+  } else if (state.quotaWeek !== week) {
+    state.quotaWeek = week
+    for (const id of Object.keys(MODELS)) {
+      state.quotas[id] = { used: 0, limit: MODELS[id].limit }
+    }
+    return true
+  }
+  for (const id of Object.keys(MODELS)) {
+    const want = MODELS[id].limit
+    const prev = state.quotas[id]
+    const used = Math.max(0, Number(prev?.used) || 0)
+    if (!prev || typeof prev !== 'object' || Number(prev.limit) !== want || Number(prev.used) !== used) {
+      state.quotas[id] = { used, limit: want }
+      changed = true
+    }
+  }
+  return changed
+}
+
+function ensureData() {
+  fs.mkdirSync(DATA_DIR, { recursive: true })
+  if (!fs.existsSync(STATE_FILE)) {
+    const initial = {
+      session: null,
+      quotaWeek: quotaWeekId(),
+      quotas: {
+        tide: { used: 0, limit: MODELS.tide.limit },
+        flare: { used: 0, limit: MODELS.flare.limit },
+        pine: { used: 0, limit: MODELS.pine.limit },
+      },
+    }
+    fs.writeFileSync(STATE_FILE, JSON.stringify(initial, null, 2))
+  }
+}
+
+function loadState() {
+  ensureData()
+  const state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'))
+  if (normalizeQuotas(state)) saveState(state)
+  return state
+}
+
+function saveState(state) {
+  ensureData()
+  fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2))
+}

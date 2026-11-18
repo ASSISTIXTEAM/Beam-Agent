@@ -1,0 +1,90 @@
+PATH: c:\Users\Alexa\OneDrive\Documents\Beam Agent\desktop\bridge\server.js
+OLD_LEN: 2395
+NEW_LEN: 1893
+FILE: 5557b7f7-c113-4b20-8abe-905542fdac2d.jsonl L11
+---OLD---
+function serveCallbackBounce(res, ok, detail = '') {
+  const target = ok ? 'beam-agent://auth/callback' : 'beam-agent://auth/error'
+  const safe = String(detail || '').replace(/[<>&"']/g, '')
+  const title = ok ? 'Вход выполнен' : 'Ошибка входа'
+  const lead = ok
+    ? 'Аккаунт ASSISTIX ID получен. Возвращаем в Beam Agent…'
+    : ('Не удалось войти' + (safe ? (': ' + safe) : ''))
+  const html = `<!doctype html><html lang="ru"><head>
+<meta charset="utf-8"/>
+<meta http-equiv="refresh" content="0;url=${target}"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Beam Agent — ${title}</title>
+<script>
+(function(){
+  var targets = [${JSON.stringify(target)}, 'beam-agent://open', 'dsh://open'];
+  function go(i){
+    try { location.href = targets[i] || targets[0]; } catch (e) {}
+  }
+  go(0);
+  setTimeout(function(){ go(0); }, 80);
+  setTimeout(function(){ go(1); }, 200);
+  setTimeout(function(){ go(2); }, 360);
+  setTimeout(function(){ try { window.close(); } catch (e) {} }, 1200);
+})();
+</script>
+<style>
+  html,body{margin:0;height:100%;background:
+    radial-gradient(900px 480px at 20% -10%, rgba(0,179,188,.28), transparent 55%),
+    #041210;color:#e8f7f5;font-family:Segoe UI,system-ui,sans-serif;display:grid;place-items:center}
+  .card{width:min(420px,92vw);padding:28px 24px;border-radius:28px;text-align:center;
+    background:rgba(10,25,23,.96);border:1px solid rgba(0,179,188,.35);
+    box-shadow:0 24px 60px rgba(0,0,0,.45)}
+  h1{margin:0 0 10px;font-size:22px}
+  p{margin:0;color:#9ec9c3;font-size:14px;line-height:1.45}
+  .ok{display:inline-block;margin:0 0 14px;width:56px;height:56px;border-radius:50%;
+    background:linear-gradient(135deg,#2dd4bf,#0d9488);color:#042f2e;font:800 28px/56px Segoe UI; }
+</style>
+</head><body><div class="card">
+  <div class="ok" aria-hidden="true">${ok ? '✓' : '!'}</div>
+  <h1>${title}</h1>
+  <p>${lead}</p>
+  <p style="margin-top:12px;font-size:12px;color:#7aaba4">Если окно не поднялось само — нажмите кнопку:</p>
+  <p style="margin-top:16px"><a href="${target}" style="display:inline-block;padding:12px 18px;border-radius:18px;background:linear-gradient(135deg,#2dd4bf,#00B3BC 55%,#0f766e);color:#042f2e;font-weight:800;text-decoration:none">Открыть Beam Agent</a></p>
+</div></body></html>`
+  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' })
+  res.end(html)
+}
+---NEW---
+/** OAuth finish page — NO custom-protocol handoff (avoids Chrome «open app from 127.0.0.1»).
+ *  Electron already polls /assistix/status for pendingUser and shows in-app confirm. */
+function serveCallbackBounce(res, ok, detail = '') {
+  const safe = String(detail || '').replace(/[<>&"']/g, '')
+  const title = ok ? 'Готово' : 'Ошибка входа'
+  const lead = ok
+    ? 'Вход через ASSISTIX ID выполнен. Вернитесь в Beam Agent — подтверждение аккаунта уже там.'
+    : ('Не удалось войти' + (safe ? (': ' + safe) : ''))
+  const hint = ok
+    ? 'Это окно можно закрыть.'
+    : 'Закройте это окно и попробуйте снова из Beam Agent.'
+  const html = `<!doctype html><html lang="ru"><head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Beam Agent — ${title}</title>
+<style>
+  html,body{margin:0;height:100%;background:
+    radial-gradient(900px 480px at 20% -10%, rgba(0,179,188,.28), transparent 55%),
+    #041210;color:#e8f7f5;font-family:Segoe UI,system-ui,sans-serif;display:grid;place-items:center}
+  .card{width:min(420px,92vw);padding:28px 24px;border-radius:28px;text-align:center;
+    background:rgba(10,25,23,.96);border:1px solid rgba(0,179,188,.35);
+    box-shadow:0 24px 60px rgba(0,0,0,.45)}
+  h1{margin:0 0 10px;font-size:22px}
+  p{margin:0;color:#9ec9c3;font-size:14px;line-height:1.45}
+  .ok{display:inline-block;margin:0 0 14px;width:56px;height:56px;border-radius:50%;
+    background:linear-gradient(135deg,#2dd4bf,#0d9488);color:#042f2e;font:800 28px/56px Segoe UI; }
+  .hint{margin-top:14px;font-size:13px;color:#7aaba4}
+</style>
+</head><body><div class="card">
+  <div class="ok" aria-hidden="true">${ok ? '✓' : '!'}</div>
+  <h1>${title}</h1>
+  <p>${lead}</p>
+  <p class="hint">${hint}</p>
+</div></body></html>`
+  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' })
+  res.end(html)
+}

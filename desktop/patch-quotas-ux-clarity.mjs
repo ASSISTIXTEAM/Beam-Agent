@@ -1,0 +1,569 @@
+/**
+ * Beam Agent: clearer weekly quotas UX.
+ * - Sidebar rings: Tide/Flare/Pine + used/limit under each ring
+ * - Settings → Limits: plain RU/EN copy (used/limit, Monday UTC + local, exhaustion)
+ * - 402 exhaustion notice: same language + optional switch suggestion (no auto-switch)
+ * Applies runtime + dist. No BEAM_BASE_URL / .env writes.
+ */
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(__dirname, "..");
+const MARK = "/* beam-quotas-ux-clarity */";
+const report = [];
+
+function patchFile(file, fn) {
+  if (!fs.existsSync(file)) return false;
+  const before = fs.readFileSync(file, "utf8");
+  const after = fn(before);
+  if (after == null || after === before) return false;
+  fs.writeFileSync(file, after);
+  report.push(path.relative(ROOT, file).replace(/\\/g, "/"));
+  return true;
+}
+
+function appRoots() {
+  return [
+    path.join(ROOT, "runtime", "app"),
+    path.join(ROOT, "dist", "Beam Agent", "resources", "app"),
+  ].filter((p) => fs.existsSync(p));
+}
+
+function webHtmlFiles() {
+  const out = [];
+  for (const app of appRoots()) {
+    for (const ns of ["@assistix/beam-web-frontend", "@deepseek-ai/dsh-web-frontend"]) {
+      for (const base of ["beam", "dsh"]) {
+        const f = path.join(app, base, "node_modules", ns, "dist", "index.html");
+        if (fs.existsSync(f)) out.push(f);
+      }
+    }
+  }
+  return [...new Set(out)];
+}
+
+function webCssFiles() {
+  const out = [];
+  for (const app of appRoots()) {
+    for (const ns of ["@assistix/beam-web-frontend", "@deepseek-ai/dsh-web-frontend"]) {
+      for (const base of ["beam", "dsh"]) {
+        const f = path.join(app, base, "node_modules", ns, "dist", "assets", "beam-override.css");
+        if (fs.existsSync(f)) out.push(f);
+      }
+    }
+  }
+  return [...new Set(out)];
+}
+
+function generalClientFiles() {
+  const out = [];
+  for (const app of appRoots()) {
+    for (const ns of [
+      "@assistix/beam-client-ui-settings-general",
+      "@deepseek-ai/dsh-client-ui-settings-general",
+    ]) {
+      for (const base of ["beam", "dsh"]) {
+        const f = path.join(app, base, "node_modules", ns, "lib", "client.js");
+        if (fs.existsSync(f)) out.push(f);
+      }
+    }
+  }
+  return [...new Set(out)];
+}
+
+function chatClientFiles() {
+  const out = [];
+  for (const app of appRoots()) {
+    for (const ns of ["@assistix/beam-client-ui-chat", "@deepseek-ai/dsh-client-ui-chat"]) {
+      for (const base of ["beam", "dsh"]) {
+        const f = path.join(app, base, "node_modules", ns, "lib", "client.js");
+        if (fs.existsSync(f)) out.push(f);
+      }
+    }
+  }
+  return [...new Set(out)];
+}
+
+const NEW_LIMITS_SECTION = `
+		/* beam-settings-limits-section */
+		${MARK}
+		function BeamLimitsSettingsSection() {
+			const [, bump] = react.useState(0);
+			react.useEffect(() => {
+				const onRefresh = () => bump((n) => n + 1);
+				window.addEventListener("beam:refresh-limits", onRefresh);
+				window.addEventListener("beam:limits-updated", onRefresh);
+				return () => {
+					window.removeEventListener("beam:refresh-limits", onRefresh);
+					window.removeEventListener("beam:limits-updated", onRefresh);
+				};
+			}, []);
+			const snap = (typeof window !== "undefined" && window.__beamLimitsSnapshot) || { models: [] };
+			const ru = ((document.documentElement.lang || "").toLowerCase().startsWith("ru")) || ((document.documentElement.dataset.beamLang || "") === "ru");
+			const nextMondayUtc = (() => {
+				const d = new Date();
+				const day = d.getUTCDay() || 7;
+				const add = day === 1 ? 7 : 8 - day;
+				return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + add));
+			})();
+			const fmtWhen = (d, tz) => {
+				try {
+					return new Intl.DateTimeFormat(ru ? "ru-RU" : "en-GB", {
+						weekday: "long",
+						day: "numeric",
+						month: "long",
+						hour: "2-digit",
+						minute: "2-digit",
+						timeZone: tz
+					}).format(d);
+				} catch {
+					return d.toISOString().slice(0, 16).replace("T", " ") + (tz === "UTC" ? " UTC" : "");
+				}
+			};
+			const whenUtc = fmtWhen(nextMondayUtc, "UTC");
+			const whenLocal = fmtWhen(nextMondayUtc, Intl.DateTimeFormat().resolvedOptions().timeZone || undefined);
+			const intro = ru
+				? "Недельные лимиты Tide, Flare и Pine. У каждой модели свой счётчик: использовано / лимит."
+				: "Weekly limits for Tide, Flare, and Pine. Each model has its own used / limit counter.";
+			const resetNote = ru
+				? ("Обновление: каждый понедельник 00:00 UTC (" + whenUtc + "). У вас это: " + whenLocal + ".")
+				: ("Resets every Monday 00:00 UTC (" + whenUtc + "). Your local time: " + whenLocal + ".");
+			const exhaustNote = ru
+				? "Если лимит исчерпан — эта модель останавливается до обновления. Можно вручную переключиться на другую модель с остатком (авто-смена не делается)."
+				: "When exhausted, that model stops until reset. You can switch to another model with remaining quota (no silent auto-switch).";
+			const refreshLabel = ru ? "Обновить" : "Refresh";
+			const usedLabel = ru ? "Использовано" : "Used";
+			const statusOk = ru ? "доступна" : "available";
+			const statusOut = ru ? "исчерпана" : "exhausted";
+			const models = Array.isArray(snap.models) && snap.models.length ? snap.models : [
+				{ id: "tide", name: "Tide", tag: ru ? "Быстрая" : "Fast", desc: ru ? "Повседневное мышление — быстрые задачи и код." : "Everyday thinking — quick tasks and coding.", used: 0, limit: 1e6, color: "#f97316" },
+				{ id: "flare", name: "Flare", tag: ru ? "Стиль" : "Style", desc: ru ? "Стиль и креатив — тексты, полировка, идеи." : "Style & creative — writing, polish, ideation.", used: 0, limit: 1e5, color: "#a78bfa" },
+				{ id: "pine", name: "Pine", tag: ru ? "Точная" : "Precise", desc: ru ? "Точность — сложные задачи и длинный контекст." : "Precision — harder problems, longer context.", used: 0, limit: 1e4, color: "#34d399" }
+			];
+			const fmt = (n) => {
+				const v = Number(n) || 0;
+				if (v >= 1e6) return (v / 1e6).toFixed(1).replace(/\\.0$/, "") + "M";
+				if (v >= 1e3) return (v / 1e3).toFixed(1).replace(/\\.0$/, "") + "K";
+				return String(Math.round(v));
+			};
+			return (0, react_jsx_runtime.jsxs)("div", {
+				className: "beam-settings-limits",
+				"data-beam-settings-limits": "1",
+				children: [
+					(0, react_jsx_runtime.jsx)("p", { className: "beam-settings-limits-intro", children: intro }),
+					(0, react_jsx_runtime.jsx)("p", { className: "beam-settings-limits-note", children: resetNote }),
+					(0, react_jsx_runtime.jsx)("p", { className: "beam-settings-limits-note", children: exhaustNote }),
+					(0, react_jsx_runtime.jsx)("div", {
+						className: "beam-settings-limits-list",
+						children: models.map((m) => {
+							const used = Number(m.used) || 0;
+							const limit = Math.max(1, Number(m.limit) || 1);
+							const pct = Math.min(100, Math.round((used / limit) * 100));
+							const exhausted = used >= limit;
+							return (0, react_jsx_runtime.jsxs)("div", {
+								className: "beam-settings-limits-row" + (exhausted ? " is-exhausted" : ""),
+								children: [
+									(0, react_jsx_runtime.jsxs)("div", {
+										className: "beam-settings-limits-rowText",
+										children: [
+											(0, react_jsx_runtime.jsxs)("div", {
+												className: "beam-settings-limits-title",
+												children: [
+													(0, react_jsx_runtime.jsx)("span", { className: "beam-settings-limits-dot", style: { background: m.color } }),
+													m.name,
+													(0, react_jsx_runtime.jsx)("span", { className: "beam-settings-limits-tag", children: m.tag || "" }),
+													(0, react_jsx_runtime.jsx)("span", {
+														className: "beam-settings-limits-status" + (exhausted ? " is-out" : ""),
+														children: exhausted ? statusOut : statusOk
+													})
+												]
+											}),
+											(0, react_jsx_runtime.jsx)("div", { className: "beam-settings-limits-desc", children: m.desc || "" }),
+											(0, react_jsx_runtime.jsxs)("div", {
+												className: "beam-settings-limits-meta",
+												children: [
+													(0, react_jsx_runtime.jsx)("span", { children: usedLabel + ": " + fmt(used) + " / " + fmt(limit) }),
+													(0, react_jsx_runtime.jsx)("span", { children: pct + "%" })
+												]
+											}),
+											(0, react_jsx_runtime.jsx)("div", {
+												className: "beam-settings-limits-bar",
+												children: (0, react_jsx_runtime.jsx)("span", { style: { width: pct + "%", background: m.color } })
+											})
+										]
+									})
+								]
+							}, m.id || m.name);
+						})
+					}),
+					(0, react_jsx_runtime.jsx)("div", {
+						className: "beam-settings-limits-actions",
+						children: (0, react_jsx_runtime.jsx)("button", {
+							type: "button",
+							className: "beam-settings-limits-btn",
+							onClick: () => {
+								try { window.dispatchEvent(new CustomEvent("beam:refresh-limits")); } catch {}
+							},
+							children: refreshLabel
+						})
+					})
+				]
+			});
+		}
+`;
+
+/** ---- Bridge: richer 402 message + alternatives ---- */
+function patchBridge(file) {
+  patchFile(file, (s) => {
+    let out = s;
+    if (!out.includes("function sendQuotaExhausted")) return s;
+
+    if (!out.includes("function formatQuotaResetLocal")) {
+      out = out.replace(
+        "function formatQuotaResetRu(d = nextQuotaResetAt()) {\n  try {\n    return new Intl.DateTimeFormat('ru-RU', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }).format(d) + ' (UTC)'\n  } catch {\n    return d.toISOString().slice(0, 10) + ' UTC'\n  }\n}",
+        `function formatQuotaResetRu(d = nextQuotaResetAt()) {\n  try {\n    return new Intl.DateTimeFormat('ru-RU', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }).format(d) + ' (UTC)'\n  } catch {\n    return d.toISOString().slice(0, 10) + ' UTC'\n  }\n}\n\nfunction formatQuotaResetLocal(d = nextQuotaResetAt()) {\n  try {\n    return new Intl.DateTimeFormat('ru-RU', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }).format(d)\n  } catch {\n    return d.toISOString().slice(0, 16).replace('T', ' ')\n  }\n}\n\nfunction suggestQuotaAlternatives(state, exhaustedId) {\n  const alts = []\n  for (const m of Object.values(MODELS)) {\n    if (m.id === exhaustedId) continue\n    const u = Number(state?.quotas?.[m.id]?.used) || 0\n    if (u < m.limit) alts.push(m.name)\n  }\n  return alts\n}`,
+      );
+    }
+
+    if (!out.includes("Beam Agent: weekly quota exhausted response (clear UX)")) {
+      out = out.replace(
+        /\/\*\* Beam Agent: weekly quota exhausted response \(402 → client QUOTA; never auth\)\. \*\/\nfunction sendQuotaExhausted\(res, tier, used, limit\) \{[\s\S]*?\n\}\n/,
+        `/** Beam Agent: weekly quota exhausted response (clear UX) (402 → client QUOTA; never auth). */\nfunction sendQuotaExhausted(res, tier, used, limit, state) {\n  const resetAt = nextQuotaResetAt()\n  const whenUtc = formatQuotaResetRu(resetAt)\n  const whenLocal = formatQuotaResetLocal(resetAt)\n  const alts = suggestQuotaAlternatives(state || {}, tier.id)\n  const suggest = alts.length\n    ? \` Можно переключиться на \${alts.join(' или ')} — там ещё есть лимит.\`\n    : ' У всех моделей лимит на этой неделе исчерпан.'\n  return sendJson(res, 402, {\n    type: 'error',\n    error: {\n      type: 'insufficient_quota',\n      code: 'insufficient_quota',\n      message: \`Лимит \${tier.name} на этой неделе исчерпан (\${used}/\${limit}). Запросы этой модели остановлены до обновления. Обновится в понедельник \${whenUtc} (у вас: \${whenLocal}).\${suggest}\`,\n      model: tier.id,\n      model_name: tier.name,\n      used,\n      limit,\n      reset_at: resetAt.toISOString(),\n      alternatives: Object.values(MODELS)
+        .filter((m) => m.id !== tier.id && (Number(state?.quotas?.[m.id]?.used) || 0) < m.limit)
+        .map((m) => m.id),\n    },\n  })\n}\n`,
+      );
+    }
+
+    out = out.replace(
+      "if (used >= limit) {\n    return sendQuotaExhausted(res, tier, used, limit)\n  }",
+      "if (used >= limit) {\n    return sendQuotaExhausted(res, tier, used, limit, state)\n  }",
+    );
+
+    return out === s ? s : out;
+  });
+}
+
+/** ---- Injector i18n + rings used/limit ---- */
+function patchHtml(file) {
+  patchFile(file, (s) => {
+    let out = s;
+
+    // i18n keys
+    const enOld = `      limitsTitle: "Limits", limitsHint: "Weekly usage for Tide, Flare, and Pine.",
+      tideTag: "Fast", flareTag: "Style", pineTag: "Precise",
+      tideDesc: "Everyday thinking — quick tasks and coding.",
+      flareDesc: "Style & creative — writing, polish, ideation.",
+      pineDesc: "Precision — harder problems, longer context.",`;
+    const enNew = `      limitsTitle: "Limits", limitsHint: "Weekly limits for Tide, Flare, and Pine. Each ring shows % used; under the name — used / limit.",
+      usedOf: "Used", ofLimit: "of", resetMonday: "Resets Monday 00:00 UTC",
+      exhaustHint: "When exhausted, that model stops until Monday. Switch to another model with remaining quota.",
+      tideTag: "Fast", flareTag: "Style", pineTag: "Precise",
+      tideDesc: "Everyday thinking — quick tasks and coding.",
+      flareDesc: "Style & creative — writing, polish, ideation.",
+      pineDesc: "Precision — harder problems, longer context.",`;
+    const ruOld = `      limitsTitle: "Лимиты", limitsHint: "Недельные лимиты Tide, Flare и Pine.",
+      tideTag: "Быстрая", flareTag: "Стиль", pineTag: "Точная",
+      tideDesc: "Повседневное мышление — быстрые задачи и код.",
+      flareDesc: "Стиль и креатив — тексты, полировка, идеи.",
+      pineDesc: "Точность — сложные задачи и длинный контекст.",`;
+    const ruNew = `      limitsTitle: "Лимиты", limitsHint: "Недельные лимиты Tide, Flare и Pine. Кольцо — % использования; под именем — использовано / лимит.",
+      usedOf: "Использовано", ofLimit: "из", resetMonday: "Обновление: понедельник 00:00 UTC",
+      exhaustHint: "Если лимит исчерпан — модель останавливается до понедельника. Можно переключиться на другую с остатком.",
+      tideTag: "Быстрая", flareTag: "Стиль", pineTag: "Точная",
+      tideDesc: "Повседневное мышление — быстрые задачи и код.",
+      flareDesc: "Стиль и креатив — тексты, полировка, идеи.",
+      pineDesc: "Точность — сложные задачи и длинный контекст.",`;
+
+    if (out.includes(enOld)) out = out.replace(enOld, enNew);
+    else if (!out.includes('usedOf: "Used"')) {
+      out = out.replace(
+        /limitsHint: "Weekly usage for Tide, Flare, and Pine\."/,
+        'limitsHint: "Weekly limits for Tide, Flare, and Pine. Each ring shows % used; under the name — used / limit.",\n      usedOf: "Used", ofLimit: "of", resetMonday: "Resets Monday 00:00 UTC",\n      exhaustHint: "When exhausted, that model stops until Monday. Switch to another model with remaining quota."',
+      );
+    }
+    if (out.includes(ruOld)) out = out.replace(ruOld, ruNew);
+    else if (!out.includes('usedOf: "Использовано"')) {
+      out = out.replace(
+        /limitsHint: "Недельные лимиты Tide, Flare и Pine\."/,
+        'limitsHint: "Недельные лимиты Tide, Flare и Pine. Кольцо — % использования; под именем — использовано / лимит.",\n      usedOf: "Использовано", ofLimit: "из", resetMonday: "Обновление: понедельник 00:00 UTC",\n      exhaustHint: "Если лимит исчерпан — модель останавливается до понедельника. Можно переключиться на другую с остатком."',
+      );
+    }
+
+    // Rings: show used/limit under label
+    const ringOld = `    const rings = models.map((m) => {
+      const pct = Math.min(100, Math.round((m.used / Math.max(1, m.limit)) * 100));
+      const label = String(m.name || ({ tide: "Tide", flare: "Flare", pine: "Pine" }[m.id] || m.id)).replace(/</g,"");
+      const title = label + ": " + fmt(m.used) + " / " + fmt(m.limit);
+      return '<div class="bsl-ring" data-id="'+m.id+'" title="'+title.replace(/"/g,"&quot;")+'" style="--ring-color:'+m.color+'">'
+        + '<div class="bsl-chart">'+ringSvg(pct, m.color)+'<div class="bsl-pct">'+pct+'%</div></div>'
+        + '<span class="bsl-label" data-model="'+m.id+'">'+label+'</span>'
+        + '</div>';
+    }).join("");`;
+
+    const ringNew = `    const rings = models.map((m) => {
+      ${MARK}
+      const pct = Math.min(100, Math.round((m.used / Math.max(1, m.limit)) * 100));
+      const exhausted = (Number(m.used) || 0) >= Math.max(1, Number(m.limit) || 1);
+      const label = String(m.name || ({ tide: "Tide", flare: "Flare", pine: "Pine" }[m.id] || m.id)).replace(/</g,"");
+      const usedTxt = fmt(m.used) + " / " + fmt(m.limit);
+      const title = label + ": " + usedTxt + " · " + pct + "%" + (exhausted ? " · " + (isRu() ? "исчерпана" : "exhausted") : "");
+      return '<div class="bsl-ring'+(exhausted ? " is-exhausted" : "")+'" data-id="'+m.id+'" title="'+title.replace(/"/g,"&quot;")+'" style="--ring-color:'+m.color+'" aria-label="'+title.replace(/"/g,"&quot;")+'">'
+        + '<div class="bsl-chart">'+ringSvg(pct, m.color)+'<div class="bsl-pct">'+pct+'%</div></div>'
+        + '<span class="bsl-label" data-model="'+m.id+'">'+label+'</span>'
+        + '<span class="bsl-used">'+usedTxt+'</span>'
+        + '</div>';
+    }).join("");`;
+
+    if (out.includes(ringOld)) out = out.replace(ringOld, ringNew);
+    else if (!out.includes('class="bsl-used"') && out.includes("const rings = models.map")) {
+      // already partially customized — force replace via regex
+      out = out.replace(
+        /const rings = models\.map\(\(m\) => \{[\s\S]*?\}\)\.join\(""\);/,
+        ringNew.trim().replace(/^\s+/gm, (m) => m), // keep indentation soft
+      );
+      // Fix indentation if regex replaced loosely
+      if (!out.includes('class="bsl-used"')) {
+        out = out.replace(
+          /const rings = models\.map\(\(m\) => \{[\s\S]*?\}\)\.join\(""\);/,
+          ringNew,
+        );
+      }
+    }
+
+    // enhanceLimitsPage cards: clearer used label + status + notes
+    const enhanceOld = `    panel.innerHTML = modelsFrom(data).map((m) => {
+      const pct = Math.min(100, Math.round((m.used / Math.max(1, m.limit)) * 100));
+      const info = meta[m.id];
+      return '<div class="blp-card"><div class="blp-top"><div class="blp-name"><span class="blp-dot" style="background:'+m.color+'"></span>'+m.name+'</div><div class="blp-tag">'+info.tag+'</div></div><div class="blp-desc">'+info.desc+'</div><div class="blp-row"><span>'+tr.limits+'</span><span>'+fmt(m.used)+' / '+fmt(m.limit)+'</span></div><div class="blp-bar"><span style="width:'+pct+'%;background:linear-gradient(90deg,'+m.color+',#00B3BC)"></span></div></div>';
+    }).join("");`;
+
+    const enhanceNew = `    const resetLine = (tr.resetMonday || "") + (tr.exhaustHint ? ". " + tr.exhaustHint : "");
+    panel.innerHTML = '<p class="blp-intro">'+(tr.limitsHint || "")+'</p>'
+      + (resetLine ? '<p class="blp-note">'+resetLine+'</p>' : '')
+      + modelsFrom(data).map((m) => {
+      const pct = Math.min(100, Math.round((m.used / Math.max(1, m.limit)) * 100));
+      const exhausted = (Number(m.used) || 0) >= Math.max(1, Number(m.limit) || 1);
+      const info = meta[m.id];
+      const usedLbl = (tr.usedOf || (isRu() ? "Использовано" : "Used"));
+      const status = exhausted ? (isRu() ? "исчерпана" : "exhausted") : (isRu() ? "доступна" : "available");
+      return '<div class="blp-card'+(exhausted ? " is-exhausted" : "")+'"><div class="blp-top"><div class="blp-name"><span class="blp-dot" style="background:'+m.color+'"></span>'+m.name+'</div><div class="blp-tag">'+info.tag+' · '+status+'</div></div><div class="blp-desc">'+info.desc+'</div><div class="blp-row"><span>'+usedLbl+'</span><span>'+fmt(m.used)+' / '+fmt(m.limit)+' · '+pct+'%</span></div><div class="blp-bar"><span style="width:'+pct+'%;background:linear-gradient(90deg,'+m.color+',#00B3BC)"></span></div></div>';
+    }).join("");`;
+
+    if (out.includes(enhanceOld)) out = out.replace(enhanceOld, enhanceNew);
+
+    return out === s ? s : out;
+  });
+}
+
+/** ---- CSS for used line + settings notes ---- */
+const CSS_BLOCK = `
+/* ===== BEAM quotas UX clarity ===== */
+${MARK}
+#beam-side-limits .bsl-used {
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 10px !important;
+  font-weight: 550 !important;
+  line-height: 1.15 !important;
+  letter-spacing: 0.01em !important;
+  color: #8faba5 !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  font-family: "Savona", "Segoe UI", system-ui, sans-serif !important;
+  pointer-events: none !important;
+}
+body:not([data-ds-dark-theme]):not([data-theme="dark"]) #beam-side-limits .bsl-used {
+  color: rgba(10, 36, 34, 0.55) !important;
+}
+#beam-side-limits .bsl-ring.is-exhausted .bsl-label,
+#beam-side-limits .bsl-ring.is-exhausted .bsl-used {
+  color: #f0a8a0 !important;
+}
+#beam-side-limits .bsl-rings {
+  min-height: 88px !important;
+  padding-bottom: 12px !important;
+}
+.beam-settings-limits-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-tertiary, var(--beam-soft));
+}
+.beam-settings-limits-status {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: lowercase;
+  color: var(--dsw-alias-label-tertiary, var(--beam-soft));
+}
+.beam-settings-limits-status.is-out {
+  color: #e07a70;
+}
+.beam-settings-limits-row.is-exhausted {
+  background: rgba(224, 122, 112, 0.06);
+}
+#beam-limits-panel .blp-intro,
+#beam-limits-panel .blp-note {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--beam-muted, #8faba5);
+}
+#beam-limits-panel .blp-card.is-exhausted {
+  outline: 1px solid rgba(224, 122, 112, 0.35);
+}
+`;
+
+function patchCss(file) {
+  patchFile(file, (s) => {
+    if (s.includes("BEAM quotas UX clarity")) {
+      // refresh block
+      return s.replace(
+        /\/\* ===== BEAM quotas UX clarity ===== \*\/[\s\S]*?(?=\/\* =====|$)/,
+        CSS_BLOCK.trim() + "\n\n",
+      );
+    }
+    return s.trimEnd() + "\n\n" + CSS_BLOCK.trim() + "\n";
+  });
+}
+
+/** ---- Settings Limits section ---- */
+function patchGeneral(file) {
+  patchFile(file, (s) => {
+    if (!s.includes("function BeamLimitsSettingsSection")) return s;
+    // Replace existing BeamLimitsSettingsSection function body (between marker or function and next ctx.slots)
+    const re =
+      /(?:\/\* beam-settings-limits-section \*\/\s*)?(?:\/\* beam-quotas-ux-clarity \*\/\s*)?function BeamLimitsSettingsSection\(\) \{[\s\S]*?\n\t\t\}\n\n\t\tctx\.slots\.inject\("settings\.section"/;
+    if (!re.test(s)) {
+      console.warn("  BeamLimitsSettingsSection pattern miss", path.relative(ROOT, file));
+      return s;
+    }
+    return s.replace(
+      re,
+      NEW_LIMITS_SECTION.trim() +
+        `\n\n\t\tctx.slots.inject("settings.section"`,
+    );
+  });
+}
+
+/** ---- Chat quota notice fallback + locale polish (CRLF-safe) ---- */
+function patchChat(file) {
+  patchFile(file, (s) => {
+    let out = s;
+    const nl = out.includes("\r\n") ? "\r\n" : "\n";
+
+    if (!out.includes("Beam Agent: weekly quota notice + switch hint")) {
+      const re =
+        /\/\* Beam Agent: weekly quota notice text \*\/\r?\n\t\t\tconst weeklyMsg = \(\(\) => \{[\s\S]*?\n\t\t\t\}\)\;/;
+      const NEW = `/* Beam Agent: weekly quota notice + switch hint */
+			const weeklyMsg = (() => {
+				const raw = typeof notice.message === "string" && notice.message.trim() ? notice.message.trim() : "";
+				if (raw) return raw;
+				const d = new Date();
+				const day = d.getUTCDay() || 7;
+				const add = day === 1 ? 7 : 8 - day;
+				const n = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + add));
+				let when;
+				try {
+					when = new Intl.DateTimeFormat("ru-RU", {
+						weekday: "long",
+						day: "numeric",
+						month: "long",
+						timeZone: "UTC"
+					}).format(n) + " (UTC)";
+				} catch {
+					when = n.toISOString().slice(0, 10) + " UTC";
+				}
+				let base = t("message.failure.quotaWeekly", { when });
+				try {
+					const models = window.__beamLimitsSnapshot?.models || [];
+					const alts = models.filter((m) => (Number(m.used) || 0) < Math.max(1, Number(m.limit) || 1)).map((m) => m.name).filter(Boolean);
+					if (alts.length) base += " " + t("message.failure.quotaSwitch", { models: alts.join(" / ") });
+				} catch {}
+				return base;
+			})();`.replace(/\n/g, nl);
+      if (re.test(out)) out = out.replace(re, NEW);
+    }
+
+    const localeReplaces = [
+      [
+        '"message.failure.quota": "This model\'s weekly limit is exhausted."',
+        '"message.failure.quota": "This model\'s weekly limit is exhausted. Requests for it are stopped until Monday."',
+      ],
+      [
+        '"message.failure.quotaWeekly": "Weekly limit exhausted. Renews {when}."',
+        '"message.failure.quotaWeekly": "Weekly limit exhausted. Renews Monday {when}. You can switch to another model with remaining quota."',
+      ],
+      [
+        '"message.failure.quota": "Лимит модели на этой неделе исчерпан."',
+        '"message.failure.quota": "Лимит модели на этой неделе исчерпан. Запросы этой модели остановлены до понедельника."',
+      ],
+      [
+        '"message.failure.quotaWeekly": "Лимит модели на этой неделе исчерпан. Обновится {when}."',
+        '"message.failure.quotaWeekly": "Лимит модели на этой неделе исчерпан. Обновится в понедельник {when}. Можно переключиться на другую модель с остатком."',
+      ],
+      [
+        '"message.failure.quotaWeekly": "本周额度已用尽。将于 {when} 更新。"',
+        '"message.failure.quotaWeekly": "本周额度已用尽。将于 {when} 更新。可切换到仍有额度的其他模型。"',
+      ],
+    ];
+    for (const [a, b] of localeReplaces) {
+      if (out.includes(a)) out = out.split(a).join(b);
+    }
+
+    out = out.replace(
+      /("message\.failure\.quotaWeekly": "Weekly limit exhausted[^"]*"),\r?\n\t\t\t"message\.failure\.quotaSwitch": "Try \{models\}\."/,
+      `$1,${nl}\t\t\t"message.failure.quotaSwitch": "Try {models} — remaining quota available."`,
+    );
+    out = out.replace(
+      /("message\.failure\.quotaWeekly": "Лимит модели[^"]*"),\r?\n\t\t\t"message\.failure\.quotaSwitch": "Try \{models\}\."/,
+      `$1,${nl}\t\t\t"message.failure.quotaSwitch": "Попробуйте {models} — там ещё есть лимит."`,
+    );
+    out = out.replace(
+      /("message\.failure\.quotaWeekly": "本周额度[^"]*"),\r?\n\t\t\t"message\.failure\.quotaSwitch": "Try \{models\}\."/,
+      `$1,${nl}\t\t\t"message.failure.quotaSwitch": "可尝试 {models}。"`,
+    );
+
+    if (!out.includes("message.failure.quotaSwitch")) {
+      out = out.replace(
+        /("message\.failure\.quotaWeekly": "[^"]*")/g,
+        `$1,${nl}\t\t\t"message.failure.quotaSwitch": "Try {models}."`,
+      );
+    }
+
+    return out === s ? s : out;
+  });
+}
+
+// Also keep patch-settings-profile-limits template in sync for future re-runs
+function syncSettingsPatchTemplate() {
+  const file = path.join(ROOT, "desktop", "patch-settings-profile-limits.mjs");
+  if (!fs.existsSync(file)) return;
+  patchFile(file, (s) => {
+    if (s.includes("beam-quotas-ux-clarity") && s.includes("beam-settings-limits-note")) return s;
+    // Soft note only — full section is owned by patch-quotas-ux-clarity.mjs
+    if (s.includes("Недельные лимиты Tide, Flare и Pine.")) {
+      return s.replace(
+        'const intro = ru ? "Недельные лимиты Tide, Flare и Pine." : "Weekly limits for Tide, Flare, and Pine.";',
+        'const intro = ru ? "Недельные лимиты Tide, Flare и Pine. У каждой модели свой счётчик: использовано / лимит." : "Weekly limits for Tide, Flare, and Pine. Each model has its own used / limit counter."; /* beam-quotas-ux-clarity: re-run patch-quotas-ux-clarity.mjs after this */',
+      );
+    }
+    return s;
+  });
+}
+
+// Run
+for (const f of webHtmlFiles()) patchHtml(f);
+for (const f of webCssFiles()) patchCss(f);
+for (const f of generalClientFiles()) patchGeneral(f);
+for (const f of chatClientFiles()) patchChat(f);
+patchBridge(path.join(ROOT, "desktop", "bridge", "server.js"));
+patchBridge(path.join(ROOT, "dist", "Beam Agent", "bridge", "server.js"));
+syncSettingsPatchTemplate();
+
+console.log("patch-quotas-ux-clarity:");
+for (const f of report) console.log(" -", f);
+console.log(`done (${report.length} files)`);

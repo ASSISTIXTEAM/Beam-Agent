@@ -1,0 +1,300 @@
+/**
+ * Major-app OAuth for Beam:
+ * - open ASSISTIX ID in the system browser (real cookies)
+ * - loopback callback → pending profile → in-app confirm
+ * - deep link + polling so return never dead-ends
+ */
+import fs from "node:fs";
+import path from "node:path";
+
+const ROOT = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
+const BRIDGE_SRC = path.join(ROOT, "desktop/bridge/server.js");
+const BRIDGE_DIST = path.join(ROOT, "dist/Beam Agent/bridge/server.js");
+const MAIN = path.join(ROOT, "dist/Beam Agent/resources/app/lib/main.js");
+const INDEX_DIST = path.join(
+  ROOT,
+  "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html"
+);
+const INDEX_RT = path.join(
+  ROOT,
+  "runtime/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html"
+);
+
+function patchBridge(file) {
+  let s = fs.readFileSync(file, "utf8");
+
+  const oldBounce = `function serveCallbackBounce(res, ok, detail = '') {
+  const target = ok ? 'beam-agent://auth/callback' : 'beam-agent://auth/error'
+  const safe = String(detail || '').replace(/[<>&"']/g, '')
+  const html = \`<!doctype html><html lang="ru"><head>
+<meta charset="utf-8"/>
+<meta http-equiv="refresh" content="0;url=\${target}"/>
+<title>Beam Agent</title>
+<script>
+(function(){
+  try { location.replace(\${JSON.stringify(target)}); } catch (e) {}
+  setTimeout(function(){ try { location.replace('dsh://open'); } catch (e) {} }, 40);
+  setTimeout(function(){ try { window.close(); } catch (e) {} }, 180);
+})();
+</script>
+<style>html,body{margin:0;height:100%;background:#041210;color:#9ec9c3;font-family:Segoe UI,system-ui,sans-serif;display:grid;place-items:center}</style>
+</head><body><p>\${ok ? 'Возвращаем в Beam Agent…' : ('Ошибка входа' + (safe ? (': ' + safe) : ''))}</p></body></html>\`
+  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' })
+  res.end(html)
+}`;
+
+  // Polling-only finish page — never beam-agent:// (Chrome protocol prompt from 127.0.0.1)
+  const newBounce = `/** OAuth finish page — NO custom-protocol handoff (avoids Chrome «open app from 127.0.0.1»).
+ *  Electron already polls /assistix/status for pendingUser and shows in-app confirm. */
+function serveCallbackBounce(res, ok, detail = '') {
+  const safe = String(detail || '').replace(/[<>&"']/g, '')
+  const title = ok ? 'Готово' : 'Ошибка входа'
+  const lead = ok
+    ? 'Вход через ASSISTIX ID выполнен. Вернитесь в Beam Agent — подтверждение аккаунта уже там.'
+    : ('Не удалось войти' + (safe ? (': ' + safe) : ''))
+  const hint = ok
+    ? 'Это окно можно закрыть.'
+    : 'Закройте это окно и попробуйте снова из Beam Agent.'
+  const html = \`<!doctype html><html lang="ru"><head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Beam Agent — \${title}</title>
+<style>
+  html,body{margin:0;height:100%;background:
+    radial-gradient(900px 480px at 20% -10%, rgba(0,179,188,.28), transparent 55%),
+    #041210;color:#e8f7f5;font-family:Segoe UI,system-ui,sans-serif;display:grid;place-items:center}
+  .card{width:min(420px,92vw);padding:28px 24px;border-radius:28px;text-align:center;
+    background:rgba(10,25,23,.96);border:1px solid rgba(0,179,188,.35);
+    box-shadow:0 24px 60px rgba(0,0,0,.45)}
+  h1{margin:0 0 10px;font-size:22px}
+  p{margin:0;color:#9ec9c3;font-size:14px;line-height:1.45}
+  .ok{display:inline-block;margin:0 0 14px;width:56px;height:56px;border-radius:50%;
+    background:linear-gradient(135deg,#2dd4bf,#0d9488);color:#042f2e;font:800 28px/56px Segoe UI; }
+  .hint{margin-top:14px;font-size:13px;color:#7aaba4}
+</style>
+</head><body><div class="card">
+  <div class="ok" aria-hidden="true">\${ok ? '✓' : '!'}</div>
+  <h1>\${title}</h1>
+  <p>\${lead}</p>
+  <p class="hint">\${hint}</p>
+</div></body></html>\`
+  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' })
+  res.end(html)
+}`;
+
+  if (s.includes(oldBounce)) s = s.replace(oldBounce, newBounce);
+  else if (!s.includes("Аккаунт ASSISTIX ID получен")) {
+    console.warn("bounce block not exact; trying loose replace");
+    s = s.replace(/function serveCallbackBounce\([\s\S]*?\n\}\n\n\nconst server/, newBounce + "\n\n\nconst server");
+  }
+
+  // Track login waiting for UI polling
+  if (!s.includes("authWaiting")) {
+    s = s.replace(
+      `return sendJson(res, 200, {
+        signedIn: signed,
+        user: signed ? publicUser(state.session) : null,
+        pendingUser: (!signed && state.pendingSession && state.pendingSession.from_exchange && Number(state.pendingSession.id_user_id) > 0) ? publicUser(state.pendingSession) : null,
+        lastAuthError: state.lastAuthError || null,
+        authUrl: buildAuthUrl(state.oauth_nonce),
+        loginUrl: buildAuthUrl(state.oauth_nonce),`,
+      `const pending = (!signed && state.pendingSession && state.pendingSession.from_exchange && Number(state.pendingSession.id_user_id) > 0)
+        ? publicUser(state.pendingSession)
+        : null
+      return sendJson(res, 200, {
+        signedIn: signed,
+        user: signed ? publicUser(state.session) : null,
+        pendingUser: pending,
+        authWaiting: !signed && !pending && !!state.authWaiting,
+        lastAuthError: state.lastAuthError || null,
+        authUrl: buildAuthUrl(state.oauth_nonce),
+        loginUrl: buildAuthUrl(state.oauth_nonce),`
+    );
+
+    s = s.replace(
+      `if (url.pathname === '/assistix/login' && req.method === 'POST') {
+      // Desktop no longer accepts local email invent — return OAuth URL only
+      const state = loadState()
+      if (!state.oauth_nonce) {
+        state.oauth_nonce = crypto.randomBytes(16).toString('hex')
+        saveState(state)
+      }
+      return sendJson(res, 200, { ok: true, authUrl: buildAuthUrl(state.oauth_nonce), loginUrl: \`http://127.0.0.1:\${PORT}/assistix/login\` })
+    }`,
+      `if (url.pathname === '/assistix/login' && req.method === 'POST') {
+      const state = loadState()
+      if (!state.oauth_nonce) state.oauth_nonce = crypto.randomBytes(16).toString('hex')
+      state.authWaiting = true
+      state.lastAuthError = null
+      saveState(state)
+      return sendJson(res, 200, { ok: true, authUrl: buildAuthUrl(state.oauth_nonce), loginUrl: \`http://127.0.0.1:\${PORT}/assistix/login\` })
+    }`
+    );
+
+    s = s.replace(
+      `state.pendingSession = sessionFromIdUser(data.user, { token: data.access_token || data.token || null })
+        state.lastAuthError = null
+        state.oauth_nonce = crypto.randomBytes(16).toString('hex')
+        saveState(state)`,
+      `state.pendingSession = sessionFromIdUser(data.user, { token: data.access_token || data.token || null })
+        state.lastAuthError = null
+        state.authWaiting = false
+        state.oauth_nonce = crypto.randomBytes(16).toString('hex')
+        saveState(state)`
+    );
+
+    s = s.replace(
+      `st.pendingSession = null
+        st.lastAuthError = String(e.message || e)
+        saveState(st)`,
+      `st.pendingSession = null
+        st.authWaiting = false
+        st.lastAuthError = String(e.message || e)
+        saveState(st)`
+    );
+
+    s = s.replace(
+      `state.session = state.pendingSession
+      state.pendingSession = null`,
+      `state.session = state.pendingSession
+      state.pendingSession = null
+      state.authWaiting = false`
+    );
+  }
+
+  fs.writeFileSync(file, s);
+  console.log("bridge", path.basename(path.dirname(file)) === "desktop" ? "src" : "dist", "ok");
+}
+
+function patchMain() {
+  let s = fs.readFileSync(MAIN, "utf8");
+  // Prefer system browser — shares Chrome cookies for ASSISTIX ID
+  const old = `if (parsed.protocol === "https:" && parsed.hostname === "id.assistix.org") {
+				openAssistixAuthWindow(url);
+				return { action: "deny" };
+			}`;
+  const neu = `if (parsed.protocol === "https:" && parsed.hostname === "id.assistix.org") {
+				// System browser = real ID session (like Discord/Slack OAuth)
+				shell.openExternal(url).catch(() => openAssistixAuthWindow(url));
+				return { action: "deny" };
+			}`;
+  if (s.includes(old)) s = s.replace(old, neu);
+  else if (!s.includes("System browser = real ID session")) {
+    throw new Error("main setWindowOpenHandler id block not found");
+  }
+
+  // Also make openAssistixAuthWindow fall back path still work; keep function for failures
+  fs.writeFileSync(MAIN, s);
+  console.log("main ok");
+}
+
+function patchIndex(file) {
+  if (!fs.existsSync(file)) return;
+  let html = fs.readFileSync(file, "utf8");
+
+  const oldOpen = `  const openAssistix = async () => {
+    try {
+      const r = await fetch(BRIDGE + "/assistix/status");
+      const d = await r.json();
+      lastData = d;
+      const url = d && d.authUrl;
+      if (!url || !/^https:\\/\\/id\\.assistix\\.org\\b/i.test(url)) return;
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (e) {
+      console.warn("[beam] open assistix", e);
+    }
+  };`;
+
+  const newOpen = `  let authWaitUntil = 0;
+  const openAssistix = async () => {
+    try {
+      await fetch(BRIDGE + "/assistix/login", { method: "POST" }).catch(function(){});
+      const r = await fetch(BRIDGE + "/assistix/status");
+      const d = await r.json();
+      lastData = d;
+      const url = d && d.authUrl;
+      if (!url || !/^https:\\/\\/id\\.assistix\\.org\\b/i.test(url)) return;
+      authWaitUntil = Date.now() + 180000;
+      ensureAuthGate(Object.assign({}, d, { authWaiting: true }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (e) {
+      console.warn("[beam] open assistix", e);
+    }
+  };`;
+
+  if (html.includes(oldOpen)) html = html.replace(oldOpen, newOpen);
+  else if (!html.includes("authWaitUntil")) {
+    html = html.replace(
+      "const openAssistix = async () => {",
+      "let authWaitUntil = 0;\n  const openAssistix = async () => {"
+    );
+  }
+
+  // Waiting UI in ensureAuthGate — before login button block
+  const loginGate = `    const err = data?.lastAuthError ? '<div class="bag-error">Не удалось войти: '+String(data.lastAuthError).replace(/</g,'')+'</div>' : '';
+    gate.innerHTML = '<div class="bag-card"><div class="bag-mark" aria-hidden="true"></div><h1>ASSISTIX ID</h1><p>Войдите в аккаунт, чтобы пользоваться Beam Agent. Без входа доступ закрыт.</p>'+err+'<button type="button" data-act="login">Войти через ASSISTIX ID</button><div class="bag-note">Откроется окно ASSISTIX ID. Если вы уже вошли — сразу вернёмся в Beam Agent с вашим профилем.</div></div>';
+    gate.querySelector('[data-act="login"]')?.addEventListener("click", () => openAssistix());
+    return false;`;
+
+  const loginGateNew = `    const waiting = !!(data?.authWaiting || (authWaitUntil && Date.now() < authWaitUntil));
+    if (waiting && !data?.lastAuthError) {
+      gate.innerHTML = '<div class="bag-card"><div class="bag-mark" aria-hidden="true"></div><h1>Вход в Beam Agent</h1><p>Открыли ASSISTIX ID в браузере. Войдите или нажмите «Продолжить» — мы сразу вернём вас сюда с профилем.</p><button type="button" data-act="login">Открыть снова</button><button type="button" class="bag-ghost" data-act="cancel-wait">Отмена</button><div class="bag-note">Не закрывайте Beam Agent. После входа появится подтверждение аккаунта.</div></div>';
+      gate.querySelector('[data-act="login"]')?.addEventListener("click", () => openAssistix());
+      gate.querySelector('[data-act="cancel-wait"]')?.addEventListener("click", () => { authWaitUntil = 0; refresh(); });
+      return false;
+    }
+    const err = data?.lastAuthError ? '<div class="bag-error">Не удалось войти: '+String(data.lastAuthError).replace(/</g,'')+'</div>' : '';
+    gate.innerHTML = '<div class="bag-card"><div class="bag-mark" aria-hidden="true"></div><h1>ASSISTIX ID</h1><p>Войдите в аккаунт, чтобы пользоваться Beam Agent. Без входа доступ закрыт.</p>'+err+'<button type="button" data-act="login">Войти через ASSISTIX ID</button><div class="bag-note">Откроется браузер с id.assistix.org. Если вы уже вошли — нажмите продолжить, и мы вернём вас в Beam Agent.</div></div>';
+    gate.querySelector('[data-act="login"]')?.addEventListener("click", () => openAssistix());
+    return false;`;
+
+  if (html.includes(loginGate)) html = html.replace(loginGate, loginGateNew);
+  else if (!html.includes("Открыли ASSISTIX ID в браузере")) {
+    console.warn("login gate block missing in", file);
+  }
+
+  // Faster poll while waiting
+  html = html.replace(
+    `let authPoll = setInterval(() => {
+      if (lastData?.signedIn) { clearInterval(authPoll); return; }
+      refresh();
+    }, lastData?.pendingUser ? 1200 : 1600);`,
+    `let authPoll = setInterval(() => {
+      if (lastData?.signedIn) { clearInterval(authPoll); return; }
+      refresh();
+    }, (lastData?.pendingUser || lastData?.authWaiting || (authWaitUntil && Date.now() < authWaitUntil)) ? 900 : 2000);`
+  );
+
+  // Clear wait on pending
+  if (!html.includes("authWaitUntil = 0; // pending")) {
+    html = html.replace(
+      `if (pending) {
+      const name = pending.display_name || pending.name || "ASSISTIX";`,
+      `if (pending) {
+      authWaitUntil = 0; // pending
+      const name = pending.display_name || pending.name || "ASSISTIX";`
+    );
+  }
+
+  fs.writeFileSync(file, html);
+  console.log("index", file.includes("runtime") ? "runtime" : "dist");
+}
+
+patchBridge(BRIDGE_SRC);
+patchBridge(BRIDGE_DIST);
+patchMain();
+patchIndex(INDEX_DIST);
+patchIndex(INDEX_RT);
+console.log("✓ major-app OAuth patch applied");

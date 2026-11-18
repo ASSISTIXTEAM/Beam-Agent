@@ -1,0 +1,19 @@
+DirectoryIndex index.php index.html
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^robots\.txt$ robots.txt [L]
+  RewriteRule ^sitemap\.xml$ sitemap.xml [L]
+  RewriteRule ^api/beta-verify\.php$ api/beta-verify.php [L]
+  RewriteRule ^(en|ru|it)/s/([a-f0-9]+)/?$ s.php?lang=$1&t=$2 [L,QSA]
+  RewriteRule ^s/([a-f0-9]+)/?$ s.php?t=$1 [L,QSA]
+  RewriteRule ^(en|ru|it)/r/([a-f0-9]+)/?$ r.php?lang=$1&t=$2 [L,QSA]
+  RewriteRule ^r/([a-f0-9]+)/?$ r.php?t=$1 [L,QSA]
+  RewriteRule ^api/(.*)$ api/$1 [L]
+  RewriteRule ^(en|ru|it)/?$ index.php [L]
+  RewriteRule ^(en|ru|it)/c/.+ index.php [L]
+  RewriteRule ^c/.+ index.php [L]
+  RewriteRule ^$ index.php [L]
+</IfModule>

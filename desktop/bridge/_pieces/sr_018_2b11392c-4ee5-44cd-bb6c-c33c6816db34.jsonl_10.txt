@@ -1,0 +1,214 @@
+PATH: c:\Users\Alexa\OneDrive\Documents\Beam Agent\desktop\bridge\server.js
+OLD_LEN: 3962
+NEW_LEN: 3769
+FILE: 2b11392c-4ee5-44cd-bb6c-c33c6816db34.jsonl L10
+---OLD---
+  const requestedMax = Number(body.max_tokens) || 4096
+  const cappedMax = Math.min(requestedMax, Number(tier.maxTokensCap) || requestedMax)
+  const openaiBody = {
+    model: tier.backend,
+    messages: anthropicToOpenAIMessages(body.messages, [__BRIDGE_PERSONA, typeof body.system === 'string' ? body.system : (Array.isArray(body.system) ? body.system.map(x => x?.text || '').join('\n') : '')].filter(Boolean).join('\n\n')),
+    max_tokens: cappedMax,
+    temperature: body.temperature,
+    tools: anthropicToolsToOpenAI(body.tools),
+  }
+  if (body.tool_choice) openaiBody.tool_choice = body.tool_choice
+  const kumoOpts = { backends: tier.backends || [tier.backend] }
+
+  const wantStream = body.stream === true
+
+  if (!wantStream) {
+    let upstream
+    try {
+      upstream = await callKumo(openaiBody, { stream: false, ...kumoOpts })
+    } catch (e) {
+      return sendJson(res, 502, {
+        type: 'error',
+        error: { type: 'api_error', message: e.message || 'Нет связи с модельным API' },
+      })
+    }
+    const text = await upstream.text()
+    let data
+    try { data = JSON.parse(text) } catch {
+      bridgeLog(`kumo_bad_json status=${upstream.status} body=${text.slice(0, 200)}`)
+      return sendJson(res, 502, { type: 'error', error: { type: 'api_error', message: 'Модели вернули некорректный ответ. Попробуйте ещё раз.' } })
+    }
+    if (!upstream.ok) {
+      return sendJson(res, upstream.status >= 400 ? upstream.status : 502, {
+        type: 'error',
+        error: { type: 'api_error', message: data?.error?.message || 'Ошибка модельного API. Попробуйте ещё раз.' },
+      })
+    }
+    const choice = data.choices?.[0] || {}
+    const msg = choice.message || {}
+    const content = []
+    if (msg.content) content.push({ type: 'text', text: scrubBrandLeak(msg.content) })
+    if (msg.tool_calls?.length) content.push(...openAIToolCallsToAnthropic(msg.tool_calls))
+    const stop = msg.tool_calls?.length ? 'tool_use' : (choice.finish_reason === 'length' ? 'max_tokens' : 'end_turn')
+    // Avoid EMPTY_RESPONSE → SERVER in desktop: never return zero content blocks
+    if (!content.length) content.push({ type: 'text', text: '…' })
+    chargeTokens(state, tier.id, data.usage)
+    return sendJson(res, 200, {
+      id: data.id || `msg_${crypto.randomBytes(8).toString('hex')}`,
+      type: 'message',
+      role: 'assistant',
+      model: tier.id,
+      content,
+      stop_reason: stop,
+      stop_sequence: null,
+      usage: {
+        input_tokens: data.usage?.prompt_tokens || 0,
+        output_tokens: data.usage?.completion_tokens || 0,
+      },
+    })
+  }
+
+  // Streaming Anthropic-compatible SSE
+  let upstream
+  try {
+    upstream = await callKumo(openaiBody, { stream: true, ...kumoOpts })
+  } catch (e) {
+    return sendJson(res, 502, {
+      type: 'error',
+      error: { type: 'api_error', message: e.message || 'Нет связи с модельным API' },
+    })
+  }
+  if (!upstream.ok) {
+    const text = await upstream.text()
+    bridgeLog(`kumo_stream_http status=${upstream.status} body=${text.slice(0, 200)}`)
+    return sendJson(res, upstream.status >= 400 ? upstream.status : 502, {
+      type: 'error',
+      error: { type: 'api_error', message: 'Ошибка модельного API при потоке. Попробуйте ещё раз.' },
+    })
+  }
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream; charset=utf-8',
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive',
+    'Access-Control-Allow-Origin': '*',
+  })
+
+  const msgId = `msg_${crypto.randomBytes(8).toString('hex')}`
+  sseWrite(res, 'message_start', {
+    type: 'message_start',
+    message: {
+      id: msgId,
+      type: 'message',
+      role: 'assistant',
+      model: tier.id,
+      content: [],
+      stop_reason: null,
+      stop_sequence: null,
+      usage: { input_tokens: 0, output_tokens: 0 },
+    },
+  })
+
+  let blockIndex = 0
+  let textStarted = false
+  let toolBuf = new Map()
+  let usage = { prompt_tokens: 0, completion_tokens: 0 }
+  let stopReason = 'end_turn'
+---NEW---
+  const kumoOpts = { backends: tier.backends || [tier.backend] }
+  const wantStream = body.stream === true
+
+  // Hoisted for catch/stream-finally (avoid TDZ if fail before SSE loop)
+  let blockIndex = 0
+  let textStarted = false
+  let toolBuf = new Map()
+  let usage = { prompt_tokens: 0, completion_tokens: 0 }
+  let stopReason = 'end_turn'
+
+  if (!wantStream) {
+    let upstream
+    let errText = null
+    try {
+      ;({ upstream, errText } = await callKumoSanitized(body, tier, { stream: false, ...kumoOpts }))
+    } catch (e) {
+      return sendJson(res, 502, {
+        type: 'error',
+        error: { type: 'api_error', message: e.message || 'Нет связи с модельным API' },
+      })
+    }
+    const text = errText != null ? errText : await upstream.text()
+    let data
+    try { data = JSON.parse(text) } catch {
+      bridgeLog(`kumo_bad_json status=${upstream.status} body=${text.slice(0, 200)}`)
+      return sendJson(res, 502, { type: 'error', error: { type: 'api_error', message: 'Модели вернули некорректный ответ. Попробуйте ещё раз.' } })
+    }
+    if (!upstream.ok) {
+      const status = upstream.status >= 400 ? upstream.status : 502
+      const errType = (status === 400 || status === 413) ? 'invalid_request_error' : 'api_error'
+      return sendJson(res, status, {
+        type: 'error',
+        error: { type: errType, message: kumoErrorMessage(status, text) },
+      })
+    }
+    const choice = data.choices?.[0] || {}
+    const msg = choice.message || {}
+    const content = []
+    if (msg.content) content.push({ type: 'text', text: scrubBrandLeak(msg.content) })
+    if (msg.tool_calls?.length) content.push(...openAIToolCallsToAnthropic(msg.tool_calls))
+    const stop = msg.tool_calls?.length ? 'tool_use' : (choice.finish_reason === 'length' ? 'max_tokens' : 'end_turn')
+    // Avoid EMPTY_RESPONSE → SERVER in desktop: never return zero content blocks
+    if (!content.length) content.push({ type: 'text', text: '…' })
+    chargeTokens(state, tier.id, data.usage)
+    return sendJson(res, 200, {
+      id: data.id || `msg_${crypto.randomBytes(8).toString('hex')}`,
+      type: 'message',
+      role: 'assistant',
+      model: tier.id,
+      content,
+      stop_reason: stop,
+      stop_sequence: null,
+      usage: {
+        input_tokens: data.usage?.prompt_tokens || 0,
+        output_tokens: data.usage?.completion_tokens || 0,
+      },
+    })
+  }
+
+  // Streaming Anthropic-compatible SSE
+  let upstream
+  let errText = null
+  try {
+    ;({ upstream, errText } = await callKumoSanitized(body, tier, { stream: true, ...kumoOpts }))
+  } catch (e) {
+    return sendJson(res, 502, {
+      type: 'error',
+      error: { type: 'api_error', message: e.message || 'Нет связи с модельным API' },
+    })
+  }
+  if (!upstream.ok) {
+    const text = errText != null ? errText : await upstream.text()
+    if (!errText) bridgeLog(`kumo_stream_http status=${upstream.status} body=${text.slice(0, 200)}`)
+    const status = upstream.status >= 400 ? upstream.status : 502
+    const errType = (status === 400 || status === 413) ? 'invalid_request_error' : 'api_error'
+    return sendJson(res, status, {
+      type: 'error',
+      error: { type: errType, message: kumoErrorMessage(status, text) },
+    })
+  }
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream; charset=utf-8',
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive',
+    'Access-Control-Allow-Origin': '*',
+  })
+
+  const msgId = `msg_${crypto.randomBytes(8).toString('hex')}`
+  sseWrite(res, 'message_start', {
+    type: 'message_start',
+    message: {
+      id: msgId,
+      type: 'message',
+      role: 'assistant',
+      model: tier.id,
+      content: [],
+      stop_reason: null,
+      stop_sequence: null,
+      usage: { input_tokens: 0, output_tokens: 0 },
+    },
+  })

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d9488" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#05100f" media="(prefers-color-scheme: dark)" />
+  <title>BEAM AGENT — AI Agent Workspace</title>
+  <!-- acx-seo:start -->
+  <meta name="description" content="Free AI agent with FLAIR and PINE models. Web search, deep research reports, PDF analysis, and vision. Part of the ASSISTIX ecosystem." />
+  <meta name="author" content="ASSISTIX" />
+  <meta name="application-name" content="BEAM AGENT" />
+  <link rel="canonical" href="https://agent.assistix.org/" />
+  <link rel="alternate" hreflang="en" href="https://agent.assistix.org/" />
+  <link rel="alternate" hreflang="ru" href="https://agent.assistix.org/ru/" />
+  <link rel="alternate" hreflang="it" href="https://agent.assistix.org/it/" />
+  <link rel="alternate" hreflang="x-default" href="https://agent.assistix.org/" />
+  <meta property="og:site_name" content="BEAM AGENT" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="BEAM AGENT — AI Agent Workspace" />
+  <meta property="og:description" content="Free AI agent with FLAIR and PINE models. Web search, deep research reports, PDF analysis, and vision." />
+  <meta property="og:url" content="https://agent.assistix.org/" />
+  <meta property="og:image" content="https://agent.assistix.org/api/og.php" />
+  <meta property="og:image:alt" content="BEAM AGENT" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:locale:alternate" content="ru_RU" />
+  <meta property="og:locale:alternate" content="it_IT" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@assistixorg" />
+  <meta name="twitter:title" content="BEAM AGENT — AI Agent Workspace" />
+  <meta name="twitter:description" content="Free AI agent with FLAIR and PINE models. Web search, deep research reports, PDF analysis, and vision." />
+  <meta name="twitter:image" content="https://agent.assistix.org/api/og.php" />
+  <meta name="twitter:image:alt" content="BEAM AGENT" />
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"BEAM AGENT","url":"https://agent.assistix.org/","applicationCategory":"BusinessApplication","operatingSystem":"Web","description":"Free AI agent with FLAIR and PINE models. Web search, deep research reports, PDF analysis, and vision.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"publisher":{"@type":"Organization","name":"ASSISTIX","url":"https://assistix.org/"}}</script>
+  <!-- acx-seo:end -->
+  <link rel="icon" type="image/png" href="/agent-icon.png?v=20261104" />
+  <link rel="alternate" type="text/plain" href="/llms.txt" title="LLMs.txt" />
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml" title="Sitemap" />
+  <link rel="apple-touch-icon" href="/agent-icon.png?v=20261104" />
+  <link rel="preload" href="/assets/fonts/savona/Savona-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/savona/Savona-Medium.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/savona/Savona-Semibold.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/savona/Savona-Bold.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/assets/acx.css?v=20261102s6" />
+  <link rel="stylesheet" href="/assets/chat.css?v=20261102s6" />
+  <link rel="stylesheet" href="/assets/acx-widgets.css?v=20260783" />
+  <link rel="stylesheet" href="/assets/agent-workspace.css?v=20261105a" />
+  <link rel="stylesheet" href="/assets/agent-trace.css?v=20261105b" />
+</head>
+<body>
+<div class="c-root is-guest">
+  <aside class="c-sidebar" id="sidebar">
+    <div class="c-side-head">
+      <div class="c-side-top">
+        <a class="c-brand acx-logo" href="https://assistix.org/" data-i18n-aria="brand.home" aria-label="ASSISTIX — home">
+          <img class="c-logo-mark acx-logo" src="/agent-icon.png?v=20261104" alt="" width="32" height="32" draggable="false" />
+          <img class="c-logo-word acx-logo" src="/agent-logo.png" alt="BEAM AGENT" height="20" draggable="false" />
+        </a>
+        <button class="acx-iconbtn c-side-collapse" id="sideCollapse" type="button" data-i18n-aria="side.collapse" data-i18n-title="side.collapse"></button>
+        <button class="acx-iconbtn c-close" id="sideClose" data-i18n-aria="side.close"></button>
+      </div>
+      <div class="c-side-toolbar">
+        <button class="c-side-ic" id="newChat" type="button" data-i18n-aria="side.newChat" data-i18n-title="side.newChat"></button>
+        <button class="c-side-ic" id="newTempChat" type="button" data-i18n-aria="side.tempChat" data-i18n-title="side.tempChat"></button>
+        <button class="c-side-ic" id="sideSearchBtn" type="button" data-i18n-aria="side.search" data-i18n-title="side.search"></button>
+        <div class="c-side-tool-wrap">
+          <button class="c-side-ic" id="sideSettingsBtn" type="button" data-i18n-aria="side.settings" data-i18n-title="side.settings"></button>
+          <div class="c-side-menu" id="sideSettingsMenu" hidden>
+            <a class="c-side-menu-item" href="https://assistix.org/about/" target="_blank" rel="noreferrer"><span class="ic"></span> <span data-i18n="side.models">ASSISTIX models</span></a>
+            <a class="c-side-menu-item" href="https://search.assistix.org/" target="_blank" rel="noreferrer"><span class="ic"></span> <span data-i18n="side.acxSearch">ASSISTIX SEARCH</span></a>
+            <a class="c-side-menu-item" href="https://assistix.org/" target="_blank" rel="noreferrer"><span class="ic"></span> <span data-i18n="side.ecosystem">ASSISTIX ecosystem</span></a>
+            <button type="button" class="c-side-menu-item" id="exportChatBtn"><span class="ic"></span> <span data-i18n="action.export">Export chat</span></button>
+            <button type="button" class="c-side-menu-item" id="exportChatPdfBtn"><span class="ic"></span> <span data-i18n="action.exportPdf">Export PDF</span></button>
+            <button type="button" class="c-side-menu-item" id="exportArtifactsBtn"><span class="ic"></span> <span data-i18n="action.exportFiles">Download AI files</span></button>
+            <button type="button" class="c-side-menu-item" id="compactModeBtn"><span class="ic"></span> <span data-i18n="settings.compact">Compact messages</span></button>
+          </div>
+        </div>
+        <span class="c-side-toolbar-gap" aria-hidden="true"></span>
+        <button class="c-side-ic" id="sideThemeBtn" type="button" data-i18n-aria="side.theme" data-i18n-title="side.theme"></button>
+      </div>
+      <div class="c-side-search" id="sideSearchWrap" hidden>
+        <input type="search" id="historySearch" data-i18n-placeholder="side.searchPh" placeholder="Search chats…" autocomplete="off" />
+        <button class="c-side-ic c-side-search-clear" id="sideSearchClear" type="button" data-i18n-aria="side.searchClear"></button>
+      </div>
+    </div>
+    <div class="c-side-mid">
+      <div class="c-side-scroll acx-scroll" id="history"></div>
+      <div class="c-side-fade" aria-hidden="true"></div>
+    </div>
+    <div class="c-side-foot">
+      <div class="c-usage-panel" id="usagePanel" hidden>
+        <div class="c-usage-head">
+          <span class="c-usage-title" id="usageTitle" data-i18n="usage.limits">Weekly limits</span>
+          <span class="c-usage-reset" id="usageReset"></span>
+        </div>
+        <div class="c-usage-rings" id="usageRings"></div>
+      </div>
+      <div class="c-user-foot" id="userFoot"></div>
+    </div>
+  </aside>
+
+  <main class="c-main">
+    <div class="c-scrim" id="scrim" aria-hidden="true"></div>
+    <div class="c-glow-stack" aria-hidden="true">
+      <div class="c-glow c-glow-a"></div>
+      <div class="c-glow c-glow-b"></div>
+    </div>
+
+    <header class="c-top">
+      <button class="acx-iconbtn c-side-expand" id="sideExpand" type="button" data-i18n-aria="top.expand" data-i18n-title="top.menu" hidden></button>
+      <button class="acx-iconbtn c-burger" id="burger" data-i18n-aria="top.menu"></button>
+      <div class="c-top-pill acx-logo">
+        <img class="c-logo-mark acx-logo" src="/agent-icon.png?v=20261104" alt="" width="28" height="28" draggable="false" />
+        <img class="c-logo-word c-logo-word-sm acx-logo" src="/agent-logo.png" alt="BEAM AGENT" height="18" draggable="false" />
+      </div>
+      <div class="c-chat-head" id="chatHead" hidden>
+        <span class="c-chat-title" id="chatTitle"></span>
+        <button type="button" class="acx-iconbtn c-chat-share" id="chatShareBtn" data-i18n-aria="top.share" data-i18n-title="top.share"></button>
+      </div>
+      <div class="c-top-model" id="topModelSlot"></div>
+      <div class="c-top-spacer"></div>
+      <div class="c-lang-wrap" id="langDropdownWrap">
+        <button class="c-lang-btn" id="langGlobeBtn" type="button" aria-haspopup="true" aria-expanded="false" data-i18n-aria="lang.pick">
+          <img id="langGlobeFlagImg" src="/assets/flags/en.png" alt="" width="22" height="22" />
+          <span class="c-lang-label" id="langGlobeLabel">EN</span>
+          <svg class="c-lang-chev" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+            <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="c-lang-menu" id="langDropdownMenu" role="listbox" hidden>
+          <button class="lang-option" type="button" data-lang="en" role="option">
+            <span class="lang-flag"><img src="/assets/flags/en.png" alt="" width="22" height="22" /></span>
+            <span class="lang-name" data-i18n="lang.en">English</span>
+            <span class="lang-code">EN</span>
+          </button>
+          <button class="lang-option" type="button" data-lang="ru" role="option">
+            <span class="lang-flag"><img src="/assets/flags/ru.png" alt="" width="22" height="22" /></span>
+            <span class="lang-name" data-i18n="lang.ru">Russian</span>
+            <span class="lang-code">RU</span>
+          </button>
+          <button class="lang-option" type="button" data-lang="it" role="option">
+            <span class="lang-flag"><img src="/assets/flags/it.png" alt="" width="22" height="22" /></span>
+            <span class="lang-name" data-i18n="lang.it">Italian</span>
+            <span class="lang-code">IT</span>
+          </button>
+        </div>
+      </div>
+      <div class="c-auth" id="topAuth"></div>
+      <button class="acx-iconbtn c-theme" id="themeBtn" data-i18n-aria="top.theme"></button>
+      <button class="c-newtop" id="newChatTop"></button>
+    </header>
+
+    <div class="c-scroll acx-scroll" id="scroll">
+      <div class="c-ephemeral-banner" id="ephemeralBanner" hidden>
+        <span class="ic" aria-hidden="true"></span>
+        <span class="tx" data-i18n="chat.ephemeralBanner">Temporary chat — not saved to history. Limits still apply.</span>
+      </div>
+      <div class="c-share-banner" id="shareBanner" hidden>
+        <span data-i18n="share.banner">View-only chat</span>
+        <a href="#" id="shareLoginLink" data-i18n="share.login">Sign in to BEAM AGENT</a>
+      </div>
+      <div class="c-thread" id="thread"></div>
+    </div>
+
+    <div class="c-composer-wrap">
+      <div class="c-composer-fade" aria-hidden="true"></div>
+      <div class="c-research-templates" id="researchTemplates" hidden></div>
+      <div class="c-composer">
+        <div class="c-attach-row" id="attachRow" hidden></div>
+        <div class="c-pdf-analysis" id="pdfAnalysis" hidden></div>
+        <div class="c-pill" id="composerPill">
+          <textarea class="c-input" id="input" rows="1" data-i18n-placeholder="input.ph" placeholder="Ask ASSISTIX…"></textarea>
+          <div class="c-voice-field" id="voiceField" hidden aria-hidden="true">
+            <div class="c-voice-head">
+              <span class="c-voice-status">
+                <span class="c-voice-dot" aria-hidden="true"></span>
+                <span id="voiceStatusText" data-i18n="voice.listening">Listening…</span>
+              </span>
+              <div class="c-voice-head-right">
+                <div class="c-voice-wave-wrap" aria-hidden="true">
+                  <div class="c-voice-wave-track" id="voiceWaveTrack"></div>
+                </div>
+                <button type="button" class="c-voice-cancel" id="voiceCancel" data-i18n-aria="voice.cancel"></button>
+              </div>
+            </div>
+            <p class="c-voice-interim" id="voiceInterim" hidden></p>
+          </div>
+          <div class="c-pill-bar">
+            <div class="c-pill-tools">
+              <div class="c-tool-wrap">
+                <button class="c-tool c-attach-btn" id="attachBtn" type="button" data-i18n-aria="attach.btn"></button>
+                <div class="c-attach-menu" id="attachMenu" hidden>
+                  <button type="button" data-pick="file"><span class="ic"></span> <span data-i18n="attach.file">File or PDF</span></button>
+                  <button type="button" data-pick="image"><span class="ic"></span> <span data-i18n="attach.image">Image</span></button>
+                  <button type="button" data-pick="camera"><span class="ic"></span> <span data-i18n="attach.camera">Camera</span></button>
+                </div>
+              </div>
+              <div class="c-model-slot" id="modelSlot"></div>
+              <div class="c-mode-tags" id="modeTags" role="radiogroup" data-i18n-aria="mode.group"></div>
+              <div class="c-tool-wrap c-tools-wrap" id="toolsWrap">
+                <button class="c-tool c-tools-btn" id="toolsBtn" type="button" data-i18n-aria="tools.btn" aria-haspopup="menu" aria-expanded="false"></button>
+                <div class="c-attach-menu c-tools-menu" id="toolsMenu" hidden role="menu"></div>
+              </div>
+            </div>
+            <button class="c-voice-btn" id="voiceBtn" type="button" data-i18n-aria="voice.start" hidden></button>
+            <button class="c-send" id="send" type="button" data-i18n-aria="send"></button>
+          </div>
+        </div>
+        <p class="c-disclaimer">
+          <span class="c-disclaimer-main" data-i18n="disclaimer.main">BEAM AGENT can make mistakes.</span>
+          <span class="c-disclaimer-legal"><span data-i18n="disclaimer.legal"> By continuing, you accept the </span><a href="https://assistix.org/terms/" target="_blank" rel="noreferrer" data-i18n="disclaimer.terms">terms of use</a>.</span>
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <aside class="c-rpanel" id="researchPanel" hidden aria-hidden="true">
+    <header class="c-rpanel-head">
+      <div class="c-rpanel-head-main">
+        <span class="c-rpanel-ic" id="researchPanelIcon"></span>
+        <h2 class="c-rpanel-title" id="researchPanelTitle"></h2>
+      </div>
+      <div class="c-rpanel-actions">
+        <button type="button" class="c-rpanel-tool" id="researchPanelWide" data-i18n-title="research.panelWide"></button>
+        <button type="button" class="c-rpanel-tool" id="researchPanelShare" data-i18n-title="research.panelShare"></button>
+        <nav class="c-rpanel-export-bar" aria-label="Export">
+          <button type="button" class="c-rpanel-export" id="researchExportTxt" data-i18n-title="action.exportTxt"></button>
+          <button type="button" class="c-rpanel-export" id="researchExportMd" data-i18n-title="action.exportMd"></button>
+          <button type="button" class="c-rpanel-export" id="researchExportDocx" data-i18n-title="action.exportDocx"></button>
+          <button type="button" class="c-rpanel-export" id="researchExportPdf" data-i18n-title="action.exportPdfShort"></button>
+        </nav>
+        <button type="button" class="c-rpanel-toc-btn" id="researchPanelToc" hidden></button>
+        <button type="button" class="acx-iconbtn c-rpanel-close" id="researchPanelClose" data-i18n-aria="side.close"></button>
+      </div>
+    </header>
+    <div class="c-rpanel-channels" id="researchPanelChannels" hidden></div>
+    <div class="c-rpanel-scroll acx-scroll" id="researchPanelScroll">
+      <div class="c-rpanel-inner" id="researchPanelBody"></div>
+    </div>
+    <footer class="c-rpanel-foot" id="researchPanelFoot" hidden>
+      <button type="button" class="c-rpanel-continue" id="researchContinueBtn"></button>
+    </footer>
+  </aside>
+  <div class="c-rpanel-scrim" id="researchPanelScrim" hidden aria-hidden="true"></div>
+</div>
+
+<div class="c-fpv-modal" id="filePreviewModal" hidden aria-hidden="true" role="dialog" aria-modal="true">
+  <div class="c-fpv-backdrop"></div>
+  <div class="c-fpv-dialog">
+    <header class="c-fpv-head">
+      <h3 id="filePreviewTitle"></h3>
+      <button type="button" class="c-fpv-close" id="filePreviewClose" data-i18n-aria="attach.previewClose"></button>
+    </header>
+    <div class="c-fpv-body" id="filePreviewBody"></div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" hidden accept=".pdf,.docx,.txt,.md,.csv,.json,.html,.htm" />
+<input type="file" id="imageInput" hidden accept="image/*" />
+<input type="file" id="cameraInput" hidden accept="image/*" capture="environment" />
+<input type="file" id="avatarInput" hidden accept="image/jpeg,image/png,image/webp,image/gif" />
+
+<div class="c-profile-modal hidden" id="profileModal" role="dialog" aria-modal="true" data-i18n-aria="profile.title">
+  <div class="c-profile-modal-backdrop" id="profileModalBackdrop" aria-hidden="true"></div>
+  <div class="c-profile-modal-shell">
+    <div class="c-profile-modal-panel" id="profileModalInner"></div>
+  </div>
+</div>
+
+<div class="c-sub-modal hidden" id="subModal" role="dialog" aria-modal="true" hidden aria-hidden="true">
+  <div class="c-sub-modal-backdrop" id="subModalBackdrop" aria-hidden="true"></div>
+  <div class="c-sub-modal-shell">
+    <div class="c-sub-modal-panel" id="subModalInner"></div>
+  </div>
+</div>
+
+<div id="inputModal" class="acx-modal hidden" role="dialog" aria-modal="true" aria-labelledby="inputModalTitle">
+  <div class="acx-modal-card c-input-modal">
+    <h3 class="acx-modal-title" id="inputModalTitle"></h3>
+    <p class="acx-modal-text" id="inputModalHint" hidden></p>
+    <textarea class="c-input-modal-field" id="inputModalField" rows="4"></textarea>
+    <div class="acx-modal-actions">
+      <button type="button" class="acx-modal-btn primary" id="inputModalConfirm"></button>
+      <button type="button" class="acx-modal-btn ghost" id="inputModalCancel" data-i18n="delete.cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="shareModal" class="acx-modal hidden" role="dialog" aria-modal="true" aria-labelledby="shareModalTitle">
+  <div class="acx-modal-card c-share-modal">
+    <h3 class="acx-modal-title" id="shareModalTitle" data-i18n="share.modalTitle">Share link</h3>
+    <p class="acx-modal-text" id="shareModalHint" data-i18n="share.modalHint">Anyone with this link can open the page.</p>
+    <div class="c-share-url-row">
+      <input type="text" class="c-share-url-input" id="shareUrlInput" readonly aria-label="Share URL" />
+      <button type="button" class="acx-modal-btn primary" id="shareCopyBtn" data-i18n="share.copy">Copy link</button>
+    </div>
+    <div class="c-share-social" id="shareSocialBtns" aria-label="Share"></div>
+    <div class="acx-modal-actions">
+      <button type="button" class="acx-modal-btn primary" id="shareNativeBtn" hidden data-i18n="share.native">Share…</button>
+      <button type="button" class="acx-modal-btn ghost" id="shareCloseBtn" data-i18n="delete.cancel">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<div id="deleteChatModal" class="acx-modal hidden" role="dialog" aria-modal="true" aria-labelledby="deleteChatTitle">
+  <div class="acx-modal-card">
+    <h3 class="acx-modal-title" id="deleteChatTitle" data-i18n="delete.title">Delete chat?</h3>
+    <p class="acx-modal-text" id="deleteChatText" data-i18n="delete.body">This chat and all messages will be permanently removed.</p>
+    <div class="acx-modal-actions">
+      <button type="button" class="acx-modal-btn danger" id="deleteChatConfirm" data-i18n="delete.confirm">Delete</button>
+      <button type="button" class="acx-modal-btn ghost" id="deleteChatCancel" data-i18n="delete.cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="guestUpsellModal" class="acx-modal hidden" role="dialog" aria-modal="true">
+  <div class="acx-modal-card">
+    <h3 class="acx-modal-title" data-i18n="upsell.title">Sign in to save your chat</h3>
+    <p class="acx-modal-text" data-i18n="upsell.body">After 3 demo messages, ASSISTIX ID unlocks history, FLAIR/PINE limits, and AI memory.</p>
+    <div class="acx-modal-actions">
+      <button type="button" class="acx-modal-btn primary" id="guestUpsellLogin" data-i18n="auth.login">Sign in</button>
+      <button type="button" class="acx-modal-btn ghost" id="guestUpsellDismiss" data-i18n="upsell.later">Later</button>
+    </div>
+  </div>
+</div>
+
+<div id="hotkeysModal" class="acx-modal hidden" role="dialog" aria-modal="true">
+  <div class="acx-modal-card">
+    <h3 class="acx-modal-title" data-i18n="hotkeys.title">Keyboard shortcuts</h3>
+    <ul class="c-hotkeys-list">
+      <li><kbd>Ctrl</kbd>+<kbd>N</kbd> — <span data-i18n="hotkeys.newChat">New chat</span></li>
+      <li><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>N</kbd> — <span data-i18n="hotkeys.tempChat">Temporary chat</span></li>
+      <li><kbd>Ctrl</kbd>+<kbd>K</kbd> — <span data-i18n="hotkeys.search">Search history</span></li>
+      <li><kbd>Ctrl</kbd>+<kbd>/</kbd> — <span data-i18n="hotkeys.help">This help</span></li>
+      <li><kbd>Shift</kbd>+<span data-i18n="action.regen">Regenerate</span> — <span data-i18n="hotkeys.regenModel">Pick model</span></li>
+    </ul>
+    <div class="acx-modal-actions">
+      <button type="button" class="acx-modal-btn ghost" id="hotkeysClose" data-i18n="delete.cancel">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="idResumeModal" class="acx-modal hidden" role="dialog" aria-modal="true">
+  <div class="acx-modal-card">
+    <div class="acx-modal-brand acx-logo">
+      <img class="acx-logo" src="/agent-icon.png?v=20261104" alt="" width="36" height="36" draggable="false" />
+      <img class="acx-logo" src="/agent-logo.png" alt="BEAM AGENT" height="18" draggable="false" />
+    </div>
+    <h3 class="acx-modal-title" data-i18n="modal.session">Session found</h3>
+    <p class="acx-modal-text" id="idResumeText"></p>
+    <p class="acx-modal-sub" data-i18n="modal.sessionSub">You are already signed in to ASSISTIX ID in this browser.</p>
+    <div class="acx-modal-actions">
+      <button type="button" class="acx-modal-btn primary" id="idResumeContinueBtn" data-i18n="modal.continue">Continue to CHAT</button>
+      <button type="button" class="acx-modal-btn ghost" id="idResumeDismissBtn" data-i18n="modal.later">Later</button>
+    </div>
+  </div>
+</div>
+<iframe id="idSessionProbeFrame" class="acx-id-probe" title="ASSISTIX ID session check"></iframe>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/typescript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/php.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/css.min.js"></script>
+<script src="/assets/acx-widgets.js?v=20260783"></script>
+<script src="/assets/acx-core.js?v=20261102s6"></script>
+<script src="/assets/acx-voice.js?v=20260775"></script>
+<script src="/assets/acx-attach-preview.js?v=20260775"></script>
+<script src="/assets/acx-pdf-ocr.js?v=20260775"></script>
+<script src="/assets/acx-artifacts.js?v=20260775"></script>
+<script src="/assets/acx-export-plus.js?v=20260775"></script>
+<script src="/assets/acx-research-export.js?v=20260775"></script>
+<script src="/assets/acx-seo.js?v=20260775"></script>
+<script src="/assets/chat-suggestions.js?v=20260787"></script>
+<script src="/assets/i18n.js?v=20261031m6"></script>
+<script src="/assets/chat.js?v=20261102s6"></script>
+<script src="/assets/chat-enhance.js?v=20261031y"></script>
+<script src="/assets/agent-workspace.js?v=20261105a"></script>
+</body>
+</html>

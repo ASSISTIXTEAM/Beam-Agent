@@ -1,0 +1,158 @@
+/**
+ * Fix Beam OAuth return on Windows + reliable embedded auth when system browser stalls.
+ */
+import fs from "node:fs";
+
+const MAIN =
+  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/lib/main.js";
+const BRIDGE_SRC =
+  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/desktop/bridge/server.js";
+const BRIDGE_DIST =
+  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/bridge/server.js";
+const INDEX =
+  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html";
+const INDEX_RT =
+  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html";
+
+let main = fs.readFileSync(MAIN, "utf8");
+
+// Prefer embedded auth window again (auto-continue), with persistent cookies.
+// System browser alone left users on ID without callback.
+main = main.replace(
+  `if (parsed.protocol === "https:" && parsed.hostname === "id.assistix.org") {
+				// System browser = real ID session (like Discord/Slack OAuth)
+				shell.openExternal(url).catch(() => openAssistixAuthWindow(url));
+				return { action: "deny" };
+			}`,
+  `if (parsed.protocol === "https:" && parsed.hostname === "id.assistix.org") {
+				openAssistixAuthWindow(url);
+				return { action: "deny" };
+			}`
+);
+
+// Persist ASSISTIX cookies inside auth window
+if (!main.includes('partition: "persist:assistix-id"')) {
+  main = main.replace(
+    `const win = new BrowserWindow({
+		width: 980,
+		height: 720,
+		minWidth: 420,
+		minHeight: 560,
+		title: "ASSISTIX ID — Beam Agent",
+		autoHideMenuBar: true,
+		backgroundColor: "#041210",
+		webPreferences: {
+			nodeIntegration: false,
+			contextIsolation: true,
+			sandbox: true,
+			webSecurity: true
+		}
+	});`,
+    `const win = new BrowserWindow({
+		width: 980,
+		height: 720,
+		minWidth: 420,
+		minHeight: 560,
+		title: "ASSISTIX ID — Beam Agent",
+		autoHideMenuBar: true,
+		backgroundColor: "#041210",
+		webPreferences: {
+			partition: "persist:assistix-id",
+			nodeIntegration: false,
+			contextIsolation: true,
+			sandbox: true,
+			webSecurity: true
+		}
+	});`
+  );
+}
+
+// Windows: deep links arrive via second-instance argv, not open-url
+const oldClaim = `if (claimDesktopSingleInstance(app, (argv = []) => {
+	focusPrimaryWindow();
+}))`;
+
+const newClaim = `if (claimDesktopSingleInstance(app, (argv = []) => {
+	try {
+		const deep = (argv || []).find((a) => typeof a === "string" && (a.startsWith("beam-agent://") || a.startsWith("dsh://")));
+		if (deep) {
+			focusPrimaryWindow();
+			for (const win of BrowserWindow.getAllWindows()) {
+				if (win.isDestroyed()) continue;
+				win.webContents.executeJavaScript("window.dispatchEvent(new CustomEvent('beam-auth-return'))").catch(() => {});
+			}
+			return;
+		}
+	} catch {}
+	focusPrimaryWindow();
+}))`;
+
+if (main.includes(oldClaim)) main = main.replace(oldClaim, newClaim);
+else console.warn("claimDesktopSingleInstance block not found");
+
+// Also handle protocol URL on cold start (first argv)
+if (!main.includes("beam-agent://auth")) {
+  // open-url already handles beam-agent:// — strengthen it
+  main = main.replace(
+    `app.on("open-url", (event, url) => {
+		event.preventDefault();
+		if (url === "dsh://open" || url === "dsh://open/" || String(url).startsWith("beam-agent://")) {
+			focusPrimaryWindow();
+			try {
+				const win = currentMainWindow?.() ?? mainWindow;
+				win?.webContents?.executeJavaScript("window.dispatchEvent(new CustomEvent('beam-auth-return'))").catch(() => {});
+			} catch {}
+		}
+	});`,
+    `app.on("open-url", (event, url) => {
+		event.preventDefault();
+		if (url === "dsh://open" || url === "dsh://open/" || String(url).startsWith("beam-agent://")) {
+			focusPrimaryWindow();
+			try {
+				for (const win of BrowserWindow.getAllWindows()) {
+					if (win.isDestroyed()) continue;
+					win.webContents.executeJavaScript("window.dispatchEvent(new CustomEvent('beam-auth-return'))").catch(() => {});
+				}
+			} catch {}
+		}
+	});`
+  );
+}
+
+fs.writeFileSync(MAIN, main);
+console.log("main patched");
+
+// Bounce page: big button to open Beam if protocol handler flaky
+for (const file of [BRIDGE_SRC, BRIDGE_DIST]) {
+  let s = fs.readFileSync(file, "utf8");
+  if (!s.includes("Открыть Beam Agent")) {
+    s = s.replace(
+      `<p style="margin-top:12px;font-size:12px;color:#7aaba4">Если приложение не открылось само — просто вернитесь в Beam Agent.</p>
+</div></body></html>\``,
+      `<p style="margin-top:12px;font-size:12px;color:#7aaba4">Если окно не поднялось само — нажмите кнопку:</p>
+  <p style="margin-top:16px"><a href="\${target}" style="display:inline-block;padding:12px 18px;border-radius:18px;background:linear-gradient(135deg,#2dd4bf,#00B3BC 55%,#0f766e);color:#042f2e;font-weight:800;text-decoration:none">Открыть Beam Agent</a></p>
+</div></body></html>\``
+    );
+    fs.writeFileSync(file, s);
+    console.log("bounce button", file.includes("dist") ? "dist" : "src");
+  }
+}
+
+// Frontend: after waiting, also offer "я уже вошёл — проверить"
+for (const file of [INDEX, INDEX_RT]) {
+  if (!fs.existsSync(file)) continue;
+  let html = fs.readFileSync(file, "utf8");
+  html = html.replace(
+    `gate.innerHTML = '<div class="bag-card"><div class="bag-mark" aria-hidden="true"></div><h1>Вход в Beam Agent</h1><p>Открыли ASSISTIX ID в браузере. Войдите или нажмите «Продолжить» — мы сразу вернём вас сюда с профилем.</p><button type="button" data-act="login">Открыть снова</button><button type="button" class="bag-ghost" data-act="cancel-wait">Отмена</button><div class="bag-note">Не закрывайте Beam Agent. После входа появится подтверждение аккаунта.</div></div>';
+      gate.querySelector('[data-act="login"]')?.addEventListener("click", () => openAssistix());
+      gate.querySelector('[data-act="cancel-wait"]')?.addEventListener("click", () => { authWaitUntil = 0; refresh(); });`,
+    `gate.innerHTML = '<div class="bag-card"><div class="bag-mark" aria-hidden="true"></div><h1>Вход в Beam Agent</h1><p>Открыли окно ASSISTIX ID. Войдите или нажмите «Продолжить в Beam Agent» — профиль появится здесь автоматически.</p><button type="button" data-act="login">Открыть снова</button><button type="button" class="bag-ghost" data-act="check">Я уже вошёл — проверить</button><button type="button" class="bag-ghost" data-act="cancel-wait">Отмена</button><div class="bag-note">Не закрывайте Beam Agent.</div></div>';
+      gate.querySelector('[data-act="login"]')?.addEventListener("click", () => openAssistix());
+      gate.querySelector('[data-act="check"]')?.addEventListener("click", () => refresh());
+      gate.querySelector('[data-act="cancel-wait"]')?.addEventListener("click", () => { authWaitUntil = 0; refresh(); });`
+  );
+  fs.writeFileSync(file, html);
+  console.log("index", file.includes("runtime") ? "runtime" : "dist");
+}
+
+console.log("✓ oauth return fix applied");

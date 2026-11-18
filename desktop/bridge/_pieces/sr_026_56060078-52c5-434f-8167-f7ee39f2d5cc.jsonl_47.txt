@@ -1,0 +1,77 @@
+PATH: c:\Users\Alexa\OneDrive\Documents\Beam Agent\desktop\bridge\server.js
+OLD_LEN: 1274
+NEW_LEN: 1703
+FILE: 56060078-52c5-434f-8167-f7ee39f2d5cc.jsonl L47
+---OLD---
+  while (
+    stopReason === 'max_tokens' &&
+    !pipe.hadTools &&
+    continues < MAX_OUTPUT_CONTINUES
+  ) {
+    continues += 1
+    const contBody = buildContinuationOpenAIBody(baseOpenAIBody, accumulatedText, KUMO_SAFE_BUDGET)
+    bridgeLog(`output_continue stream round=${continues} chars=${accumulatedText.length}`)
+    let contUp
+    try {
+      contUp = await callKumo(contBody, { stream: true, backends: kumoOpts.backends || tier.backends || [tier.backend] })
+    } catch (e) {
+      bridgeLog(`output_continue stream_fail ${e?.message || e}`)
+      break
+    }
+    if (!contUp.ok) {
+      const failBody = await contUp.text().catch(() => '')
+      bridgeLog(`output_continue stream_http status=${contUp.status} body=${failBody.slice(0, 200)}`)
+      break
+    }
+    // Keep the open text block — seamless tokens for the client.
+    pipe = await pipeOpenAiSseToAnthropic(contUp, res, streamState)
+    accumulatedText += pipe.text
+    stopReason = pipe.stopReason
+    usage = streamState.usage
+  }
+
+  // Prefer end_turn so desktop never shows «Output token limit reached» for ordinary long work.
+  if (stopReason === 'max_tokens') {
+    bridgeLog(`output_continue stream_cap_reached rounds=${continues} chars=${accumulatedText.length}`)
+    stopReason = 'end_turn'
+  }
+---NEW---
+  while (
+    !pipe.hadTools &&
+    continues < MAX_OUTPUT_CONTINUES &&
+    (stopReason === 'max_tokens' || looksTruncated(accumulatedText))
+  ) {
+    continues += 1
+    const beforeLen = accumulatedText.length
+    const contBody = buildContinuationOpenAIBody(baseOpenAIBody, accumulatedText, KUMO_SAFE_BUDGET)
+    bridgeLog(`output_continue stream round=${continues} chars=${accumulatedText.length} reason=${stopReason === 'max_tokens' ? 'max_tokens' : 'heuristic'}`)
+    let contUp
+    try {
+      contUp = await callKumo(contBody, { stream: true, backends: kumoOpts.backends || tier.backends || [tier.backend] })
+    } catch (e) {
+      bridgeLog(`output_continue stream_fail ${e?.message || e}`)
+      break
+    }
+    if (!contUp.ok) {
+      const failBody = await contUp.text().catch(() => '')
+      bridgeLog(`output_continue stream_http status=${contUp.status} body=${failBody.slice(0, 200)}`)
+      break
+    }
+    // Keep the open text block — seamless tokens for the client.
+    pipe = await pipeOpenAiSseToAnthropic(contUp, res, streamState)
+    accumulatedText += pipe.text
+    stopReason = pipe.stopReason
+    usage = streamState.usage
+    if (accumulatedText.length <= beforeLen) {
+      bridgeLog('output_continue stream_no_progress')
+      break
+    }
+  }
+
+  // Still truncated after silent continues → max_tokens so UI shows «Продолжить» (not orange scare copy).
+  if (stopReason === 'max_tokens' || looksTruncated(accumulatedText)) {
+    bridgeLog(`output_continue stream_needs_user rounds=${continues} chars=${accumulatedText.length} truncated=${looksTruncated(accumulatedText)}`)
+    stopReason = 'max_tokens'
+  } else if (stopReason !== 'tool_use') {
+    stopReason = 'end_turn'
+  }

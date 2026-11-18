@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Beam Agent — скачать Early Alpha</title>
+  <meta name="description" content="Скачать Beam Agent для Windows — Early Alpha от ASSISTIX. Автообновления через официальный канал." />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <style>
+    :root {
+      --bg: #041210;
+      --elev: #132421;
+      --ink: #f2faf8;
+      --muted: #9aada9;
+      --soft: #6f827e;
+      --beam: #00B3BC;
+      --beam-bright: #2dd4bf;
+      --line: rgba(255,255,255,.08);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(900px 480px at 12% -8%, rgba(0,179,188,.18), transparent 55%),
+        radial-gradient(700px 420px at 100% 0%, rgba(45,212,191,.08), transparent 50%),
+        var(--bg);
+      color: var(--ink);
+      font-family: "Segoe UI", system-ui, sans-serif;
+    }
+    .wrap {
+      width: min(720px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 72px 0 96px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(0,179,188,.35);
+      background: rgba(0,179,188,.12);
+      color: var(--beam-bright);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .02em;
+    }
+    h1 {
+      margin: 22px 0 12px;
+      font-size: clamp(36px, 6vw, 56px);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      font-weight: 700;
+    }
+    h1 span { color: var(--beam-bright); }
+    .lead {
+      margin: 0 0 36px;
+      max-width: 42ch;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.5;
+    }
+    .card {
+      background: var(--elev);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 28px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.35);
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px 28px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .meta { color: var(--soft); font-size: 14px; line-height: 1.55; }
+    .meta strong { color: var(--ink); font-weight: 600; }
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 52px;
+      padding: 0 22px;
+      border-radius: 999px;
+      border: 0;
+      background: linear-gradient(135deg, #2dd4bf, #00B3BC 55%, #0f766e);
+      color: #042f2e;
+      font-size: 16px;
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .cta:hover { filter: brightness(1.05); }
+    .notes {
+      margin: 28px 0 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .notes li {
+      padding-left: 18px;
+      position: relative;
+    }
+    .notes li::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 8px;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--beam);
+    }
+    footer {
+      margin-top: 40px;
+      color: var(--soft);
+      font-size: 13px;
+    }
+    footer a { color: var(--beam-bright); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="badge">EARLY ALPHA · Windows · 0.1.3</div>
+    <h1>Beam <span>Agent</span></h1>
+    <p class="lead">Десктопный AI‑агент ASSISTIX. Скачайте установщик, войдите через ASSISTIX ID — дальше приложение обновляется само.</p>
+
+    <section class="card">
+      <div class="row">
+        <div class="meta">
+          <div><strong id="fileName">Beam-Agent-0.1.3-Early-Alpha-Setup.exe</strong></div>
+          <div>Windows 10/11 · x64 · без прав администратора</div>
+          <div>Версия <span id="verLine">0.1.3-early-alpha</span></div>
+          <div id="sizeLine">≈ 390 МБ</div>
+        </div>
+        <a class="cta" id="downloadBtn" href="./Beam-Agent-0.1.3-Early-Alpha-Setup.exe" download>
+          Скачать Beam Agent
+        </a>
+      </div>
+      <ul class="notes">
+        <li>Вход через ASSISTIX ID (email и пароль).</li>
+        <li>Автообновления: канал <code>nightly</code> → <code>nightly.yml</code> / <code>latest.yml</code> рядом с установщиком.</li>
+        <li>После установки ярлык «Beam Agent (Early Alpha)» появится в меню Пуск.</li>
+      </ul>
+    </section>
+
+    <footer>
+      ASSISTIX · <a href="https://agent.assistix.org">agent.assistix.org</a> ·
+      <a href="https://chat.assistix.org">chat.assistix.org</a> ·
+      <a href="https://id.assistix.org">ASSISTIX ID</a>
+    </footer>
+  </main>
+  <script>
+    const EXE = "./Beam-Agent-0.1.3-Early-Alpha-Setup.exe";
+    fetch(EXE, { method: "HEAD" })
+      .then((r) => {
+        const len = r.headers.get("content-length");
+        if (!len) return;
+        const mb = (Number(len) / (1024 * 1024)).toFixed(0);
+        document.getElementById("sizeLine").textContent = "≈ " + mb + " МБ";
+      })
+      .catch(() => {});
+  </script>
+</body>
+</html>

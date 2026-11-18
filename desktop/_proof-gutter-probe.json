@@ -1,0 +1,789 @@
+{
+  "rail": false,
+  "strips": 0,
+  "rows": [
+    {
+      "title": "Кто ты",
+      "indent": "0px",
+      "padStart": "8px",
+      "rowStyle": {
+        "border": "0px none rgb(242, 250, 248)",
+        "borderLeft": "0px none rgb(242, 250, 248)",
+        "boxShadow": "none",
+        "outline": "rgb(242, 250, 248) none 2.4px",
+        "background": "rgba(255, 255, 255, 0.05) none repeat scroll 0% 0% / auto padding-box border-box",
+        "backgroundImage": "none",
+        "mask": "none",
+        "transform": "none",
+        "content": null
+      },
+      "slotStyle": {
+        "border": "0px none rgb(111, 130, 126)",
+        "borderLeft": "0px none rgb(111, 130, 126)",
+        "boxShadow": "none",
+        "outline": "rgb(111, 130, 126) none 2.4px",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "backgroundImage": "none",
+        "mask": "none",
+        "transform": "none",
+        "content": null
+      },
+      "before": {
+        "content": "none",
+        "bg": "rgba(0, 0, 0, 0)",
+        "w": "auto",
+        "h": "auto",
+        "display": "block",
+        "shadow": "none"
+      },
+      "slotBefore": {
+        "content": "none",
+        "bg": "rgba(0, 0, 0, 0)",
+        "w": "auto",
+        "h": "auto",
+        "display": "block"
+      },
+      "slotRect": {
+        "x": 20,
+        "y": 272,
+        "w": 16,
+        "h": 20
+      },
+      "rowRect": {
+        "x": 12,
+        "y": 266,
+        "w": 255,
+        "h": 32
+      },
+      "hits": [
+        {
+          "tag": "SPAN",
+          "id": "",
+          "cls": "wnFoaW_slot",
+          "text": "",
+          "rect": {
+            "x": 20,
+            "y": 272,
+            "w": 16,
+            "h": 20
+          },
+          "bg": "rgba(0, 0, 0, 0)",
+          "color": "rgb(111, 130, 126)",
+          "html": "<span class=\"wnFoaW_slot\"><div data-slot=\"sidebar.session.row.leading\" style=\"display: contents;\"></div></span>"
+        },
+        {
+          "tag": "SPAN",
+          "id": "",
+          "cls": "wnFoaW_title",
+          "text": "Кто ты",
+          "rect": {
+            "x": 40,
+            "y": 272,
+            "w": 194,
+            "h": 20
+          },
+          "bg": "rgba(0, 0, 0, 0)",
+          "color": "rgb(242, 250, 248)",
+          "html": "<span class=\"wnFoaW_title\">Кто ты</span>"
+        }
+      ],
+      "slotHTML": "<div data-slot=\"sidebar.session.row.leading\" style=\"display: contents;\"></div>"
+    },
+    {
+      "title": "КТО ТЫ",
+      "indent": "0px",
+      "padStart": "8px",
+      "rowStyle": {
+        "border": "0px none rgb(242, 250, 248)",
+        "borderLeft": "0px none rgb(242, 250, 248)",
+        "boxShadow": "none",
+        "outline": "rgb(242, 250, 248) none 2.4px",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "backgroundImage": "none",
+        "mask": "none",
+        "transform": "none",
+        "content": null
+      },
+      "slotStyle": {
+        "border": "0px none rgb(111, 130, 126)",
+        "borderLeft": "0px none rgb(111, 130, 126)",
+        "boxShadow": "none",
+        "outline": "rgb(111, 130, 126) none 2.4px",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "backgroundImage": "none",
+        "mask": "none",
+        "transform": "none",
+        "content": null
+      },
+      "before": {
+        "content": "none",
+        "bg": "rgba(0, 0, 0, 0)",
+        "w": "auto",
+        "h": "auto",
+        "display": "block",
+        "shadow": "none"
+      },
+      "slotBefore": {
+        "content": "none",
+        "bg": "rgba(0, 0, 0, 0)",
+        "w": "auto",
+        "h": "auto",
+        "display": "block"
+      },
+      "slotRect": {
+        "x": 20,
+        "y": 306,
+        "w": 16,
+        "h": 20
+      },
+      "rowRect": {
+        "x": 12,
+        "y": 300,
+        "w": 255,
+        "h": 32
+      },
+      "hits": [
+        {
+          "tag": "SPAN",
+          "id": "",
+          "cls": "wnFoaW_slot",
+          "text": "",
+          "rect": {
+            "x": 20,
+            "y": 306,
+            "w": 16,
+            "h": 20
+          },
+          "bg": "rgba(0, 0, 0, 0)",
+          "color": "rgb(111, 130, 126)",
+          "html": "<span class=\"wnFoaW_slot\"><div data-slot=\"sidebar.session.row.leading\" style=\"display: contents;\"></div></span>"
+        },
+        {
+          "tag": "SPAN",
+          "id": "",
+          "cls": "wnFoaW_title",
+          "text": "КТО ТЫ",
+          "rect": {
+            "x": 40,
+            "y": 306,
+            "w": 194,
+            "h": 20
+          },
+          "bg": "rgba(0, 0, 0, 0)",
+          "color": "rgb(242, 250, 248)",
+          "html": "<span class=\"wnFoaW_title\">КТО ТЫ</span>"
+        }
+      ],
+      "slotHTML": "<div data-slot=\"sidebar.session.row.leading\" style=\"display: contents;\"></div>"
+    },
+    {
+      "title": "Кто ты",
+      "indent": "0px",
+      "padStart": "8px",
+      "rowStyle": {
+        "border": "0px none rgb(242, 250, 248)",
+        "borderLeft": "0px none rgb(242, 250, 248)",
+        "boxShadow": "none",
+        "outline": "rgb(242, 250, 248) none 2.4px",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "backgroundImage": "none",
+        "mask": "none",
+        "transform": "none",
+        "content": null
+      },
+      "slotStyle": {
+        "border": "0px none rgb(111, 130, 126)",
+        "borderLeft": "0px none rgb(111, 130, 126)",
+        "boxShadow": "none",
+        "outline": "rgb(111, 130, 126) none 2.4px",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "backgroundImage": "none",
+        "mask": "none",
+        "transform": "none",
+        "content": null
+      },
+      "before": {
+        "content": "none",
+        "bg": "rgba(0, 0, 0, 0)",
+        "w": "auto",
+        "h": "auto",
+        "display": "block",
+        "shadow": "none"
+      },
+      "slotBefore": {
+        "content": "none",
+        "bg": "rgba(0, 0, 0, 0)",
+        "w": "auto",
+        "h": "auto",
+        "display": "block"
+      },
+      "slotRect": {
+        "x": 20,
+        "y": 340,
+        "w": 16,
+        "h": 20
+      },
+      "rowRect": {
+        "x": 12,
+        "y": 334,
+        "w": 255,
+        "h": 32
+      },
+      "hits": [
+        {
+          "tag": "SPAN",
+          "id": "",
+          "cls": "wnFoaW_slot",
+          "text": "",
+          "rect": {
+            "x": 20,
+            "y": 340,
+            "w": 16,
+            "h": 20
+          },
+          "bg": "rgba(0, 0, 0, 0)",
+          "color": "rgb(111, 130, 126)",
+          "html": "<span class=\"wnFoaW_slot\"><div data-slot=\"sidebar.session.row.leading\" style=\"display: contents;\"></div></span>"
+        },
+        {
+          "tag": "SPAN",
+          "id": "",
+          "cls": "wnFoaW_title",
+          "text": "Кто ты",
+          "rect": {
+            "x": 40,
+            "y": 340,
+            "w": 192,
+            "h": 20
+          },
+          "bg": "rgba(0, 0, 0, 0)",
+          "color": "rgb(242, 250, 248)",
+          "html": "<span class=\"wnFoaW_title\">Кто ты</span>"
+        }
+      ],
+      "slotHTML": "<div data-slot=\"sidebar.session.row.leading\" style=\"display: contents;\"></div>"
+    },
+    {
+      "title": "Презентация о числе 123",
+      "indent": "0px",
+      "padStart": "8px",
+      "rowStyle": {
+        "border": "0px none rgb(242, 250, 248)",
+        "borderLeft": "0px none rgb(242, 250, 248)",
+        "boxShadow": "none",
+        "outline": "rgb(242, 250, 248) none 2.4px",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "backgroundImage": "none",
+        "mask": "none",
+        "transform": "none",
+        "content": null
+      },
+      "slotStyle": {
+        "border": "0px none rgb(111, 130, 126)",
+        "borderLeft": "0px none rgb(111, 130, 126)",
+        "boxShadow": "none",
+        "outline": "rgb(111, 130, 126) none 2.4px",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "backgroundImage": "none",
+        "mask": "none",
+        "transform": "none",
+        "content": null
+      },
+      "before": {
+        "content": "none",
+        "bg": "rgba(0, 0, 0, 0)",
+        "w": "auto",
+        "h": "auto",
+        "display": "block",
+        "shadow": "none"
+      },
+      "slotBefore": {
+        "content": "none",
+        "bg": "rgba(0, 0, 0, 0)",
+        "w": "auto",
+        "h": "auto",
+        "display": "block"
+      },
+      "slotRect": {
+        "x": 20,
+        "y": 374,
+        "w": 16,
+        "h": 20
+      },
+      "rowRect": {
+        "x": 12,
+        "y": 368,
+        "w": 255,
+        "h": 32
+      },
+      "hits": [
+        {
+          "tag": "SPAN",
+          "id": "",
+          "cls": "wnFoaW_slot",
+          "text": "",
+          "rect": {
+            "x": 20,
+            "y": 374,
+            "w": 16,
+            "h": 20
+          },
+          "bg": "rgba(0, 0, 0, 0)",
+          "color": "rgb(111, 130, 126)",
+          "html": "<span class=\"wnFoaW_slot\"><div data-slot=\"sidebar.session.row.leading\" style=\"display: contents;\"></div></span>"
+        },
+        {
+          "tag": "SPAN",
+          "id": "",
+          "cls": "wnFoaW_title",
+          "text": "Презентация о числе ",
+          "rect": {
+            "x": 40,
+            "y": 374,
+            "w": 192,
+            "h": 20
+          },
+          "bg": "rgba(0, 0, 0, 0)",
+          "color": "rgb(242, 250, 248)",
+          "html": "<span class=\"wnFoaW_title\">Презентация о числе 123</span>"
+        }
+      ],
+      "slotHTML": "<div data-slot=\"sidebar.session.row.leading\" style=\"display: contents;\"></div>"
+    },
+    {
+      "title": "Вопрос о личности ассистента",
+      "indent": "0px",
+      "padStart": "8px",
+      "rowStyle": {
+        "border": "0px none rgb(242, 250, 248)",
+        "borderLeft": "0px none rgb(242, 250, 248)",
+        "boxShadow": "none",
+        "outline": "rgb(242, 250, 248) none 2.4px",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "backgroundImage": "none",
+        "mask": "none",
+        "transform": "none",
+        "content": null
+      },
+      "slotStyle": {
+        "border": "0px none rgb(111, 130, 126)",
+        "borderLeft": "0px none rgb(111, 130, 126)",
+        "boxShadow": "none",
+        "outline": "rgb(111, 130, 126) none 2.4px",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "backgroundImage": "none",
+        "mask": "none",
+        "transform": "none",
+        "content": null
+      },
+      "before": {
+        "content": "none",
+        "bg": "rgba(0, 0, 0, 0)",
+        "w": "auto",
+        "h": "auto",
+        "display": "block",
+        "shadow": "none"
+      },
+      "slotBefore": {
+        "content": "none",
+        "bg": "rgba(0, 0, 0, 0)",
+        "w": "auto",
+        "h": "auto",
+        "display": "block"
+      },
+      "slotRect": {
+        "x": 20,
+        "y": 446,
+        "w": 16,
+        "h": 20
+      },
+      "rowRect": {
+        "x": 12,
+        "y": 440,
+        "w": 255,
+        "h": 32
+      },
+      "hits": [
+        {
+          "tag": "SPAN",
+          "id": "",
+          "cls": "wnFoaW_slot",
+          "text": "",
+          "rect": {
+            "x": 20,
+            "y": 446,
+            "w": 16,
+            "h": 20
+          },
+          "bg": "rgba(0, 0, 0, 0)",
+          "color": "rgb(111, 130, 126)",
+          "html": "<span class=\"wnFoaW_slot\"><div data-slot=\"sidebar.session.row.leading\" style=\"display: contents;\"></div></span>"
+        },
+        {
+          "tag": "SPAN",
+          "id": "",
+          "cls": "wnFoaW_title",
+          "text": "Вопрос о личности ас",
+          "rect": {
+            "x": 40,
+            "y": 446,
+            "w": 187,
+            "h": 20
+          },
+          "bg": "rgba(0, 0, 0, 0)",
+          "color": "rgb(242, 250, 248)",
+          "html": "<span class=\"wnFoaW_title\">Вопрос о личности ассистента</span>"
+        }
+      ],
+      "slotHTML": "<div data-slot=\"sidebar.session.row.leading\" style=\"display: contents;\"></div>"
+    },
+    {
+      "title": "Вопрос о личности агента",
+      "indent": "0px",
+      "padStart": "8px",
+      "rowStyle": {
+        "border": "0px none rgb(242, 250, 248)",
+        "borderLeft": "0px none rgb(242, 250, 248)",
+        "boxShadow": "none",
+        "outline": "rgb(242, 250, 248) none 2.4px",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "backgroundImage": "none",
+        "mask": "none",
+        "transform": "none",
+        "content": null
+      },
+      "slotStyle": {
+        "border": "0px none rgb(111, 130, 126)",
+        "borderLeft": "0px none rgb(111, 130, 126)",
+        "boxShadow": "none",
+        "outline": "rgb(111, 130, 126) none 2.4px",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "backgroundImage": "none",
+        "mask": "none",
+        "transform": "none",
+        "content": null
+      },
+      "before": {
+        "content": "none",
+        "bg": "rgba(0, 0, 0, 0)",
+        "w": "auto",
+        "h": "auto",
+        "display": "block",
+        "shadow": "none"
+      },
+      "slotBefore": {
+        "content": "none",
+        "bg": "rgba(0, 0, 0, 0)",
+        "w": "auto",
+        "h": "auto",
+        "display": "block"
+      },
+      "slotRect": {
+        "x": 20,
+        "y": 480,
+        "w": 16,
+        "h": 20
+      },
+      "rowRect": {
+        "x": 12,
+        "y": 474,
+        "w": 255,
+        "h": 32
+      },
+      "hits": [
+        {
+          "tag": "SPAN",
+          "id": "",
+          "cls": "wnFoaW_slot",
+          "text": "",
+          "rect": {
+            "x": 20,
+            "y": 480,
+            "w": 16,
+            "h": 20
+          },
+          "bg": "rgba(0, 0, 0, 0)",
+          "color": "rgb(111, 130, 126)",
+          "html": "<span class=\"wnFoaW_slot\"><div data-slot=\"sidebar.session.row.leading\" style=\"display: contents;\"></div></span>"
+        },
+        {
+          "tag": "SPAN",
+          "id": "",
+          "cls": "wnFoaW_title",
+          "text": "Вопрос о личности аг",
+          "rect": {
+            "x": 40,
+            "y": 480,
+            "w": 186,
+            "h": 20
+          },
+          "bg": "rgba(0, 0, 0, 0)",
+          "color": "rgb(242, 250, 248)",
+          "html": "<span class=\"wnFoaW_title\">Вопрос о личности агента</span>"
+        }
+      ],
+      "slotHTML": "<div data-slot=\"sidebar.session.row.leading\" style=\"display: contents;\"></div>"
+    },
+    {
+      "title": "Кто ты",
+      "indent": "0px",
+      "padStart": "8px",
+      "rowStyle": {
+        "border": "0px none rgb(242, 250, 248)",
+        "borderLeft": "0px none rgb(242, 250, 248)",
+        "boxShadow": "none",
+        "outline": "rgb(242, 250, 248) none 2.4px",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "backgroundImage": "none",
+        "mask": "none",
+        "transform": "none",
+        "content": null
+      },
+      "slotStyle": {
+        "border": "0px none rgb(111, 130, 126)",
+        "borderLeft": "0px none rgb(111, 130, 126)",
+        "boxShadow": "none",
+        "outline": "rgb(111, 130, 126) none 2.4px",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "backgroundImage": "none",
+        "mask": "none",
+        "transform": "none",
+        "content": null
+      },
+      "before": {
+        "content": "none",
+        "bg": "rgba(0, 0, 0, 0)",
+        "w": "auto",
+        "h": "auto",
+        "display": "block",
+        "shadow": "none"
+      },
+      "slotBefore": {
+        "content": "none",
+        "bg": "rgba(0, 0, 0, 0)",
+        "w": "auto",
+        "h": "auto",
+        "display": "block"
+      },
+      "slotRect": {
+        "x": 20,
+        "y": 514,
+        "w": 16,
+        "h": 20
+      },
+      "rowRect": {
+        "x": 12,
+        "y": 508,
+        "w": 255,
+        "h": 32
+      },
+      "hits": [
+        {
+          "tag": "SPAN",
+          "id": "",
+          "cls": "wnFoaW_slot",
+          "text": "",
+          "rect": {
+            "x": 20,
+            "y": 514,
+            "w": 16,
+            "h": 20
+          },
+          "bg": "rgba(0, 0, 0, 0)",
+          "color": "rgb(111, 130, 126)",
+          "html": "<span class=\"wnFoaW_slot\"><div data-slot=\"sidebar.session.row.leading\" style=\"display: contents;\"></div></span>"
+        },
+        {
+          "tag": "SPAN",
+          "id": "",
+          "cls": "wnFoaW_title",
+          "text": "Кто ты",
+          "rect": {
+            "x": 40,
+            "y": 514,
+            "w": 186,
+            "h": 20
+          },
+          "bg": "rgba(0, 0, 0, 0)",
+          "color": "rgb(242, 250, 248)",
+          "html": "<span class=\"wnFoaW_title\">Кто ты</span>"
+        }
+      ],
+      "slotHTML": "<div data-slot=\"sidebar.session.row.leading\" style=\"display: contents;\"></div>"
+    },
+    {
+      "title": "Что умеет ассистент",
+      "indent": "0px",
+      "padStart": "8px",
+      "rowStyle": {
+        "border": "0px none rgb(242, 250, 248)",
+        "borderLeft": "0px none rgb(242, 250, 248)",
+        "boxShadow": "none",
+        "outline": "rgb(242, 250, 248) none 2.4px",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "backgroundImage": "none",
+        "mask": "none",
+        "transform": "none",
+        "content": null
+      },
+      "slotStyle": {
+        "border": "0px none rgb(111, 130, 126)",
+        "borderLeft": "0px none rgb(111, 130, 126)",
+        "boxShadow": "none",
+        "outline": "rgb(111, 130, 126) none 2.4px",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "backgroundImage": "none",
+        "mask": "none",
+        "transform": "none",
+        "content": null
+      },
+      "before": {
+        "content": "none",
+        "bg": "rgba(0, 0, 0, 0)",
+        "w": "auto",
+        "h": "auto",
+        "display": "block",
+        "shadow": "none"
+      },
+      "slotBefore": {
+        "content": "none",
+        "bg": "rgba(0, 0, 0, 0)",
+        "w": "auto",
+        "h": "auto",
+        "display": "block"
+      },
+      "slotRect": {
+        "x": 20,
+        "y": 548,
+        "w": 16,
+        "h": 20
+      },
+      "rowRect": {
+        "x": 12,
+        "y": 542,
+        "w": 255,
+        "h": 32
+      },
+      "hits": [
+        {
+          "tag": "SPAN",
+          "id": "",
+          "cls": "wnFoaW_slot",
+          "text": "",
+          "rect": {
+            "x": 20,
+            "y": 548,
+            "w": 16,
+            "h": 20
+          },
+          "bg": "rgba(0, 0, 0, 0)",
+          "color": "rgb(111, 130, 126)",
+          "html": "<span class=\"wnFoaW_slot\"><div data-slot=\"sidebar.session.row.leading\" style=\"display: contents;\"></div></span>"
+        },
+        {
+          "tag": "SPAN",
+          "id": "",
+          "cls": "wnFoaW_title",
+          "text": "Что умеет ассистент",
+          "rect": {
+            "x": 40,
+            "y": 548,
+            "w": 187,
+            "h": 20
+          },
+          "bg": "rgba(0, 0, 0, 0)",
+          "color": "rgb(242, 250, 248)",
+          "html": "<span class=\"wnFoaW_title\">Что умеет ассистент</span>"
+        }
+      ],
+      "slotHTML": "<div data-slot=\"sidebar.session.row.leading\" style=\"display: contents;\"></div>"
+    },
+    {
+      "title": "Исследование об Илоне Маске",
+      "indent": "0px",
+      "padStart": "8px",
+      "rowStyle": {
+        "border": "0px none rgb(242, 250, 248)",
+        "borderLeft": "0px none rgb(242, 250, 248)",
+        "boxShadow": "none",
+        "outline": "rgb(242, 250, 248) none 2.4px",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "backgroundImage": "none",
+        "mask": "none",
+        "transform": "none",
+        "content": null
+      },
+      "slotStyle": {
+        "border": "0px none rgb(111, 130, 126)",
+        "borderLeft": "0px none rgb(111, 130, 126)",
+        "boxShadow": "none",
+        "outline": "rgb(111, 130, 126) none 2.4px",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "backgroundImage": "none",
+        "mask": "none",
+        "transform": "none",
+        "content": null
+      },
+      "before": {
+        "content": "none",
+        "bg": "rgba(0, 0, 0, 0)",
+        "w": "auto",
+        "h": "auto",
+        "display": "block",
+        "shadow": "none"
+      },
+      "slotBefore": {
+        "content": "none",
+        "bg": "rgba(0, 0, 0, 0)",
+        "w": "auto",
+        "h": "auto",
+        "display": "block"
+      },
+      "slotRect": {
+        "x": 20,
+        "y": 582,
+        "w": 16,
+        "h": 20
+      },
+      "rowRect": {
+        "x": 12,
+        "y": 576,
+        "w": 255,
+        "h": 32
+      },
+      "hits": [
+        {
+          "tag": "SPAN",
+          "id": "",
+          "cls": "wnFoaW_slot",
+          "text": "",
+          "rect": {
+            "x": 20,
+            "y": 582,
+            "w": 16,
+            "h": 20
+          },
+          "bg": "rgba(0, 0, 0, 0)",
+          "color": "rgb(111, 130, 126)",
+          "html": "<span class=\"wnFoaW_slot\"><div data-slot=\"sidebar.session.row.leading\" style=\"display: contents;\"></div></span>"
+        },
+        {
+          "tag": "SPAN",
+          "id": "",
+          "cls": "wnFoaW_title",
+          "text": "Исследование об Илон",
+          "rect": {
+            "x": 40,
+            "y": 582,
+            "w": 187,
+            "h": 20
+          },
+          "bg": "rgba(0, 0, 0, 0)",
+          "color": "rgb(242, 250, 248)",
+          "html": "<span class=\"wnFoaW_title\">Исследование об Илоне Маске</span>"
+        }
+      ],
+      "slotHTML": "<div data-slot=\"sidebar.session.row.leading\" style=\"display: contents;\"></div>"
+    }
+  ]
+}
