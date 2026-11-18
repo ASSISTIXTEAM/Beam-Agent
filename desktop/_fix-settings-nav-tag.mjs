@@ -67,9 +67,17 @@ button[class*="navCell"][data-beam-icon] > svg *,
   mask: url("./beam-icons/bold/activity.png") center / contain no-repeat !important;
   background-color: currentColor !important;
 }
+[role="dialog"] [class*="navList"] button:nth-child(4) svg,
+[class*="navList"] button[data-beam-icon="about"] svg,
+[class*="navList"] button[data-beam-icon="info"] svg {
+  -webkit-mask: url("./beam-icons/bold/circle-info.png") center / contain no-repeat !important;
+  mask: url("./beam-icons/bold/circle-info.png") center / contain no-repeat !important;
+  background-color: currentColor !important;
+}
 [role="dialog"] [class*="navList"] button:nth-child(1) svg *,
 [role="dialog"] [class*="navList"] button:nth-child(2) svg *,
 [role="dialog"] [class*="navList"] button:nth-child(3) svg *,
+[role="dialog"] [class*="navList"] button:nth-child(4) svg *,
 [class*="navList"] button[data-beam-icon] svg * {
   opacity: 0 !important;
   fill: transparent !important;
@@ -142,9 +150,10 @@ try {
   for (const el of navBtns) {
     if (el.closest("#beam-side-limits,.bsl-rings")) continue;
     const label = ((el.getAttribute("aria-label") || "") + " " + (el.innerText || "")).trim().split("\\n")[0].trim();
-    if (/^(general|общие)$/i.test(label)) el.setAttribute("data-beam-icon", "general");
+    if (/^(general|общие|settings|настройки)$/i.test(label)) el.setAttribute("data-beam-icon", "general");
     else if (/^(profile|профиль|account|аккаунт)$/i.test(label)) el.setAttribute("data-beam-icon", "user");
     else if (/^(limits|лимиты|лимит)$/i.test(label)) el.setAttribute("data-beam-icon", "limits");
+    else if (/^(about|о приложении)$/i.test(label)) el.setAttribute("data-beam-icon", "about");
     else if (/^(models?|модели|модель)$/i.test(label)) el.setAttribute("data-beam-icon", "model");
   }
   for (const el of document.querySelectorAll('[role="dialog"] button, [class*="settings"] button, [class*="Settings"] button')) {

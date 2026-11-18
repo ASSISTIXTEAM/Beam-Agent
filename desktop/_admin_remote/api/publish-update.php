@@ -8,6 +8,7 @@
  *   version  – semver string (required)
  *   notes    – short changelog (optional)
  *   channel  – nightly|latest (optional, default nightly)
+ *   critical – true|1|yes for security/mandatory blocking update (optional)
  *
  * Or JSON body with base64 "packageBase64" for small test payloads (not for full installers).
  */
@@ -56,14 +57,23 @@ foreach ([$updatesDir, $downloadDir] as $dir) {
 $version = '';
 $notes = '';
 $channel = 'nightly';
+$critical = false;
 $tmpPackage = null;
 $origName = 'Beam-Agent-Setup.exe';
+
+$parseCritical = static function ($value): bool {
+    if (is_bool($value)) return $value;
+    if (is_int($value) || is_float($value)) return ((int)$value) === 1;
+    $s = strtolower(trim((string)$value));
+    return in_array($s, ['1', 'true', 'yes', 'on', 'critical', 'mandatory'], true);
+};
 
 $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
 if (stripos($contentType, 'multipart/form-data') !== false || !empty($_FILES)) {
     $version = trim((string)($_POST['version'] ?? ''));
     $notes = trim((string)($_POST['notes'] ?? $_POST['changelog'] ?? ''));
     $channel = trim((string)($_POST['channel'] ?? 'nightly'));
+    $critical = $parseCritical($_POST['critical'] ?? $_POST['mandatory'] ?? $_POST['force'] ?? false);
     if (empty($_FILES['package']) || !is_uploaded_file($_FILES['package']['tmp_name'])) {
         http_response_code(400);
         echo json_encode(['ok' => false, 'error' => 'package_required']);
@@ -82,6 +92,7 @@ if (stripos($contentType, 'multipart/form-data') !== false || !empty($_FILES)) {
     $version = trim((string)($body['version'] ?? ''));
     $notes = trim((string)($body['notes'] ?? $body['changelog'] ?? ''));
     $channel = trim((string)($body['channel'] ?? 'nightly'));
+    $critical = $parseCritical($body['critical'] ?? $body['mandatory'] ?? $body['force'] ?? false);
     if (!empty($body['packagePath']) && is_file($body['packagePath'])) {
         // Server-local path publish (ops SSH drop then activate)
         $tmpPackage = $body['packagePath'];
@@ -159,6 +170,8 @@ $manifest = [
     'sha256' => $sha256,
     'downloadUrl' => $downloadUrl,
     'channel' => $channel,
+    'critical' => $critical,
+    'mandatory' => $critical,
     'minAppVersion' => null,
 ];
 file_put_contents(

@@ -71,3 +71,8 @@ __pycache__/
 *.pyc
 *.pyo
 
+
+desktop/_ship_015_*.log
+desktop/_ship_015_stdout.txt
+desktop/_ship_015_stderr.txt
+

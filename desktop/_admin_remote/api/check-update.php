@@ -66,9 +66,15 @@ if ($downloadUrl === '' && !empty($manifest['file'])) {
     $downloadUrl = 'https://agent.assistix.org/updates/' . rawurlencode((string)$manifest['file']);
 }
 
+$criticalFlag = !empty($manifest['critical']) || !empty($manifest['mandatory']) || !empty($manifest['force']);
+// Critical only binds when a newer package is actually available for this client.
+$critical = $updateAvailable && $criticalFlag;
+
 echo json_encode([
     'ok' => true,
     'updateAvailable' => $updateAvailable,
+    'critical' => $critical,
+    'mandatory' => $critical,
     'version' => $latest,
     'current' => $current !== '' ? $current : null,
     'releaseDate' => $manifest['releaseDate'] ?? null,

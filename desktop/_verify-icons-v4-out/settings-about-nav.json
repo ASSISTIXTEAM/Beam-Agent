@@ -1,0 +1,61 @@
+{
+  "cssHref": "beam-app://app/assets/beam-override.css?v=settings-nav-about-v2b",
+  "opened": "gear",
+  "audit": {
+    "cells": [
+      {
+        "label": "Настройки",
+        "beam": "general",
+        "hasMask": true,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/settings.png\")",
+        "bg": "rgb(242, 250, 248)"
+      },
+      {
+        "label": "Профиль",
+        "beam": "user",
+        "hasMask": true,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/user.png\")",
+        "bg": "rgb(242, 250, 248)"
+      },
+      {
+        "label": "Лимиты",
+        "beam": "limits",
+        "hasMask": true,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/activity.png\")",
+        "bg": "rgb(242, 250, 248)"
+      },
+      {
+        "label": "О приложении",
+        "beam": "about",
+        "hasMask": true,
+        "mask": "url(\"beam-app://app/assets/beam-icons/bold/circle-info.png\")",
+        "bg": "rgb(242, 250, 248)"
+      }
+    ],
+    "labels": [
+      "Настройки",
+      "Профиль",
+      "Лимиты",
+      "О приложении"
+    ],
+    "okCount": true,
+    "okLabels": true,
+    "okIcons": true,
+    "banned": false,
+    "dialog": true
+  },
+  "aboutPanel": {
+    "present": true,
+    "hasUpdates": true,
+    "hasNetwork": true,
+    "hasNotif": true,
+    "hasVersion": true,
+    "text": "Beam Agent — десктопный агент ASSISTIX. Версия, обновления, сеть и уведомления.\n\nПриложение\nBeam Agent\nВерсия\n0.1.5\nКанал\n0.1.x / agent.assistix.org\nОбновления\nТекущая версия\n0.1.5\nСтатус\nУстановлена актуальная версия\nПоследняя проверка\n18 нояб., 23:47\nЧто нового\n0.1.5: fix Desktop Host ready timeout (boot waits host+auth only), soft runtime version drift, splash/boot caps, bridge :17865, stability tray.\nПроверить обновления\nОбновить\nСеть\nИнтернет\nВ сети\nBridge\nВ сети\n127.0.0.1:17865\nHost / Kumo\nВ сети\nИтог\nГотово к работе\nПроверить сейчас\nУведомления\nСистемные уведомления\nПоказывать тосты Windows, когда это доступно\nОбновления\nСообщать, когда доступна новая версия\nЛимиты моделей\nПредупреждать при исчерпании Tide / Flare / Pine\nСкачать на сайте\nagent.assistix.org"
+  },
+  "rings": {
+    "present": true,
+    "maskNone": true,
+    "stroke": "rgba(255, 255, 255, 0.1)"
+  },
+  "pass": true
+}

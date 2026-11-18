@@ -16,8 +16,28 @@ const DATA_DIR = path.join(process.env.BEAM_HOME || path.join(process.env.USERPR
 const STATE_FILE = path.join(DATA_DIR, 'state.json')
 const PORT = Number(process.env.BEAM_BRIDGE_PORT || 17865)
 
+const BEAM_HOME_DIR = process.env.BEAM_HOME || path.join(process.env.USERPROFILE || process.env.HOME || '', '.beam')
+function readCredentialRef(name) {
+  try {
+    const raw = fs.readFileSync(path.join(BEAM_HOME_DIR, '.credentials.yaml'), 'utf8')
+    const re = new RegExp(`^\\s*${name}:\\s*(.+)\\s*$`, 'mi')
+    const m = raw.match(re)
+    return m ? String(m[1]).trim().replace(/^['"]|['"]$/g, '') : ''
+  } catch { return '' }
+}
+function readDotEnvKey(name) {
+  try {
+    const raw = fs.readFileSync(path.join(BEAM_HOME_DIR, '.env'), 'utf8')
+    const re = new RegExp(`^\\s*${name}\\s*=\\s*(.+)\\s*$`, 'mi')
+    const m = raw.match(re)
+    return m ? String(m[1]).trim().replace(/^['"]|['"]$/g, '') : ''
+  } catch { return '' }
+}
 const KUMO_URL = process.env.KUMO_API_URL || 'https://api.kumorouter.com/v1/chat/completions'
-const KUMO_KEY = process.env.KUMO_API_KEY || 'YOUR_KUMO_API_KEY_HERE'
+const KUMO_KEY = process.env.KUMO_API_KEY
+  || readCredentialRef('KUMO_API_KEY')
+  || readDotEnvKey('KUMO_API_KEY')
+  || 'YOUR_KUMO_API_KEY_HERE'
 const ID_BASE = process.env.ASSISTIX_ID_URL || 'https://id.assistix.org'
 
 
@@ -372,7 +392,7 @@ const MODELS = {
     name: 'Tide',
     backend: 'deepseek-v4-1-flash',
     backends: ['deepseek-v4-1-flash', 'qwen3-8-flash', 'deepseek-v4-flash'],
-    limit: 1_000_000,
+    limit: 100_000,
     contextWindow: 1_048_576,
     maxTokensCap: 65536,
     maxTokensDefault: 65536,
@@ -384,7 +404,7 @@ const MODELS = {
     backend: 'google/gemini-3.1-flash-lite',
     // Prefer live Gemini lite; skip broken capability ids quickly via failover; always keep Tide-class fallbacks.
     backends: ['google/gemini-3.1-flash-lite', 'qwen3-8-flash', 'deepseek-v4-1-flash', 'deepseek-v4-flash', 'gemini-3.8-flash'],
-    limit: 100_000,
+    limit: 50_000,
     contextWindow: 1_048_576,
     maxTokensCap: 65536,
     maxTokensDefault: 65536,
@@ -836,6 +856,7 @@ function applyServerQuotasToState(state, payload, opts = {}) {
   const allowDecrease = opts.allowDecrease === true || !!payload.reset
   const lastChargeAt = Date.parse(state.quotaServer?.lastChargeAt || 0) || 0
   const chargeFresh = lastChargeAt > 0 && (Date.now() - lastChargeAt) < 20_000
+  const unlimitedByTier = {}
   for (const id of Object.keys(MODELS)) {
     const q = payload.quotas[id]
     if (!q) continue
@@ -847,21 +868,40 @@ function applyServerQuotasToState(state, payload, opts = {}) {
       bridgeLog(`quota_apply_guard tier=${id} keep=${prev} stale_get=${used}`)
       used = prev
     }
+    const unlimited = !!(q.unlimited || payload.unlimited)
+    unlimitedByTier[id] = unlimited
     state.quotas[id] = {
       used,
       limit: Math.max(0, Number(q.limit) || MODELS[id].limit),
+      unlimited,
+      remaining: q.remaining == null && unlimited
+        ? null
+        : Math.max(0, Number(q.remaining ?? ((Number(q.limit) || MODELS[id].limit) - used))),
     }
   }
   if (payload.week_start) state.quotaWeek = String(payload.week_start)
   state.quotaServer = {
     at: new Date().toISOString(),
     reset_at: payload.reset_at || null,
+    week_boundary: payload.week_boundary || 'monday_00_00_utc',
+    defaults: payload.defaults || { tide: 100000, flare: 50000, pine: 10000 },
     unlimited: !!payload.unlimited,
+    unlimitedByTier,
     source_of_truth: true,
     lastChargeAt: opts.fromCharge ? new Date().toISOString() : (state.quotaServer?.lastChargeAt || null),
   }
   saveState(state)
   return state
+}
+
+function tierIsUnlimited(state, tierId, payload) {
+  const id = String(tierId || '').toLowerCase()
+  if (payload?.quotas?.[id]?.unlimited) return true
+  if (payload?.unlimited) return true
+  if (state?.quotas?.[id]?.unlimited) return true
+  if (state?.quotaServer?.unlimited) return true
+  if (state?.quotaServer?.unlimitedByTier?.[id]) return true
+  return false
 }
 
 function fetchWithTimeout(url, opts = {}, ms = 8000) {
@@ -953,13 +993,23 @@ async function enforceServerQuotaOrReject(res, tier, req) {
   }
   state = loadState()
   const freshQ = got?.quotas?.[tier.id] || state.quotas?.[tier.id] || null
-  const unlimited = !!(got?.unlimited || state.quotaServer?.unlimited)
+  const unlimited = tierIsUnlimited(state, tier.id, got)
 
-  if (got?.ok && got?.quotas && freshQ && !unlimited) {
+  if (unlimited) {
+    bridgeLog(`quota_softblock_skip tier=${tier.id} reason=unlimited`)
+    return null
+  }
+
+  // Prefer product MODELS caps for soft-block (server may temporarily advertise INT_MAX when mis-flagged unlimited).
+  const productLimit = Math.max(1, Number(tier.limit) || MODELS[tier.id]?.limit || 1)
+  if (got?.ok && got?.quotas && freshQ) {
     const used = Math.max(0, Number(freshQ.used) || 0)
-    const limit = Math.max(0, Number(freshQ.limit) || Number(tier.limit) || 0)
-    bridgeLog(`quota_softblock_get tier=${tier.id} used=${used} limit=${limit}`)
+    const serverLimit = Math.max(0, Number(freshQ.limit) || 0)
+    // If server limit looks like "unlimited INT_MAX", fall back to product cap so soft-block stays honest.
+    const limit = (serverLimit <= 0 || serverLimit >= 1_000_000_000) ? productLimit : serverLimit
+    bridgeLog(`quota_softblock_get tier=${tier.id} used=${used} limit=${limit} serverLimit=${serverLimit}`)
     // If used < limit, NEVER show exhausted — gauges and soft-block agree.
+    // used=0 with healthy limit (Pine) must NEVER soft-block.
     if (limit > 0 && used >= limit) {
       return sendQuotaExhausted(res, tier, used, limit, state, req)
     }
@@ -981,7 +1031,7 @@ async function enforceServerQuotaOrReject(res, tier, req) {
     const q = checked.quotas[tier.id]
     const used = Math.max(0, Number(q.used) || 0)
     const limit = Math.max(0, Number(q.limit) || Number(tier.limit) || 0)
-    if (!checked.unlimited && limit > 0 && used >= limit) {
+    if (!tierIsUnlimited(state, tier.id, checked) && limit > 0 && used >= limit) {
       return sendQuotaExhausted(res, tier, used, limit, state, req)
     }
     if (checked.ok !== false) return null
@@ -1164,8 +1214,10 @@ function suggestQuotaAlternatives(state, exhaustedId) {
   const alts = []
   for (const m of Object.values(MODELS)) {
     if (m.id === exhaustedId) continue
-    const u = Number(state?.quotas?.[m.id]?.used) || 0
-    if (u < m.limit) alts.push(m.name)
+    if (tierIsUnlimited(state, m.id)) { alts.push(m.name); continue }
+    const lim = Math.max(1, Number(state?.quotas?.[m.id]?.limit) || m.limit || 1)
+    const u = Math.max(0, Number(state?.quotas?.[m.id]?.used) || 0)
+    if (u < lim) alts.push(m.name)
   }
   return alts
 }
@@ -1190,13 +1242,19 @@ function sendQuotaExhausted(res, tier, used, limit, state, req) {
       limit,
       reset_at: resetAt.toISOString(),
       alternatives: Object.values(MODELS)
-        .filter((m) => m.id !== tier.id && (Number(state?.quotas?.[m.id]?.used) || 0) < m.limit)
+        .filter((m) => {
+          if (m.id === tier.id) return false
+          if (tierIsUnlimited(state, m.id)) return true
+          const lim = Math.max(1, Number(state?.quotas?.[m.id]?.limit) || m.limit || 1)
+          const u = Math.max(0, Number(state?.quotas?.[m.id]?.used) || 0)
+          return u < lim
+        })
         .map((m) => m.id),
     },
   })
 }
 
-/** Keep stored weekly token quotas aligned with MODELS caps; reset used each week. */
+/** Keep local quota mirror shape valid; week rollover clears used. Server remains source of truth for limits. */
 function normalizeQuotas(state) {
   let changed = false
   const week = quotaWeekId()
@@ -1210,16 +1268,22 @@ function normalizeQuotas(state) {
   } else if (state.quotaWeek !== week) {
     state.quotaWeek = week
     for (const id of Object.keys(MODELS)) {
-      state.quotas[id] = { used: 0, limit: MODELS[id].limit }
+      const prev = state.quotas[id]
+      state.quotas[id] = {
+        used: 0,
+        limit: Math.max(0, Number(prev?.limit) || MODELS[id].limit),
+        unlimited: !!prev?.unlimited,
+      }
     }
     return true
   }
   for (const id of Object.keys(MODELS)) {
-    const want = MODELS[id].limit
     const prev = state.quotas[id]
     const used = Math.max(0, Number(prev?.used) || 0)
-    if (!prev || typeof prev !== 'object' || Number(prev.limit) !== want || Number(prev.used) !== used) {
-      state.quotas[id] = { used, limit: want }
+    const limit = Math.max(0, Number(prev?.limit) || MODELS[id].limit)
+    const unlimited = !!prev?.unlimited
+    if (!prev || typeof prev !== 'object' || Number(prev.used) !== used || Number(prev.limit) !== limit || !!prev.unlimited !== unlimited) {
+      state.quotas[id] = { used, limit, unlimited }
       changed = true
     }
   }
@@ -1502,8 +1566,10 @@ function smartRouteModel(body, state) {
   const toolHeavy = (toolUses + toolResults) >= 3 && (coding || /\b(write|edit|bash|shell|terminal|apply_patch|search_replace|файл|терминал)\b/i.test(userText))
 
   const remaining = (id) => {
-    const lim = Number(state?.quotas?.[id]?.limit) || MODELS[id]?.limit || 1
-    const used = Number(state?.quotas?.[id]?.used) || 0
+    if (tierIsUnlimited(state, id)) return true
+    const lim = Math.max(1, Number(state?.quotas?.[id]?.limit) || MODELS[id]?.limit || 1)
+    const used = Math.max(0, Number(state?.quotas?.[id]?.used) || 0)
+    // used < limit ⇒ headroom. Never treat used=0 / healthy pine as exhausted.
     return used < lim
   }
 
@@ -1512,13 +1578,23 @@ function smartRouteModel(body, state) {
   else if (coding || creative || toolUses > 0 || toolResults > 0) pick = 'flare'
   else pick = 'tide'
 
+  const preferred = pick
   if (!remaining(pick)) {
-    // Always fall through exhausted picks — never hard-block Auto on Pine when Tide/Flare remain.
-    const ladder = pick === 'tide' ? ['tide', 'flare', 'pine'] : pick === 'flare' ? ['flare', 'tide', 'pine'] : ['flare', 'tide', 'pine']
-    pick = ladder.find((id) => remaining(id)) || 'tide'
-    bridgeLog(`auto_route fallback pick=${pick} (preferred exhausted)`)
+    // Exhausted preferred → Flare then Pine then Tide. NEVER hard-block Auto while any bucket has headroom.
+    const ladder = pick === 'tide'
+      ? ['flare', 'pine']
+      : pick === 'flare'
+        ? ['tide', 'pine']
+        : ['flare', 'tide']
+    const next = ladder.find((id) => remaining(id))
+    if (next) {
+      pick = next
+      bridgeLog(`auto_route fallback preferred=${preferred} → pick=${pick} (preferred exhausted, headroom remains)`)
+    } else {
+      bridgeLog(`auto_route all_exhausted preferred=${preferred}`)
+    }
   }
-  bridgeLog(`auto_route pick=${pick} heavy=${!!heavy} toolHeavy=${!!toolHeavy} coding=${!!coding}`)
+  bridgeLog(`auto_route pick=${pick} preferred=${preferred} heavy=${!!heavy} toolHeavy=${!!toolHeavy} coding=${!!coding}`)
   return MODELS[pick] || MODELS.tide
 }
 
@@ -1527,24 +1603,16 @@ function resolveTierWithAuto(modelId, body, state) {
   const id = String(modelId || '').toLowerCase()
   const flag = body?.metadata?.beam_auto === true || body?.beam_auto === true
   const clientAskedAuto = flag || id === 'auto' || id === 'assistix-auto'
-  // Explicit Tide/Flare/Pine ALWAYS wins. Sticky prefs.auto must never hijack a concrete model
-  // (that was remapping request_model=flare → tide/pine and burning the wrong bucket).
-  const explicitManual = !clientAskedAuto && !!id && id !== 'auto' && id !== 'assistix-auto' && (
-    id === 'tide' || id === 'flare' || id === 'flair' || id === 'pine'
-    || Object.values(MODELS).some((t) => t.aliases.includes(id) || t.backend === id)
-  )
-  if (explicitManual) {
-    const manual = resolveTier(modelId)
-    bridgeLog(`tier_resolve manual → ${manual.id} (request_model=${id || '-'} prefs_auto=${!!prefs.auto})`)
-    return manual
-  }
-  if (clientAskedAuto || prefs.auto) {
+  // Auto FIRST. Composer Auto keeps catalog seat model=tide while prefs.auto=true —
+  // that must fall through, not be treated as an explicit Tide hard-block.
+  if (clientAskedAuto || prefs.auto === true) {
     const picked = smartRouteModel(body, state)
-    bridgeLog(`tier_resolve auto → ${picked.id} (request_model=${id || '-'})`)
+    bridgeLog(`tier_resolve auto → ${picked.id} (request_model=${id || '-'} prefs_auto=true)`)
     return picked
   }
+  // Manual Tide/Flare/Pine only when Auto is off — soft-block only the selected bucket.
   const manual = resolveTier(modelId)
-  bridgeLog(`tier_resolve manual → ${manual.id} (request_model=${id || '-'})`)
+  bridgeLog(`tier_resolve manual → ${manual.id} (request_model=${id || '-'} prefs_auto=false)`)
   return manual
 }
 
@@ -2589,11 +2657,32 @@ async function handleMessages(req, res) {
     return sendJson(res, 400, { type: 'error', error: { type: 'invalid_request_error', message: 'Invalid JSON' } })
   }
 
-  const state = loadState()
-  const tier = resolveTierWithAuto(body.model, body, state)
-  // Central server is source of truth — local wipe cannot restore quota
-  const rejected = await enforceServerQuotaOrReject(res, tier, req)
-  if (rejected) return rejected
+  // Fresh gauges before Auto fallthrough so remaining() matches sidebar (never soft-block Flare/Pine on stale Tide).
+  try { await syncQuotasFromServer() } catch {}
+  let state = loadState()
+  let tier = resolveTierWithAuto(body.model, body, state)
+  // Soft-block ONLY the model that would be charged this request (post-Auto remap).
+  let rejected = await enforceServerQuotaOrReject(res, tier, req)
+  if (rejected) {
+    const prefs = loadModelPrefs()
+    const autoOn = prefs.auto === true || body?.metadata?.beam_auto === true || body?.beam_auto === true
+      || ['auto', 'assistix-auto'].includes(String(body.model || '').toLowerCase())
+    if (!autoOn) return rejected
+    // Race: preferred exhausted after route — fall through to any bucket with headroom.
+    state = loadState()
+    const rem = (id) => {
+      if (tierIsUnlimited(state, id)) return true
+      const lim = Math.max(1, Number(state?.quotas?.[id]?.limit) || MODELS[id]?.limit || 1)
+      const used = Math.max(0, Number(state?.quotas?.[id]?.used) || 0)
+      return used < lim
+    }
+    const alt = ['flare', 'pine', 'tide'].find((id) => id !== tier.id && rem(id))
+    if (!alt) return rejected
+    bridgeLog(`auto_route softblock_retry exhausted=${tier.id} → ${alt}`)
+    tier = MODELS[alt]
+    rejected = await enforceServerQuotaOrReject(res, tier, req)
+    if (rejected) return rejected
+  }
 
   const wantStream = body.stream === true
   const userPlain = extractPlainTextFromMessages(body.messages)
@@ -3020,12 +3109,22 @@ const server = http.createServer(async (req, res) => {
         user: state.session,
         quotas: state.quotas,
         quotaServer: state.quotaServer || null,
-        models: Object.values(MODELS).map((m) => ({
-          id: m.id,
-          name: m.name,
-          limit: state.quotas[m.id]?.limit || m.limit,
-          used: state.quotas[m.id]?.used || 0,
-        })),
+        week_start: state.quotaWeek || null,
+        reset_at: state.quotaServer?.reset_at || null,
+        models: Object.values(MODELS).map((m) => {
+          const q = state.quotas?.[m.id] || {}
+          const unlimited = tierIsUnlimited(state, m.id)
+          const limit = Number(q.limit) || m.limit
+          const used = Number(q.used) || 0
+          return {
+            id: m.id,
+            name: m.name,
+            limit,
+            used,
+            remaining: unlimited ? null : Math.max(0, limit - used),
+            unlimited,
+          }
+        }),
       })
     }
 
@@ -3156,11 +3255,15 @@ if (url.pathname === '/assistix/logout' && req.method === 'POST') {
         const check = await fetchCheckUpdate(local.version)
         const available = !!check.updateAvailable || (!!check.version && semverGt(check.version, local.version))
         confirmUpdateBootOk()
+        const critical = !!(available && (check.critical || check.mandatory || check.force))
         return sendJson(res, 200, {
           ok: true,
           localVersion: local.version,
           updateAvailable: available,
+          critical,
+          mandatory: critical,
           version: check.version || null,
+          channel: check.channel || null,
           notes: check.notes || check.changelog || '',
           downloadUrl: check.downloadUrl || null,
           sha512: check.sha512 || null,

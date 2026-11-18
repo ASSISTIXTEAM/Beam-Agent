@@ -60,6 +60,11 @@ def main() -> int:
     ap.add_argument("--version", required=True)
     ap.add_argument("--notes", default="")
     ap.add_argument("--channel", default="nightly", choices=["nightly", "latest"])
+    ap.add_argument(
+        "--critical",
+        action="store_true",
+        help="Mark release as critical/mandatory (clients show blocking update UX)",
+    )
     ap.add_argument("--seed-only", action="store_true", help="Seed from already-remote download file")
     args = ap.parse_args()
 
@@ -120,6 +125,7 @@ def main() -> int:
             "version": args.version,
             "notes": args.notes,
             "channel": args.channel,
+            "critical": bool(args.critical),
             "packagePath": remote_tmp,
             "file": pkg.name if pkg.name else "Beam-Agent-Setup.exe",
         }

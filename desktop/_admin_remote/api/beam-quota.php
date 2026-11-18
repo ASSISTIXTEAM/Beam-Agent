@@ -1,8 +1,13 @@
 <?php
 /**
- * Central Beam Agent weekly quotas — server is source of truth (anti-cheat).
- * Keys: ASSISTIX ID user id and/or email. Week = Monday 00:00 UTC.
- * Actions: get | check | charge | set_limits (admin key same as ingest).
+ * Central Assistix weekly quotas — shared source of truth for Beam Agent
+ * and any product that shares ASSISTIX ID (chat, etc.).
+ *
+ * Week boundary: Monday 00:00 UTC (ISO week start). used resets by new week_start row.
+ * Defaults (everyone, unless per-user override): Tide 100_000 · Flare 50_000 · Pine 10_000
+ *
+ * Actions: get | check | charge | set_limits | reset_used
+ * Auth: BEAM_INGEST_KEY (Bearer / X-Beam-Ingest-Key / ?key=)
  */
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -47,11 +52,18 @@ if (!$dbLoaded || !isset($pdo)) {
     exit;
 }
 
-/** Default weekly token caps (Beam Agent desktop product). */
+/** Product defaults — shared across Assistix products. */
 const BEAM_DEFAULT_LIMITS = [
-    'tide' => 1000000,
-    'flare' => 100000,
+    'tide' => 100000,
+    'flare' => 50000,
     'pine' => 10000,
+];
+
+/** Known historical product defaults (migrate unless custom override). */
+const BEAM_LEGACY_LIMITS = [
+    'tide' => [500000, 1000000],
+    'flare' => [10000, 50000, 100000],
+    'pine' => [1000, 50000, 10000],
 ];
 
 function beam_week_start_utc(): string {
@@ -63,14 +75,25 @@ function beam_week_start_utc(): string {
 function beam_next_reset_iso(): string {
     $dt = new DateTimeImmutable('now', new DateTimeZone('UTC'));
     $dow = (int)$dt->format('N');
+    // Next Monday 00:00 UTC (if already Monday, next week's Monday).
     $add = $dow === 1 ? 7 : (8 - $dow);
     return $dt->modify("+{$add} days")->setTime(0, 0, 0)->format(DateTimeInterface::ATOM);
+}
+
+function beam_ensure_col(PDO $pdo, string $table, string $col, string $ddl): void {
+    try {
+        $st = $pdo->query("SHOW COLUMNS FROM `{$table}` LIKE " . $pdo->quote($col));
+        if (!$st->fetch(PDO::FETCH_ASSOC)) {
+            $pdo->exec("ALTER TABLE `{$table}` ADD COLUMN {$ddl}");
+        }
+    } catch (Throwable $e) {}
 }
 
 function beam_ensure_quota_schema(PDO $pdo): void {
     static $done = false;
     if ($done) return;
     $done = true;
+
     $pdo->exec("CREATE TABLE IF NOT EXISTS beam_weekly_usage (
         id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
         id_user_id BIGINT UNSIGNED NULL DEFAULT NULL,
@@ -79,8 +102,8 @@ function beam_ensure_quota_schema(PDO $pdo): void {
         tide_used INT UNSIGNED NOT NULL DEFAULT 0,
         flare_used INT UNSIGNED NOT NULL DEFAULT 0,
         pine_used INT UNSIGNED NOT NULL DEFAULT 0,
-        tide_limit INT UNSIGNED NOT NULL DEFAULT 1000000,
-        flare_limit INT UNSIGNED NOT NULL DEFAULT 100000,
+        tide_limit INT UNSIGNED NOT NULL DEFAULT 100000,
+        flare_limit INT UNSIGNED NOT NULL DEFAULT 50000,
         pine_limit INT UNSIGNED NOT NULL DEFAULT 10000,
         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -99,6 +122,9 @@ function beam_ensure_quota_schema(PDO $pdo): void {
         flare_limit INT UNSIGNED NULL DEFAULT NULL,
         pine_limit INT UNSIGNED NULL DEFAULT NULL,
         unlimited TINYINT(1) NOT NULL DEFAULT 0,
+        tide_unlimited TINYINT(1) NOT NULL DEFAULT 0,
+        flare_unlimited TINYINT(1) NOT NULL DEFAULT 0,
+        pine_unlimited TINYINT(1) NOT NULL DEFAULT 0,
         note VARCHAR(255) NOT NULL DEFAULT '',
         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         PRIMARY KEY (id),
@@ -106,35 +132,38 @@ function beam_ensure_quota_schema(PDO $pdo): void {
         UNIQUE KEY uq_beam_lim_email (email)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
-    // One-shot: column defaults + migrate legacy product caps + clear inflated pine burns.
+    beam_ensure_col($pdo, 'beam_user_limits', 'tide_unlimited', 'tide_unlimited TINYINT(1) NOT NULL DEFAULT 0 AFTER unlimited');
+    beam_ensure_col($pdo, 'beam_user_limits', 'flare_unlimited', 'flare_unlimited TINYINT(1) NOT NULL DEFAULT 0 AFTER tide_unlimited');
+    beam_ensure_col($pdo, 'beam_user_limits', 'pine_unlimited', 'pine_unlimited TINYINT(1) NOT NULL DEFAULT 0 AFTER flare_unlimited');
+
     try {
         $pdo->exec("CREATE TABLE IF NOT EXISTS beam_quota_migrations (
             id VARCHAR(64) NOT NULL,
             applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-        $migId = 'limits_v2_tide1m_flare100k_pine10k';
+
+        $migId = 'limits_v3_tide100k_flare50k_pine10k';
         $st = $pdo->prepare('SELECT id FROM beam_quota_migrations WHERE id=? LIMIT 1');
         $st->execute([$migId]);
         if (!$st->fetch(PDO::FETCH_ASSOC)) {
             try {
                 $pdo->exec("ALTER TABLE beam_weekly_usage
-                    MODIFY tide_limit INT UNSIGNED NOT NULL DEFAULT 1000000,
-                    MODIFY flare_limit INT UNSIGNED NOT NULL DEFAULT 100000,
+                    MODIFY tide_limit INT UNSIGNED NOT NULL DEFAULT 100000,
+                    MODIFY flare_limit INT UNSIGNED NOT NULL DEFAULT 50000,
                     MODIFY pine_limit INT UNSIGNED NOT NULL DEFAULT 10000");
             } catch (Throwable $e) {}
-            // Only rewrite limits that still match known legacy defaults (preserve custom admin overrides).
-            $pdo->exec("UPDATE beam_weekly_usage SET tide_limit=1000000 WHERE tide_limit IN (500000)");
-            $pdo->exec("UPDATE beam_weekly_usage SET flare_limit=100000 WHERE flare_limit IN (50000, 10000)");
-            $pdo->exec("UPDATE beam_weekly_usage SET pine_limit=10000 WHERE pine_limit IN (50000, 1000)");
-            $pdo->exec("UPDATE beam_user_limits SET tide_limit=1000000 WHERE tide_limit IN (500000)");
-            $pdo->exec("UPDATE beam_user_limits SET flare_limit=100000 WHERE flare_limit IN (50000, 10000)");
-            $pdo->exec("UPDATE beam_user_limits SET pine_limit=10000 WHERE pine_limit IN (50000, 1000)");
-            // Undo inflated pine burns from tool-schema re-billing (often used==50000 old cap).
-            $week = beam_week_start_utc();
-            $pdo->prepare("UPDATE beam_weekly_usage SET pine_used=0
-                WHERE week_start=? AND pine_used >= 5000")
-                ->execute([$week]);
+
+            // Week rows still on known product defaults → new defaults (custom caps preserved).
+            $pdo->exec("UPDATE beam_weekly_usage SET tide_limit=100000 WHERE tide_limit IN (500000, 1000000)");
+            $pdo->exec("UPDATE beam_weekly_usage SET flare_limit=50000 WHERE flare_limit IN (10000, 100000)");
+            $pdo->exec("UPDATE beam_weekly_usage SET pine_limit=10000 WHERE pine_limit IN (1000, 50000)");
+
+            // Override rows that merely mirrored old product defaults → new product defaults.
+            $pdo->exec("UPDATE beam_user_limits SET tide_limit=100000 WHERE tide_limit IN (500000, 1000000)");
+            $pdo->exec("UPDATE beam_user_limits SET flare_limit=50000 WHERE flare_limit IN (10000, 100000)");
+            $pdo->exec("UPDATE beam_user_limits SET pine_limit=10000 WHERE pine_limit IN (1000, 50000)");
+
             $pdo->prepare('INSERT INTO beam_quota_migrations (id) VALUES (?)')->execute([$migId]);
         }
     } catch (Throwable $e) {}
@@ -147,11 +176,16 @@ function beam_norm_tier(string $tier): string {
     return 'tide';
 }
 
-/** @return array{tide:int,flare:int,pine:int,unlimited:bool} */
+/**
+ * @return array{tide:int,flare:int,pine:int,unlimited:bool,tide_unlimited:bool,flare_unlimited:bool,pine_unlimited:bool,has_override:bool}
+ */
 function beam_resolve_limits(PDO $pdo, ?int $idUserId, string $email): array {
     $lim = BEAM_DEFAULT_LIMITS;
     $unlimited = false;
+    $per = ['tide' => false, 'flare' => false, 'pine' => false];
+    $hasOverride = false;
     try {
+        $row = false;
         if ($idUserId && $idUserId > 0) {
             $st = $pdo->prepare('SELECT * FROM beam_user_limits WHERE id_user_id=? LIMIT 1');
             $st->execute([$idUserId]);
@@ -165,29 +199,39 @@ function beam_resolve_limits(PDO $pdo, ?int $idUserId, string $email): array {
             $st = $pdo->prepare('SELECT * FROM beam_user_limits WHERE email=? LIMIT 1');
             $st->execute([$email]);
             $row = $st->fetch(PDO::FETCH_ASSOC);
-        } else {
-            $row = false;
         }
         if (is_array($row)) {
+            $hasOverride = true;
             if (!empty($row['unlimited'])) $unlimited = true;
             foreach (['tide', 'flare', 'pine'] as $k) {
                 $col = $k . '_limit';
                 if (isset($row[$col]) && $row[$col] !== null && $row[$col] !== '') {
                     $lim[$k] = max(0, (int)$row[$col]);
                 }
+                $ucol = $k . '_unlimited';
+                if (!empty($row[$ucol])) $per[$k] = true;
             }
         }
     } catch (Throwable $e) {}
+
     return [
         'tide' => $lim['tide'],
         'flare' => $lim['flare'],
         'pine' => $lim['pine'],
         'unlimited' => $unlimited,
+        'tide_unlimited' => $unlimited || $per['tide'],
+        'flare_unlimited' => $unlimited || $per['flare'],
+        'pine_unlimited' => $unlimited || $per['pine'],
+        'has_override' => $hasOverride,
     ];
 }
 
+function beam_tier_unlimited(array $limits, string $tier): bool {
+    if (!empty($limits['unlimited'])) return true;
+    return !empty($limits[$tier . '_unlimited']);
+}
+
 /**
- * Load or create week row. Prefer id_user_id; fall back to email.
  * @return array<string,mixed>
  */
 function beam_get_or_create_usage(PDO $pdo, ?int $idUserId, string $email): array {
@@ -204,7 +248,6 @@ function beam_get_or_create_usage(PDO $pdo, ?int $idUserId, string $email): arra
         $st = $pdo->prepare('SELECT * FROM beam_weekly_usage WHERE email=? AND week_start=? LIMIT 1');
         $st->execute([$email, $week]);
         $row = $st->fetch(PDO::FETCH_ASSOC) ?: null;
-        // Attach id_user_id if we now know it
         if ($row && $idUserId && $idUserId > 0 && empty($row['id_user_id'])) {
             try {
                 $pdo->prepare('UPDATE beam_weekly_usage SET id_user_id=? WHERE id=?')->execute([$idUserId, $row['id']]);
@@ -228,9 +271,7 @@ function beam_get_or_create_usage(PDO $pdo, ?int $idUserId, string $email): arra
                 $limits['flare'],
                 $limits['pine'],
             ]);
-        } catch (Throwable $e) {
-            // race on unique — re-read
-        }
+        } catch (Throwable $e) {}
         if ($idUserId && $idUserId > 0) {
             $st = $pdo->prepare('SELECT * FROM beam_weekly_usage WHERE id_user_id=? AND week_start=? LIMIT 1');
             $st->execute([$idUserId, $week]);
@@ -257,7 +298,7 @@ function beam_get_or_create_usage(PDO $pdo, ?int $idUserId, string $email): arra
         }
     }
 
-    // Keep limits columns synced to override/defaults (used is never reset except new week)
+    // Keep week limits synced to override/defaults (used only resets on new week_start).
     foreach (['tide', 'flare', 'pine'] as $k) {
         $want = (int)$limits[$k];
         if ((int)($row[$k . '_limit'] ?? 0) !== $want) {
@@ -269,25 +310,39 @@ function beam_get_or_create_usage(PDO $pdo, ?int $idUserId, string $email): arra
             $row[$k . '_limit'] = $want;
         }
     }
-    $row['_unlimited'] = $limits['unlimited'];
+    $row['_limits'] = $limits;
     return $row;
 }
 
 function beam_usage_payload(array $row): array {
-    $unlimited = !empty($row['_unlimited']);
+    $limits = $row['_limits'] ?? [
+        'unlimited' => false,
+        'tide_unlimited' => false,
+        'flare_unlimited' => false,
+        'pine_unlimited' => false,
+    ];
+    $allUnlimited = !empty($limits['unlimited'])
+        && !empty($limits['tide_unlimited'])
+        && !empty($limits['flare_unlimited'])
+        && !empty($limits['pine_unlimited']);
+
     $out = [
         'week_start' => $row['week_start'] ?? beam_week_start_utc(),
         'reset_at' => beam_next_reset_iso(),
-        'unlimited' => $unlimited,
+        'week_boundary' => 'monday_00_00_utc',
+        'defaults' => BEAM_DEFAULT_LIMITS,
+        'unlimited' => $allUnlimited || !empty($limits['unlimited']),
         'quotas' => [],
     ];
     foreach (['tide', 'flare', 'pine'] as $k) {
-        $limit = $unlimited ? 2147483647 : (int)($row[$k . '_limit'] ?? BEAM_DEFAULT_LIMITS[$k]);
+        $isUnlim = beam_tier_unlimited($limits, $k);
+        $limit = $isUnlim ? 2147483647 : (int)($row[$k . '_limit'] ?? BEAM_DEFAULT_LIMITS[$k]);
         $used = (int)($row[$k . '_used'] ?? 0);
         $out['quotas'][$k] = [
             'used' => $used,
             'limit' => $limit,
-            'remaining' => max(0, $limit - $used),
+            'remaining' => $isUnlim ? null : max(0, $limit - $used),
+            'unlimited' => $isUnlim,
         ];
     }
     return $out;
@@ -309,7 +364,6 @@ if ($idUserId <= 0 && $email === '') {
     echo json_encode(['ok' => false, 'error' => 'id_user_id or email required']);
     exit;
 }
-// Avoid empty-email unique collisions when only id_user_id is known
 if ($email === '' && $idUserId > 0) {
     $email = 'id:' . $idUserId;
 }
@@ -321,9 +375,9 @@ try {
         $tier = beam_norm_tier((string)($body['tier'] ?? $_GET['tier'] ?? ''));
         $ok = true;
         $exhausted = null;
-        if ($action === 'check' && $tier !== '' && empty($payload['unlimited'])) {
+        if ($action === 'check' && $tier !== '') {
             $q = $payload['quotas'][$tier];
-            if ($q['used'] >= $q['limit']) {
+            if (empty($q['unlimited']) && $q['used'] >= $q['limit']) {
                 $ok = false;
                 $exhausted = $tier;
             }
@@ -335,6 +389,7 @@ try {
             'email' => $email ?: ($row['email'] ?? ''),
             'server' => true,
             'source_of_truth' => true,
+            'product' => 'assistix-unified',
         ] + $payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         exit;
     }
@@ -353,11 +408,32 @@ try {
 
         $pdo->beginTransaction();
         $row = beam_get_or_create_usage($pdo, $idUserId > 0 ? $idUserId : null, $email);
-        if (!empty($row['_unlimited'])) {
+        $limits = $row['_limits'] ?? [];
+        $isUnlim = beam_tier_unlimited($limits, $tier);
+
+        if ($isUnlim) {
+            // Honest accounting: still record provider usage; never soft-block.
+            $add = $tokens;
+            if (!empty($row['id'])) {
+                $pdo->prepare("UPDATE beam_weekly_usage SET {$colUsed} = {$colUsed} + ? WHERE id=?")
+                    ->execute([$add, $row['id']]);
+                $st2 = $pdo->prepare('SELECT * FROM beam_weekly_usage WHERE id=?');
+                $st2->execute([$row['id']]);
+                $row = $st2->fetch(PDO::FETCH_ASSOC) ?: $row;
+                $row['_limits'] = $limits;
+            } else {
+                $row[$colUsed] = (int)($row[$colUsed] ?? 0) + $add;
+            }
             $pdo->commit();
-            echo json_encode(['ok' => true, 'charged' => 0, 'unlimited' => true] + beam_usage_payload($row), JSON_UNESCAPED_UNICODE);
+            echo json_encode([
+                'ok' => true,
+                'charged' => $add,
+                'tier' => $tier,
+                'unlimited' => true,
+            ] + beam_usage_payload($row), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             exit;
         }
+
         $used = (int)($row[$colUsed] ?? 0);
         $limit = (int)($row[$colLimit] ?? BEAM_DEFAULT_LIMITS[$tier]);
         if ($used >= $limit) {
@@ -372,17 +448,15 @@ try {
         }
         $add = min($tokens, max(0, $limit - $used));
         if (!empty($row['id'])) {
-            // Atomic: only increment if still under limit
             $sql = "UPDATE beam_weekly_usage SET {$colUsed} = {$colUsed} + ?
                     WHERE id=? AND {$colUsed} < {$colLimit}";
             $st = $pdo->prepare($sql);
             $st->execute([$add, $row['id']]);
             if ($st->rowCount() < 1) {
-                // re-read — may have raced to exhaust
                 $st2 = $pdo->prepare('SELECT * FROM beam_weekly_usage WHERE id=?');
                 $st2->execute([$row['id']]);
                 $row = $st2->fetch(PDO::FETCH_ASSOC) ?: $row;
-                $row['_unlimited'] = false;
+                $row['_limits'] = $limits;
                 $pdo->commit();
                 if ((int)($row[$colUsed] ?? 0) >= (int)($row[$colLimit] ?? 0)) {
                     http_response_code(402);
@@ -397,7 +471,7 @@ try {
                 $st2 = $pdo->prepare('SELECT * FROM beam_weekly_usage WHERE id=?');
                 $st2->execute([$row['id']]);
                 $row = $st2->fetch(PDO::FETCH_ASSOC) ?: $row;
-                $row['_unlimited'] = false;
+                $row['_limits'] = $limits;
             }
         }
         $pdo->commit();
@@ -415,21 +489,41 @@ try {
             echo json_encode(['ok' => false, 'error' => 'POST only']);
             exit;
         }
-        $tide = isset($body['tide_limit']) ? max(0, (int)$body['tide_limit']) : null;
-        $flare = isset($body['flare_limit']) ? max(0, (int)$body['flare_limit']) : null;
-        $pine = isset($body['pine_limit']) ? max(0, (int)$body['pine_limit']) : null;
-        $unlimited = !empty($body['unlimited']) ? 1 : 0;
+        $tide = array_key_exists('tide_limit', $body) ? max(0, (int)$body['tide_limit']) : null;
+        $flare = array_key_exists('flare_limit', $body) ? max(0, (int)$body['flare_limit']) : null;
+        $pine = array_key_exists('pine_limit', $body) ? max(0, (int)$body['pine_limit']) : null;
+        $unlimited = array_key_exists('unlimited', $body) ? (!empty($body['unlimited']) ? 1 : 0) : null;
+        $tideU = array_key_exists('tide_unlimited', $body) ? (!empty($body['tide_unlimited']) ? 1 : 0) : null;
+        $flareU = array_key_exists('flare_unlimited', $body) ? (!empty($body['flare_unlimited']) ? 1 : 0) : null;
+        $pineU = array_key_exists('pine_unlimited', $body) ? (!empty($body['pine_unlimited']) ? 1 : 0) : null;
         $note = mb_substr(trim((string)($body['note'] ?? '')), 0, 255);
 
+        // If only global unlimited is set true, treat all models as unlimited.
+        if ($unlimited === 1) {
+            $tideU = 1; $flareU = 1; $pineU = 1;
+        }
+        // If all three model flags are set, derive global.
+        if ($tideU !== null && $flareU !== null && $pineU !== null) {
+            $unlimited = ($tideU && $flareU && $pineU) ? 1 : 0;
+        }
+        if ($unlimited === null) $unlimited = 0;
+        if ($tideU === null) $tideU = 0;
+        if ($flareU === null) $flareU = 0;
+        if ($pineU === null) $pineU = 0;
+
         $pdo->prepare(
-            'INSERT INTO beam_user_limits (id_user_id, email, tide_limit, flare_limit, pine_limit, unlimited, note)
-             VALUES (?,?,?,?,?,?,?)
+            'INSERT INTO beam_user_limits
+             (id_user_id, email, tide_limit, flare_limit, pine_limit, unlimited, tide_unlimited, flare_unlimited, pine_unlimited, note)
+             VALUES (?,?,?,?,?,?,?,?,?,?)
              ON DUPLICATE KEY UPDATE
                email=VALUES(email),
                tide_limit=COALESCE(VALUES(tide_limit), tide_limit),
                flare_limit=COALESCE(VALUES(flare_limit), flare_limit),
                pine_limit=COALESCE(VALUES(pine_limit), pine_limit),
                unlimited=VALUES(unlimited),
+               tide_unlimited=VALUES(tide_unlimited),
+               flare_unlimited=VALUES(flare_unlimited),
+               pine_unlimited=VALUES(pine_unlimited),
                note=VALUES(note)'
         )->execute([
             $idUserId > 0 ? $idUserId : null,
@@ -438,17 +532,18 @@ try {
             $flare,
             $pine,
             $unlimited,
+            $tideU,
+            $flareU,
+            $pineU,
             $note,
         ]);
 
-        // Also patch current week row limits
         $row = beam_get_or_create_usage($pdo, $idUserId > 0 ? $idUserId : null, $email);
-        echo json_encode(['ok' => true, 'saved' => true] + beam_usage_payload($row), JSON_UNESCAPED_UNICODE);
+        echo json_encode(['ok' => true, 'saved' => true] + beam_usage_payload($row), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         exit;
     }
 
     if ($action === 'reset_used') {
-        // Admin-only wipe of current week used counters (does not change limits)
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
             echo json_encode(['ok' => false, 'error' => 'POST only']);
@@ -460,7 +555,7 @@ try {
                 ->execute([$row['id']]);
         }
         $row = beam_get_or_create_usage($pdo, $idUserId > 0 ? $idUserId : null, $email);
-        echo json_encode(['ok' => true, 'reset' => true] + beam_usage_payload($row), JSON_UNESCAPED_UNICODE);
+        echo json_encode(['ok' => true, 'reset' => true] + beam_usage_payload($row), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         exit;
     }
 
