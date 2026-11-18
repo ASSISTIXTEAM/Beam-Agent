@@ -80,8 +80,8 @@ function stripEnvFiles(dir) {
   return n
 }
 
-const INSTALLER_VERSION = '0.1.5'
-const INSTALLER_EXE = 'Beam-Agent-0.1.5-Setup.exe'
+const INSTALLER_VERSION = '0.1.6'
+const INSTALLER_EXE = 'Beam-Agent-0.1.6-Setup.exe'
 const UPDATE_FEED_URL = 'https://agent.assistix.org/download/'
 const APP_UPDATE_YML_SRC = path.join(ROOT, 'desktop', 'installer', 'app-update.yml')
 
@@ -301,6 +301,16 @@ if (fs.existsSync(BRIDGE_SRC)) {
   }
 }
 {
+  const fixBundles = path.join(ROOT, 'desktop', 'fix-profile-dsh-bundles.mjs')
+  if (fs.existsSync(fixBundles)) {
+    console.log('→ Applying fix-profile-dsh-bundles.mjs (dsh.profile.bundles boot fix)')
+    const r = spawnSync(process.execPath, [fixBundles], { cwd: ROOT, encoding: 'utf8', windowsHide: true })
+    if (r.stdout) process.stdout.write(r.stdout)
+    if (r.stderr) process.stderr.write(r.stderr)
+    if (r.status !== 0) console.warn('  fix-profile-dsh-bundles exited', r.status)
+  }
+}
+{
   const fix = path.join(ROOT, 'desktop', 'fix-missing-credential.mjs')
   if (fs.existsSync(fix)) {
     console.log('→ Applying fix-missing-credential.mjs')
@@ -456,23 +466,28 @@ stripEnvFiles(DIST)
   ]
   for (const file of runtimeStamp) {
     if (!fs.existsSync(file)) continue
-    if (file.endsWith('package.json')) {
-      const pkg = JSON.parse(fs.readFileSync(file, 'utf8'))
-      pkg.version = INSTALLER_VERSION
-      if (path.basename(path.dirname(file)) === 'app') {
-        pkg.productName = 'Beam Agent'
-        pkg.description = 'Beam Agent — Assistix desktop AI agent (Early Alpha)'
+    try {
+      if (file.endsWith('package.json')) {
+        const pkg = JSON.parse(fs.readFileSync(file, 'utf8'))
+        pkg.version = INSTALLER_VERSION
+        if (path.basename(path.dirname(file)) === 'app') {
+          pkg.productName = 'Beam Agent'
+          pkg.description = 'Beam Agent — Assistix desktop AI agent (Early Alpha)'
+        }
+        fs.writeFileSync(file, JSON.stringify(pkg, null, 2) + '\n')
+        continue
       }
-      fs.writeFileSync(file, JSON.stringify(pkg, null, 2) + '\n')
-      continue
+      if (file.endsWith('desktop-runtime.json')) {
+        const rt = JSON.parse(fs.readFileSync(file, 'utf8'))
+        if (rt.release) rt.release.version = INSTALLER_VERSION
+        fs.writeFileSync(file, JSON.stringify(rt) + '\n')
+        continue
+      }
+      stampJs(file)
+    } catch (error) {
+      // OneDrive / AV can lock runtime mirror files; dist stamp is authoritative for Setup.exe.
+      console.warn('  runtime stamp skipped', path.relative(ROOT, file), String(error?.message || error))
     }
-    if (file.endsWith('desktop-runtime.json')) {
-      const rt = JSON.parse(fs.readFileSync(file, 'utf8'))
-      if (rt.release) rt.release.version = INSTALLER_VERSION
-      fs.writeFileSync(file, JSON.stringify(rt) + '\n')
-      continue
-    }
-    stampJs(file)
   }
 }
 

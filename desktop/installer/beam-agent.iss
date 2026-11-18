@@ -1,7 +1,7 @@
 ; Beam Agent — Windows installer
 ; SourceDir / OutDir / IconFile can be overridden via ISCC /D flags (packager uses short SUBST paths).
 #define MyAppName "Beam Agent"
-#define MyAppVersion "0.1.5"
+#define MyAppVersion "0.1.6"
 #define MyAppPublisher "ASSISTIX"
 #define MyAppURL "https://agent.assistix.org/download/"
 #define MyAppExeName "Start Beam Agent.vbs"
@@ -29,7 +29,7 @@ DefaultGroupName=Beam Agent
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 OutputDir={#OutDir}
-OutputBaseFilename=Beam-Agent-0.1.5-Setup
+OutputBaseFilename=Beam-Agent-0.1.6-Setup
 SetupIconFile={#IconFile}
 UninstallDisplayIcon={app}\resources\app.ico
 Compression=lzma2/normal
@@ -39,11 +39,11 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 CloseApplications=yes
 RestartApplications=no
-VersionInfoVersion=0.1.5.0
+VersionInfoVersion=0.1.6.0
 VersionInfoCompany=ASSISTIX
 VersionInfoDescription=Beam Agent Setup
 VersionInfoProductName=Beam Agent
-VersionInfoProductVersion=0.1.5.0
+VersionInfoProductVersion=0.1.6.0
 InfoBeforeFile=info-before.txt
 
 [Languages]

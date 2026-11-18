@@ -3586,7 +3586,8 @@ function initProfile(dir, bundles) {
 			name: `dsh-profile-${basename(dir)}`,
 			private: true,
 			dependencies: {},
-			beam: { profile: { bundles: [...bundles] } }
+			dsh: { profile: { bundles: [...bundles] } },
+			beam: { profile: { bundles: [...bundles] } } /* BEAM_DSH_PROFILE_BUNDLES */
 		};
 		writeFileSync(manifestPath, JSON.stringify(manifest, void 0, 2) + "\n");
 	}
@@ -3675,14 +3676,20 @@ function writeProfileManifest(dir, manifest) {
 * @returns the written manifest.
 */
 function writeProfileBundles(profileDir, manifest, bundles) {
+	const profileBlock = {
+		...manifest.dsh?.profile,
+		...manifest.beam?.profile,
+		bundles: [...bundles]
+	};
 	const updated = {
 		...manifest,
-		beam: {
+		dsh: {
 			...manifest.dsh,
-			profile: {
-				...manifest.dsh?.profile,
-				bundles: [...bundles]
-			}
+			profile: profileBlock
+		},
+		beam: {
+			...manifest.beam,
+			profile: profileBlock
 		}
 	};
 	writeProfileManifest(profileDir, updated);
@@ -6858,7 +6865,7 @@ function platformWireLocale(locale) {
 * @throws Error when the build carries no client version, instead of reporting a guessed one.
 */
 function desktopClientVersion() {
-	return "0.1.5";
+	return "0.1.6";
 }
 /**
 * Sample the Desktop client identity for one Platform request.
@@ -8006,6 +8013,13 @@ var DesktopUpdateCoordinator = class {
 		this.updater.on("download-progress", this.onProgress);
 		this.updater.on("update-downloaded", this.onDownloaded);
 		this.updater.on("error", this.onError);
+
+
+
+
+
+
+
 
 
 

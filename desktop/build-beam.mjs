@@ -332,6 +332,13 @@ fs.copyFileSync(path.join(ROOT, 'logo.svg'), path.join(DIST, 'logo.svg'))
     if (r.stderr) process.stderr.write(r.stderr)
     if (r.status !== 0) console.warn('ship-stability-tray exited', r.status)
   }
+  const fixBundles = path.join(ROOT, 'desktop', 'fix-profile-dsh-bundles.mjs')
+  if (fs.existsSync(fixBundles)) {
+    const r = spawnSync(process.execPath, [fixBundles], { cwd: ROOT, encoding: 'utf8', windowsHide: true })
+    if (r.stdout) process.stdout.write(r.stdout)
+    if (r.stderr) process.stderr.write(r.stderr)
+    if (r.status !== 0) console.warn('fix-profile-dsh-bundles exited', r.status)
+  }
 }
 
 // Keep auth/credential path on ~/.beam (prevents MISSING_CREDENTIAL regressions).
