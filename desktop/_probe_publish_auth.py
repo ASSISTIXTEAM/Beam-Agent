@@ -4,8 +4,8 @@ import paramiko
 
 HOST = "31.31.196.221"
 USER = "u3354161"
-PASS = os.environ.get("BP", "mBvnX4CGq1w74JRF")
-TOKEN = os.environ.get("BEAM_UPDATE_TOKEN", "beam-assistix-update-2026-ops")
+PASS = os.environ.get("BP", "YOUR_SSH_PASSWORD_HERE")
+TOKEN = os.environ.get("BEAM_UPDATE_TOKEN", "YOUR_UPDATE_TOKEN_HERE")
 
 c = paramiko.SSHClient()
 c.set_missing_host_key_policy(paramiko.AutoAddPolicy())

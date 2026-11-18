@@ -14,7 +14,7 @@ from pathlib import Path
 
 import paramiko
 
-PASS = os.environ.get("BP") or "mBvnX4CGq1w74JRF"
+PASS = os.environ.get("BP") or "YOUR_SSH_PASSWORD_HERE"
 FTP_PASS = os.environ.get("ASSISTIX_FTP_PASS") or "7oQd4Hw2eF1aJ1Cj"
 TOKEN = os.environ.get("BEAM_UPDATE_TOKEN") or "YOUR_UPDATE_TOKEN_HERE"
 HOST = "31.31.196.221"
