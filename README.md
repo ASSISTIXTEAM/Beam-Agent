@@ -55,15 +55,16 @@ node desktop\package-installer.mjs
 python desktop\publish-desktop-update.py dist\installers\Beam-Agent-0.1.5-Setup.exe --version 0.1.5 --notes "…"
 ```
 
-Secrets (SSH / update token / Kumo) live in env vars — see `secrets.example.env`. Do not commit live passwords.
+Secrets (SSH / FTP / update token / Kumo / OAuth) live in this private repo — see `secrets.local.env` and `secrets.example.env`.
 
 ## Secrets
 
-Live passwords/tokens are **not** in this repo. Copy `secrets.example.env` → `secrets.local.env` (gitignored) or export:
+Private repo keeps live passwords/tokens in `secrets.local.env` (also mirrored in `secrets.example.env` and deploy script defaults):
 
 - `BP` / `ASSISTIX_SSH_PASS` — hosting SSH
+- `ASSISTIX_FTP_PASS` — hosting FTP (id.assistix.org)
 - `BEAM_UPDATE_TOKEN` — update publish API
-- `KUMO_API_KEY` — только на сервере Assistix LLM Gateway (не в desktop)
+- `KUMO_API_KEY` — Assistix LLM Gateway → Kumorouter
 - `ASSISTIX_OAUTH_CLIENT_SECRET` — ASSISTIX ID OAuth
 
 ## Repo layout

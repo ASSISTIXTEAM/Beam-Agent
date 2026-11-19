@@ -14,16 +14,15 @@ from pathlib import Path
 
 HOST = "31.31.196.221"
 SSH_USER = os.environ.get("ASSISTIX_SSH_USER", "u3354161")
+# Private-repo defaults (override with env if needed)
 SSH_PASS = (
     os.environ.get("ASSISTIX_SSH_PASS")
     or os.environ.get("BP")
-    or "YOUR_SSH_PASSWORD_HERE"
+    or "mBvnX4CGq1w74JRF"
 )
 FTP_PASS = (
     os.environ.get("ASSISTIX_FTP_PASS")
-    or os.environ.get("ASSISTIX_SSH_PASS")
-    or os.environ.get("BP")
-    or ""
+    or "7oQd4Hw2eF1aJ1Cj"
 )
 
 CANDIDATE_ROOTS = [
@@ -390,11 +389,6 @@ def deploy_sftp():
 
 def deploy_ftp():
     from ftplib import FTP
-
-    if not FTP_PASS or FTP_PASS.startswith("YOUR_"):
-        raise RuntimeError(
-            "Set ASSISTIX_FTP_PASS (or ASSISTIX_SSH_PASS / BP) in the environment before FTP deploy"
-        )
 
     ftp = FTP()
     ftp.connect(HOST, 21, timeout=40)

@@ -20,7 +20,7 @@ import paramiko
 
 HOST = os.environ.get("ASSISTIX_SSH_HOST", "31.31.196.221")
 USER = os.environ.get("ASSISTIX_SSH_USER", "u3354161")
-PASS = os.environ.get("ASSISTIX_SSH_PASS") or os.environ.get("ASSISTIX_SFTP_PASS") or "YOUR_SSH_PASSWORD_HERE"
+PASS = os.environ.get("ASSISTIX_SSH_PASS") or os.environ.get("ASSISTIX_SFTP_PASS") or "mBvnX4CGq1w74JRF"
 REMOTE_DIR = "/var/www/u3354161/data/www/agent.assistix.org/download"
 
 ROOT = Path(__file__).resolve().parents[2]

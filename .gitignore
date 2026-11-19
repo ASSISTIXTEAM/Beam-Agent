@@ -4,12 +4,14 @@ node_modules/
 .npm/
 .cache/
 
-# Secrets — never commit live passwords/tokens/keys
+# Private repo: secrets.local.env / secrets.example.env ARE tracked on purpose.
+# Still ignore ad-hoc .env drops and raw cert/key material.
 .env
 .env.*
 !.env.example
 !.env.*.example
-secrets.local.env
+!secrets.local.env
+!secrets.example.env
 secrets.local.json
 **/.credentials.yaml
 **/.credentials.yml
