@@ -219,9 +219,9 @@ function __bridgeLoadPersonaPack() {
     const candidates = [
       path.join(__dirname, '../resources/app/beam/node_modules/@assistix/beam-util-values/lib/wv-hints-3a7c.bin'),
       path.join(__dirname, '../resources/app/beam/node_modules/@deepseek-ai/dsh-util-values/lib/wv-hints-3a7c.bin'),
-      path.join(ROOT, 'dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-util-values/lib/wv-hints-3a7c.bin'),
+      path.join(ROOT, 'dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-util-values/lib/wv-hints-3a7c.bin'),
       path.join(ROOT, 'runtime/app/beam/node_modules/@assistix/beam-util-values/lib/wv-hints-3a7c.bin'),
-      path.join(ROOT, 'dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-util-values/lib/wv-hints-3a7c.bin'),
+      path.join(ROOT, 'dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-util-values/lib/wv-hints-3a7c.bin'),
     ]
     let buf = null
     for (const p of candidates) {
@@ -387,22 +387,22 @@ function patchCordisProfile() {
 
 function collectSystemPromptTargets() {
   const rels = [
-    "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-system-prompt/lib/index.js",
-    "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-system-prompt/lib/index.js",
+    "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-system-prompt/lib/index.js",
+    "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-system-prompt/lib/index.js",
     "runtime/app/beam/node_modules/@assistix/beam-system-prompt/lib/index.js",
     "runtime/app/beam/node_modules/@deepseek-ai/dsh-system-prompt/lib/index.js",
-    "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-system-prompt/lib/index.js",
+    "dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-system-prompt/lib/index.js",
   ];
   return rels.map((r) => path.join(ROOT, r)).filter((p) => fs.existsSync(p));
 }
 
 function collectBlobDirs() {
   const rels = [
-    "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-util-values/lib",
-    "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-util-values/lib",
+    "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-util-values/lib",
+    "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-util-values/lib",
     "runtime/app/beam/node_modules/@assistix/beam-util-values/lib",
     "runtime/app/beam/node_modules/@deepseek-ai/dsh-util-values/lib",
-    "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-util-values/lib",
+    "dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-util-values/lib",
   ];
   return rels.map((r) => path.join(ROOT, r));
 }
@@ -410,7 +410,7 @@ function collectBlobDirs() {
 function collectBridgeTargets() {
   return [
     path.join(ROOT, "desktop/bridge/server.js"),
-    path.join(ROOT, "dist/Beam Agent/bridge/server.js"),
+    path.join(ROOT, "dist/Beam-Agent/bridge/server.js"),
   ].filter((p) => fs.existsSync(p));
 }
 

@@ -1,5 +1,5 @@
-﻿# List Previous Versions for bridge/server.js via Shell.Application
-$path = "C:\Users\Alexa\OneDrive\Documents\Beam Agent\desktop\bridge\server.js"
+# List Previous Versions for bridge/server.js via Shell.Application
+$path = "C:\Beam-Agent\desktop\bridge\server.js"
 $dir = Split-Path $path
 $name = Split-Path $path -Leaf
 
@@ -27,7 +27,7 @@ for ($i = 0; $i -lt 320; $i++) {
 # Copy from Volume Shadow if accessible without admin via Win32_ShadowCopy paths
 Get-CimInstance -ClassName Win32_ShadowCopy -ErrorAction SilentlyContinue | ForEach-Object {
   Write-Host "Shadow:" $_.DeviceObject $_.InstallDate
-  $candidate = $_.DeviceObject + "\Users\Alexa\OneDrive\Documents\Beam Agent\desktop\bridge\server.js"
+  $candidate = $_.DeviceObject + "\Users\Alexa\Beam-Agent\desktop\bridge\server.js"
   if (Test-Path $candidate) {
     Write-Host "FOUND shadow copy:" $candidate ((Get-Item $candidate).Length)
   }

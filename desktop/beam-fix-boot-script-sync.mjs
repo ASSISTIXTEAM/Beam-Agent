@@ -2,9 +2,9 @@ import fs from "node:fs";
 
 const files = [
   "runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/index-BXV-oxvX.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/index-BXV-oxvX.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/index-BXV-oxvX.js",
   "runtime/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/index-BXV-oxvX.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/index-BXV-oxvX.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/index-BXV-oxvX.js",
 ];
 
 const old =
@@ -30,7 +30,7 @@ for (const f of files) {
   console.log("patched", f);
 }
 
-const mains = ["runtime/app/lib/main.js", "dist/Beam Agent/resources/app/lib/main.js"];
+const mains = ["runtime/app/lib/main.js", "dist/Beam-Agent/resources/app/lib/main.js"];
 const oldBoot =
   "if (boot && text.length >= 8) return { blank: false, booting: true, textLen: text.length };";
 const neuBoot =

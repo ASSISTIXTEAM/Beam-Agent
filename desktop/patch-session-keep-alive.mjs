@@ -79,8 +79,8 @@ const NEW_ENSURE_START = `  const ensureAuthGate = (data, opts = {}) => {
 function targets() {
   const list = [];
   const rels = [
-    "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
-    "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html",
+    "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
+    "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html",
     "runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
     "runtime/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html",
   ];

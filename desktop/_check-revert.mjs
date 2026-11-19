@@ -1,7 +1,7 @@
 import fs from "node:fs";
 
 const cssPath =
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/beam-override.css";
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/beam-override.css";
 const htmlPath = cssPath.replace("assets/beam-override.css", "index.html");
 const s = fs.readFileSync(cssPath, "utf8");
 const h = fs.readFileSync(htmlPath, "utf8");
@@ -36,9 +36,9 @@ if (out !== s) {
   // mirror to other trees
   for (const p of [
     cssPath.replace("@assistix/beam-web-frontend", "@deepseek-ai/dsh-web-frontend"),
-    cssPath.replace("dist/Beam Agent/resources/app", "runtime/app"),
+    cssPath.replace("dist/Beam-Agent/resources/app", "runtime/app"),
     cssPath
-      .replace("dist/Beam Agent/resources/app", "runtime/app")
+      .replace("dist/Beam-Agent/resources/app", "runtime/app")
       .replace("@assistix/beam-web-frontend", "@deepseek-ai/dsh-web-frontend"),
   ]) {
     if (fs.existsSync(p) && p !== cssPath) fs.writeFileSync(p, out);

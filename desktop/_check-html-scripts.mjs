@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const files = [
   "runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
 ].map((p) => path.join(ROOT, p));
 
 for (const p of files) {

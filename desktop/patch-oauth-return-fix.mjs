@@ -4,15 +4,15 @@
 import fs from "node:fs";
 
 const MAIN =
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/lib/main.js";
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/lib/main.js";
 const BRIDGE_SRC =
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/desktop/bridge/server.js";
+  "C:/Beam-Agent/desktop/bridge/server.js";
 const BRIDGE_DIST =
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/bridge/server.js";
+  "C:/Beam-Agent/dist/Beam-Agent/bridge/server.js";
 const INDEX =
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html";
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html";
 const INDEX_RT =
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html";
+  "C:/Beam-Agent/runtime/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html";
 
 let main = fs.readFileSync(MAIN, "utf8");
 

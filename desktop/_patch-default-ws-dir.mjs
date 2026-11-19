@@ -1,9 +1,9 @@
 import fs from "node:fs";
 
 const files = [
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/beam/node_modules/@assistix/beam-api-workspace-controller/lib/index.js",
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-api-workspace-controller/lib/index.js",
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/_tmp_app/dsh/node_modules/@deepseek-ai/dsh-api-workspace-controller/lib/index.js",
+  "C:/Beam-Agent/runtime/app/beam/node_modules/@assistix/beam-api-workspace-controller/lib/index.js",
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-api-workspace-controller/lib/index.js",
+  "C:/Beam-Agent/_tmp_app/dsh/node_modules/@deepseek-ai/dsh-api-workspace-controller/lib/index.js",
 ];
 
 const replacement = `async function defaultWorkspaceDirectory(documentsDirectory, signal, internals = {}) {

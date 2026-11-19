@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 const root =
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/dsh/node_modules/@deepseek-ai";
+  "C:/Beam-Agent/runtime/app/dsh/node_modules/@deepseek-ai";
 for (const pkg of [
   "dsh-client-ui-conversation",
   "dsh-client-ui-schedule",

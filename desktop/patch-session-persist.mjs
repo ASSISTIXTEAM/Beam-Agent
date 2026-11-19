@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const TARGETS = [
   path.join(ROOT, "desktop", "bridge", "server.js"),
-  path.join(ROOT, "dist", "Beam Agent", "bridge", "server.js"),
+  path.join(ROOT, "dist", "Beam-Agent", "bridge", "server.js"),
   path.join(process.env.USERPROFILE || "", "BeamAgent", "bridge", "server.js"),
 ].filter((p) => fs.existsSync(p));
 

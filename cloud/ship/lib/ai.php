@@ -8,13 +8,33 @@ require_once __DIR__ . '/persona.php';
 require_once __DIR__ . '/economy.php';
 
 /**
- * Активный LLM-эндпоинт: Kumo (приоритет) → NVIDIA → пусто.
+ * Активный LLM-эндпоинт: Assistix Hub (канон) → Kumo legacy → NVIDIA → пусто.
  *
- * @return array{name:string,key:string,url:string,strict:bool,headers:list<string>}
+ * @return array{name:string,key:string,url:string,strict:bool,headers:list<string>,hub?:bool}
  */
 function acx_primary_chat_endpoint(): array
 {
     $cfg = acx_config();
+
+    $hubKey = trim((string) ($cfg['assistix_hub']['service_key'] ?? getenv('ASSISTIX_CHAT_SERVICE_KEY') ?: ''));
+    $hubUrl = trim((string) ($cfg['assistix_hub']['api_url'] ?? 'https://api.assistix.org/v1/chat/completions'));
+    if ($hubKey !== '' && str_starts_with($hubKey, 'ax_sk_')) {
+        if ($hubUrl === '') {
+            $hubUrl = 'https://api.assistix.org/v1/chat/completions';
+        }
+
+        return [
+            'name' => 'assistix-hub',
+            'key' => $hubKey,
+            'url' => $hubUrl,
+            'strict' => true,
+            'hub' => true,
+            'headers' => [
+                'X-Assistix-Product: chat',
+            ],
+        ];
+    }
+
     $kumoKey = trim((string) ($cfg['kumo']['api_key'] ?? ''));
     if ($kumoKey !== '') {
         $url = trim((string) ($cfg['kumo']['api_url'] ?? 'https://api.kumorouter.com/v1/chat/completions'));
@@ -41,6 +61,58 @@ function acx_primary_chat_endpoint(): array
         'strict' => false,
         'headers' => $nvKey !== '' ? acx_nvidia_extra_headers() : [],
     ];
+}
+
+/**
+ * User attribution headers for Assistix Hub service-key calls.
+ *
+ * @param array{id_user_id?:int,email?:string,display_name?:string}|null $user
+ * @return list<string>
+ */
+function acx_hub_user_headers(?array $user): array
+{
+    if ($user === null) {
+        return [];
+    }
+    $id = (int) ($user['id_user_id'] ?? 0);
+    $email = strtolower(trim((string) ($user['email'] ?? '')));
+    if ($id <= 0 || $email === '' || !str_contains($email, '@')) {
+        return [];
+    }
+    $headers = [
+        'X-Assistix-User-Id: ' . $id,
+        'X-Assistix-User-Email: ' . $email,
+    ];
+    $name = trim((string) ($user['display_name'] ?? ''));
+    if ($name !== '') {
+        $headers[] = 'X-Assistix-User-Name: ' . $name;
+    }
+
+    return $headers;
+}
+
+/** @return list<string> */
+function acx_llm_request_headers(): array
+{
+    $ep = acx_primary_chat_endpoint();
+    $headers = is_array($ep['headers'] ?? null) ? $ep['headers'] : [];
+    if (!empty($ep['hub'])) {
+        $user = null;
+        if (function_exists('acx_logged_user')) {
+            $user = acx_logged_user();
+        }
+        if ($user === null && !empty($GLOBALS['acx_llm_user']) && is_array($GLOBALS['acx_llm_user'])) {
+            $user = $GLOBALS['acx_llm_user'];
+        }
+        $headers = array_merge($headers, acx_hub_user_headers($user));
+    }
+
+    return $headers;
+}
+
+function acx_is_assistix_hub_url(string $url): bool
+{
+    return (bool) preg_match('/api\.assistix\.org|assistix\.org\/api\/v1/i', $url);
 }
 
 function acx_llm_is_configured(): bool
@@ -107,18 +179,20 @@ function acx_complete_openai_style(
     $nvKey = $ep['key'];
     $nvUrl = $ep['url'];
     $strict = !empty($ep['strict']);
-    $extraHeaders = $ep['headers'];
+    $extraHeaders = acx_llm_request_headers();
     $ioKey = trim((string) ($cfg['ionet']['api_key'] ?? ''));
     $ioUrl = trim((string) ($cfg['ionet']['api_url'] ?? 'https://api.intelligence.io.solutions/api/v1/chat/completions'));
 
-    // Vision multipart на Kumo Chat Completions не принимается — уводим текст.
+    // Vision multipart на Kumo/Hub Chat Completions не принимается — уводим текст.
     if ($strict && acx_messages_include_vision($messages)) {
         $messages = acx_messages_strip_vision_to_text($messages);
     }
 
     $nvChain = array_values(array_unique(array_filter(array_merge([trim($model)], $nvidiaFallbackModels))));
     require_once __DIR__ . '/models.php';
-    $nvChain = acx_filter_kumo_models($nvChain);
+    if (empty($ep['hub'])) {
+        $nvChain = acx_filter_kumo_models($nvChain);
+    }
     $lastNvErr = 'LLM: не удалось получить ответ';
 
     if ($nvKey !== '') {
@@ -879,7 +953,9 @@ function acx_chat_stream_proxy(
     }
 
     $ep = acx_primary_chat_endpoint();
-    $strict = !empty($ep['strict']) && str_contains($url, 'kumorouter.com');
+    $strict = !empty($ep['strict']) && (
+        str_contains($url, 'kumorouter.com') || acx_is_assistix_hub_url($url) || !empty($ep['hub'])
+    );
     if ($strict) {
         $messages = acx_messages_strip_vision_to_text($messages);
     }
@@ -910,7 +986,7 @@ function acx_chat_stream_proxy(
         $accumulatedReasoning = '';
     }
 
-    $streamHeaders = $strict ? [] : acx_nvidia_extra_headers();
+    $streamHeaders = $strict ? acx_llm_request_headers() : acx_nvidia_extra_headers();
     $ch = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_POST => true,
@@ -1520,7 +1596,7 @@ function acx_complete_with_tools(
     $key = $ep['key'];
     $url = $ep['url'];
     $strict = !empty($ep['strict']);
-    $extraHeaders = $ep['headers'];
+    $extraHeaders = acx_llm_request_headers();
 
     if ($key === '') {
         $empty['error'] = acx_sanitize_public_error('assistix_unconfigured', $locale);
@@ -1529,9 +1605,10 @@ function acx_complete_with_tools(
     }
 
     require_once __DIR__ . '/models.php';
-    $chain = acx_filter_kumo_models(array_values(array_unique(array_filter(
-        array_merge([trim($model)], $nvFallbackModels)
-    ))));
+    $chain = array_values(array_unique(array_filter(array_merge([trim($model)], $nvFallbackModels))));
+    if (empty($ep['hub'])) {
+        $chain = acx_filter_kumo_models($chain);
+    }
 
     $lastErr = 'LLM: не удалось получить ответ';
 

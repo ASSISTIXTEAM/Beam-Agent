@@ -3,12 +3,12 @@ OLD_LEN: 1755
 NEW_LEN: 10037
 FILE: 7c4d522e-fdad-4370-a5e5-67e86d70b531.jsonl L37
 ---OLD---
-  t = t.replace(/\bя\s+(?:модель\s+)?(?:DeepSeek|ChatGPT|Claude|GPT|Grok|Gemini|Qwen)\b/gi, 'я Assistix')
+  t = t.replace(/\bя\s+(?:модель\s+)?(?:Beam|ChatGPT|Claude|GPT|Grok|Gemini|Qwen)\b/gi, 'я Assistix')
   return stripDsmlMarkup(t)
 }
 
 /**
- * Strip DeepSeek DSML / tool-XML soup from chat-visible text.
+ * Strip Beam DSML / tool-XML soup from chat-visible text.
  * Coordinates with dump-hiding: tool markup must not land in the transcript.
  */
 function stripDsmlMarkup(text) {
@@ -42,12 +42,12 @@ function looksTruncated(text) {
 }
 // #endregion beam-persona-bridge
 ---NEW---
-  t = t.replace(/\bя\s+(?:модель\s+)?(?:DeepSeek|ChatGPT|Claude|GPT|Grok|Gemini|Qwen)\b/gi, 'я Assistix')
+  t = t.replace(/\bя\s+(?:модель\s+)?(?:Beam|ChatGPT|Claude|GPT|Grok|Gemini|Qwen)\b/gi, 'я Assistix')
   return stripDsmlMarkup(t)
 }
 
 // #region beam-dsml-tool-leak
-/** DeepSeek V4/V4.1 DSML (fullwidth ｜ or ASCII |) → structured tool_calls + clean chat text. */
+/** Beam V4/V4.1 DSML (fullwidth ｜ or ASCII |) → structured tool_calls + clean chat text. */
 const __DSML_PIPE = '[|｜]'
 const __DSML_OPEN = `<\\s*${__DSML_PIPE}\\s*DSML\\s*${__DSML_PIPE}`
 const __DSML_CLOSE = `<\\/\\s*${__DSML_PIPE}\\s*DSML\\s*${__DSML_PIPE}`

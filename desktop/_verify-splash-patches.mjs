@@ -62,8 +62,8 @@ ok &= check(
 
 // dist mirrors
 for (const rel of [
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
-  "dist/Beam Agent/resources/app/lib/main.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
+  "dist/Beam-Agent/resources/app/lib/main.js",
 ]) {
   ok &= check("exists " + rel, fs.existsSync(path.join(ROOT, rel)));
 }

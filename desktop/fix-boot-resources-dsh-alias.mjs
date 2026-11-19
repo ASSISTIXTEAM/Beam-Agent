@@ -13,13 +13,13 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const MAINS = [
   path.join(ROOT, "runtime", "app", "lib", "main.js"),
-  path.join(ROOT, "dist", "Beam Agent", "resources", "app", "lib", "main.js"),
+  path.join(ROOT, "dist", "Beam-Agent", "resources", "app", "lib", "main.js"),
 ];
 const HTMLS = [
   path.join(ROOT, "runtime", "app", "beam", "node_modules", "@assistix", "beam-web-frontend", "dist", "index.html"),
   path.join(ROOT, "runtime", "app", "beam", "node_modules", "@deepseek-ai", "dsh-web-frontend", "dist", "index.html"),
-  path.join(ROOT, "dist", "Beam Agent", "resources", "app", "beam", "node_modules", "@assistix", "beam-web-frontend", "dist", "index.html"),
-  path.join(ROOT, "dist", "Beam Agent", "resources", "app", "beam", "node_modules", "@deepseek-ai", "dsh-web-frontend", "dist", "index.html"),
+  path.join(ROOT, "dist", "Beam-Agent", "resources", "app", "beam", "node_modules", "@assistix", "beam-web-frontend", "dist", "index.html"),
+  path.join(ROOT, "dist", "Beam-Agent", "resources", "app", "beam", "node_modules", "@deepseek-ai", "dsh-web-frontend", "dist", "index.html"),
 ];
 
 const OLD_RESOURCES = `function runtimeResources() {

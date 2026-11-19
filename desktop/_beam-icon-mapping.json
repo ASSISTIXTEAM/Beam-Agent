@@ -62,7 +62,7 @@
     "runtime/.../dsh-web-frontend/dist/assets/beam-override.css",
     "runtime/.../dsh-web-frontend/dist/assets/beam-icons/**",
     "runtime/.../dsh-web-frontend/dist/index.html",
-    "dist/Beam Agent/resources/app/... (same)",
+    "dist/Beam-Agent/resources/app/... (same)",
     "dsh-client-*/lib/client.js RU + DeepSeek scrub"
   ]
 }

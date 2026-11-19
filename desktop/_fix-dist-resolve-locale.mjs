@@ -1,6 +1,6 @@
 import fs from "node:fs";
 
-const file = "dist/Beam Agent/resources/app/lib/main.js";
+const file = "dist/Beam-Agent/resources/app/lib/main.js";
 let s = fs.readFileSync(file, "utf8");
 const start = s.indexOf("function resolveDesktopLocale(locale)");
 const end = s.indexOf("/**", start + 10);

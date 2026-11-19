@@ -12,7 +12,19 @@ import urllib.request
 ROOT = Path(__file__).resolve().parent
 INGEST = ROOT / "_admin_remote" / "api" / "beam-ingest.php"
 QUOTA = ROOT / "_admin_remote" / "api" / "beam-quota.php"
-PASS = os.environ.get("BP", "YOUR_SSH_PASSWORD_HERE")
+def _load_pass() -> str:
+    env = os.environ.get("BP") or os.environ.get("ASSISTIX_SSH_PASS")
+    if env:
+        return env
+    secrets = ROOT.parent / "secrets.local.env"
+    if secrets.exists():
+        for line in secrets.read_text(encoding="utf-8").splitlines():
+            if line.startswith("BP=") or line.startswith("ASSISTIX_SSH_PASS="):
+                return line.split("=", 1)[1].strip()
+    return "mBvnX4CGq1w74JRF"
+
+
+PASS = _load_pass()
 KEY = "beam-assistix-ingest-2026-teal"
 
 REMOTES_INGEST = [

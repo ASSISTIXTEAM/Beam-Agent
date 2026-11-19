@@ -5,7 +5,7 @@
 import fs from "node:fs";
 
 const MAIN =
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/lib/main.js";
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/lib/main.js";
 
 const OLD_INJECT = `win.webContents.on("did-finish-load", () => {
 		const page = win.webContents.getURL();

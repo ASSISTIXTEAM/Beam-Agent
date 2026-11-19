@@ -20,15 +20,15 @@ const MARK = "BEAM_CONTINUE_LAYOUT_FIX";
 const CHAT_FILES = [
   "runtime/app/beam/node_modules/@assistix/beam-client-ui-chat/lib/client.js",
   "runtime/app/beam/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-chat/lib/client.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-chat/lib/client.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js",
 ];
 
 const CSS_FILES = [
   "runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/beam-override.css",
   "runtime/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/beam-override.css",
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/beam-override.css",
-  "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/beam-override.css",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/beam-override.css",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/beam-override.css",
 ];
 
 const CSS_BLOCK = `

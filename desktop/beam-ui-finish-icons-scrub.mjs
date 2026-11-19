@@ -7,13 +7,13 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
-const ROOT = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
+const ROOT = "C:/Beam-Agent";
 const ICONS_SRC = "C:/Users/Alexa/Downloads/icons";
 const TREES = [
   path.join(ROOT, "runtime/app/beam/node_modules/@assistix"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@assistix"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@assistix"),
   path.join(ROOT, "runtime/app/dsh/node_modules/@deepseek-ai"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai"),
 ];
 
 /** UI role → flaticon base name (without fi-br-/fi-sr- prefix) */
@@ -725,7 +725,7 @@ const report = {
     "runtime/.../beam-web-frontend/dist/assets/beam-override.css",
     "runtime/.../beam-web-frontend/dist/assets/beam-icons/**",
     "runtime/.../beam-web-frontend/dist/index.html",
-    "dist/Beam Agent/resources/app/... (same)",
+    "dist/Beam-Agent/resources/app/... (same)",
     "beam-client-*/lib/client.js RU + brand scrub",
   ],
   newSessionFix:

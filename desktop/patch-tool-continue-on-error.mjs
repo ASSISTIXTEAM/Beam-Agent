@@ -28,7 +28,7 @@ const HOME_BEAM = path.join(os.homedir(), "BeamAgent");
 
 const TREES = [
   path.join(ROOT, "runtime", "app", "beam", "node_modules"),
-  path.join(ROOT, "dist", "Beam Agent", "resources", "app", "beam", "node_modules"),
+  path.join(ROOT, "dist", "Beam-Agent", "resources", "app", "beam", "node_modules"),
   path.join(HOME_BEAM, "resources", "app", "beam", "node_modules"),
 ].filter((p) => fs.existsSync(p));
 

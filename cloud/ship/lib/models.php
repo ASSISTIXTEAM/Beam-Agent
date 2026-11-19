@@ -14,13 +14,14 @@ function acx_model_catalog(bool $guestMode): array
         return [];
     }
 
-    $tide = 'deepseek-v4-1-flash';
-    $tideFallbacks = acx_filter_kumo_models(['deepseek-v4-flash', 'qwen3-8-flash']);
-    // Prefer Gemini 3.8 family; 3.1 lite is blocked on Kumo.
-    $flare = 'gemini-3.8-flash';
-    $flareFallbacks = acx_filter_kumo_models(['google/gemini-3.8-flash-high', 'qwen3-8-flash', 'deepseek-v4-flash']);
-    $pine = 'xai/grok-4.7';
-    $pineFallbacks = acx_filter_kumo_models(['xai/grok-4.6', 'deepseek-v4-pro-0813', 'deepseek-v4-flash']);
+    // Assistix Hub: public tide|flare|pine. Legacy Kumo: multimodal backends (parity with hub).
+    $hubMode = function_exists('acx_assistix_hub_enabled') && acx_assistix_hub_enabled();
+    $tide = $hubMode ? 'tide' : 'deepseek-v4-1-flash';
+    $tideFallbacks = $hubMode ? [] : acx_filter_kumo_models(['glm-5.3-flash', 'deepseek-v4-flash']);
+    $flare = $hubMode ? 'flare' : 'glm-5.3-flash';
+    $flareFallbacks = $hubMode ? [] : acx_filter_kumo_models(['gemini-3.8-flash', 'google/gemini-3.8-flash-high', 'deepseek-v4-1-flash']);
+    $pine = $hubMode ? 'pine' : 'gemini-3.8-flash';
+    $pineFallbacks = $hubMode ? [] : acx_filter_kumo_models(['google/gemini-3.8-flash-high', 'google/gemini-4-carbon', 'xai/grok-4.7', 'glm-5.3-flash']);
 
     $catalog = [
         'TIDE' => [
@@ -72,7 +73,7 @@ function acx_model_catalog(bool $guestMode): array
             'usage_tide' => false,
             'usage_flair' => false,
             'usage_pine' => true,
-            'supports_vision' => false,
+            'supports_vision' => true,
         ],
     ];
 
@@ -86,6 +87,9 @@ function acx_model_catalog(bool $guestMode): array
 
 function acx_utility_model_id(): string
 {
+    if (acx_assistix_hub_enabled()) {
+        return 'tide';
+    }
     $cfg = function_exists('acx_config') ? acx_config() : [];
     $m = trim((string) ($cfg['kumo']['utility_model'] ?? $cfg['utility_model'] ?? 'deepseek-v4-flash'));
 
@@ -228,10 +232,24 @@ function acx_model_api_id(array $modelRow, bool $hasImages = false): string
     return $model !== '' ? $model : (acx_kumo_enabled() ? 'deepseek-v4-flash' : 'poolside/laguna-xs-2.1');
 }
 
+function acx_assistix_hub_enabled(): bool
+{
+    if (!function_exists('acx_config')) {
+        return false;
+    }
+    $cfg = acx_config();
+    $key = trim((string) ($cfg['assistix_hub']['service_key'] ?? getenv('ASSISTIX_CHAT_SERVICE_KEY') ?: ''));
+
+    return $key !== '' && str_starts_with($key, 'ax_sk_');
+}
+
 function acx_kumo_enabled(): bool
 {
     if (!function_exists('acx_config')) {
         return false;
+    }
+    if (acx_assistix_hub_enabled()) {
+        return true;
     }
 
     return trim((string) (acx_config()['kumo']['api_key'] ?? '')) !== '';
@@ -241,6 +259,9 @@ function acx_llm_configured(): bool
 {
     if (!function_exists('acx_config')) {
         return false;
+    }
+    if (acx_assistix_hub_enabled()) {
+        return true;
     }
     $cfg = acx_config();
     if (trim((string) ($cfg['kumo']['api_key'] ?? '')) !== '') {

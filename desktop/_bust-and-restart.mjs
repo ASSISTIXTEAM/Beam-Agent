@@ -2,10 +2,10 @@ import fs from "node:fs";
 import { spawn } from "node:child_process";
 
 const htmlPaths = [
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html",
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html",
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html",
+  "C:/Beam-Agent/runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
+  "C:/Beam-Agent/runtime/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html",
 ];
 
 const bust = "coolicons-duocolor-round-mask2";

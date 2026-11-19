@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
-const APP = path.join(ROOT, "dist", "Beam Agent", "resources", "app");
+const APP = path.join(ROOT, "dist", "Beam-Agent", "resources", "app");
 const WEB = path.join(
   APP,
   "dsh",
@@ -353,7 +353,7 @@ const welcome = path.join(APP, "renderer", "assets", "welcome-brand.svg");
 if (fs.existsSync(path.dirname(welcome))) {
   fs.writeFileSync(welcome, wordmarkSvg);
 }
-fs.writeFileSync(path.join(ROOT, "dist", "Beam Agent", "resources", "icon.svg"), logoSvg);
+fs.writeFileSync(path.join(ROOT, "dist", "Beam-Agent", "resources", "icon.svg"), logoSvg);
 
 const mainJs = path.join(APP, "lib", "main.js");
 if (fs.existsSync(mainJs)) {

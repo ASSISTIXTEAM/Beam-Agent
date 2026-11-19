@@ -15,6 +15,26 @@ require_once __DIR__ . '/economy.php';
 function acx_primary_chat_endpoint(): array
 {
     $cfg = acx_config();
+
+    $hubKey = trim((string) ($cfg['assistix_hub']['service_key'] ?? getenv('ASSISTIX_CHAT_SERVICE_KEY') ?: ''));
+    $hubUrl = trim((string) ($cfg['assistix_hub']['api_url'] ?? 'https://api.assistix.org/v1/chat/completions'));
+    if ($hubKey !== '' && str_starts_with($hubKey, 'ax_sk_')) {
+        if ($hubUrl === '') {
+            $hubUrl = 'https://api.assistix.org/v1/chat/completions';
+        }
+
+        return [
+            'name' => 'assistix-hub',
+            'key' => $hubKey,
+            'url' => $hubUrl,
+            'strict' => true,
+            'hub' => true,
+            'headers' => [
+                'X-Assistix-Product: chat',
+            ],
+        ];
+    }
+
     $kumoKey = trim((string) ($cfg['kumo']['api_key'] ?? ''));
     if ($kumoKey !== '') {
         $url = trim((string) ($cfg['kumo']['api_url'] ?? 'https://api.kumorouter.com/v1/chat/completions'));

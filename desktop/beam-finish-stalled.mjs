@@ -14,7 +14,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 const TREES = [
-  path.join(ROOT, "dist", "Beam Agent", "resources", "app"),
+  path.join(ROOT, "dist", "Beam-Agent", "resources", "app"),
   path.join(ROOT, "runtime", "app"),
 ].filter((p) => fs.existsSync(p));
 
@@ -890,7 +890,7 @@ button.wtg9ga_panelRow[aria-haspopup="menu"]:has([class*="panelTitle"]),
 /* -------------------------------------------------------------------------- */
 function syncBridgeAndEnv() {
   const src = path.join(ROOT, "desktop", "bridge", "server.js");
-  const dst = path.join(ROOT, "dist", "Beam Agent", "bridge", "server.js");
+  const dst = path.join(ROOT, "dist", "Beam-Agent", "bridge", "server.js");
   if (exists(src) && exists(path.dirname(dst))) {
     fs.mkdirSync(path.dirname(dst), { recursive: true });
     fs.copyFileSync(src, dst);

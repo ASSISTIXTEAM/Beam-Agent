@@ -2,8 +2,8 @@ import fs from "fs";
 import path from "path";
 
 const files = [
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/lib/main.js",
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/lib/main.js",
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/lib/main.js",
+  "C:/Beam-Agent/runtime/app/lib/main.js",
 ];
 
 for (const file of files) {

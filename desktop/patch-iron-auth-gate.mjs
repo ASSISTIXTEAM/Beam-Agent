@@ -16,10 +16,10 @@ const TAG = '<script src="./assets/beam-iron-auth.js"></script>';
 const DISTS = [
   path.join(ROOT, "runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
   path.join(ROOT, "runtime/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist"),
   path.join(HOME, "BeamAgent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
-  path.join(HOME, "AppData/Local/Programs/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
+  path.join(HOME, "AppData/Local/Programs/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
 ].filter((p) => fs.existsSync(p));
 
 if (!fs.existsSync(SRC)) {

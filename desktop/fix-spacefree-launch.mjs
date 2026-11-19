@@ -1,6 +1,6 @@
 /**
  * Durable space-free launch layout for Beam Agent.
- * Canonical path: C:\Users\Alexa\BeamAgent  (junction → dist\Beam Agent)
+ * Canonical path: C:\Beam-Agent\dist\Beam-Agent (project root C:\Beam-Agent).
  * All entry points use ONLY that path, fully quoted. Also restores truncated bridge.
  */
 import fs from "node:fs";
@@ -9,8 +9,9 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const DIST = path.join(ROOT, "dist", "Beam Agent");
-const ALIAS = path.join(process.env.USERPROFILE || "C:\\Users\\Alexa", "BeamAgent");
+const DIST = path.join(ROOT, "dist", "Beam-Agent");
+/** Legacy short alias; prefer C:\\Beam-Agent\\dist\\Beam-Agent directly. */
+const ALIAS = "C:\\Beam-Agent\\dist\\Beam-Agent";
 const HOME = path.join(process.env.USERPROFILE || "C:\\Users\\Alexa", ".beam");
 
 function q(s) {
@@ -18,10 +19,15 @@ function q(s) {
 }
 
 function ensureJunction() {
+  // Canonical app lives at C:\Beam-Agent\dist\Beam-Agent — no secondary junction required.
+  if (path.resolve(ALIAS) === path.resolve(DIST)) {
+    if (!fs.existsSync(DIST)) throw new Error("missing dist app: " + DIST);
+    console.log("canonical app root", DIST);
+    return;
+  }
   if (fs.existsSync(ALIAS)) {
     const st = fs.lstatSync(ALIAS);
     if (st.isSymbolicLink() || st.isDirectory()) {
-      // refresh if pointing elsewhere
       try {
         const target = fs.readlinkSync(ALIAS);
         if (path.resolve(target) === path.resolve(DIST) || path.resolve(ALIAS) === path.resolve(DIST)) {
@@ -294,7 +300,7 @@ function Set-Lnk($p) {
 }
 $desk = [Environment]::GetFolderPath('Desktop')
 @(
-  (Join-Path $env:APPDATA 'Microsoft\\Windows\\Start Menu\\Programs\\Beam Agent.lnk'),
+  (Join-Path $env:APPDATA 'Microsoft\\Windows\\Start Menu\\Programs\\Beam-Agent.lnk'),
   (Join-Path $desk 'Beam Agent.lnk'),
   (Join-Path $env:USERPROFILE 'BeamAgent\\Beam Agent.lnk'),
   (Join-Path $env:USERPROFILE 'BeamAgent\\StartBeamAgent.lnk')

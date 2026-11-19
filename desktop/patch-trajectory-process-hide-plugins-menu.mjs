@@ -18,27 +18,27 @@ const MARK = "BEAM_TRAJECTORY_PROCESS_HIDE_PLUGINS";
 const TRAJECTORY_FILES = [
   "runtime/app/beam/node_modules/@assistix/beam-client-ui-trajectory/lib/client.js",
   "runtime/app/beam/node_modules/@deepseek-ai/dsh-client-ui-trajectory/lib/client.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-trajectory/lib/client.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-client-ui-trajectory/lib/client.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-trajectory/lib/client.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-client-ui-trajectory/lib/client.js",
 ];
 
 const ENTRY_FILES = [
   "runtime/app/beam/node_modules/@assistix/beam-client-ui-entry-customization/lib/client.js",
   "runtime/app/beam/node_modules/@deepseek-ai/dsh-client-ui-entry-customization/lib/client.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-entry-customization/lib/client.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-client-ui-entry-customization/lib/client.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-entry-customization/lib/client.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-client-ui-entry-customization/lib/client.js",
 ];
 
 const FRONTEND_INDEX = [
   "runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
 ];
 
 const SETTINGS_GENERAL = [
   "runtime/app/beam/node_modules/@assistix/beam-client-ui-settings-general/lib/client.js",
   "runtime/app/beam/node_modules/@deepseek-ai/dsh-client-ui-settings-general/lib/client.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-settings-general/lib/client.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-client-ui-settings-general/lib/client.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-settings-general/lib/client.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-client-ui-settings-general/lib/client.js",
 ];
 
 function abs(rel) {

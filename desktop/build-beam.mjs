@@ -9,7 +9,7 @@ import { execFileSync, spawnSync } from 'node:child_process'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
 const APP = path.join(ROOT, 'runtime', 'app')
-const DIST = path.join(ROOT, 'dist', 'Beam Agent')
+const DIST = path.join(ROOT, 'dist', 'Beam-Agent')
 const DS_INSTALL = 'C:\\Users\\Alexa\\AppData\\Local\\Programs\\DeepSeek Harness'
 
 function mustExist(p) {
@@ -232,7 +232,7 @@ for (const file of fs.readdirSync(assetsDir)) {
   }
 }
 
-console.log('→ Assembling dist/Beam Agent')
+console.log('→ Assembling dist/Beam-Agent')
 fs.rmSync(DIST, { recursive: true, force: true })
 fs.mkdirSync(DIST, { recursive: true })
 

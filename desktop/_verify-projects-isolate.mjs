@@ -70,7 +70,7 @@ const remotes = path.join(
   "lib",
   "client.js"
 );
-const vbs = path.join(ROOT, "dist", "Beam Agent", "Start Beam Agent.vbs");
+const vbs = path.join(ROOT, "dist", "Beam-Agent", "Start Beam Agent.vbs");
 
 const ctrlSrc = fs.readFileSync(ctrl, "utf8");
 check("host named create", ctrlSrc.includes("allocateNamedBeamProjectPath"));

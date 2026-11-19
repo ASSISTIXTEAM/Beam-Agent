@@ -106,31 +106,60 @@ if ($guestMode) {
     $out['memory_limits'] = $memoryLimits;
     $imgUsed = acx_canvas_daily_count(acx_canvas_subject_key((int) $u['internal_id']));
     $imgCap = acx_canvas_daily_limit();
+    $globalUnlimited = !empty($limitsCfg['unlimited']);
+    $gaugeTier = static function (int $used, $cap, bool $forceUnlimited = false): array {
+        $unlimited = $forceUnlimited || $cap === null;
+        if ($unlimited) {
+            return [
+                'remaining' => null,
+                'remaining_pct' => 100,
+                'gauge_fill' => 100,
+                'unlimited' => true,
+            ];
+        }
+        $capN = max(0, (int) $cap);
+        $remaining = max(0, $capN - $used);
+        $pct = $capN > 0 ? (int) round(min(100, max(0, ($remaining / $capN) * 100))) : 0;
+        return [
+            'remaining' => $remaining,
+            'remaining_pct' => $pct,
+            'gauge_fill' => $pct,
+            'unlimited' => false,
+        ];
+    };
+    $tideUsed = (int) $usage['tide_tokens_used'];
+    $flairUsed = (int) $usage['flair_tokens_used'];
+    $pineUsed = (int) $usage['pine_tokens_used'];
+    $tideG = $gaugeTier($tideUsed, $tideCap, $globalUnlimited);
+    $flairG = $gaugeTier($flairUsed, $flairCap, $globalUnlimited);
+    $pineG = $gaugeTier($pineUsed, $pineCap, $globalUnlimited);
     $out['usage'] = [
         'week_start_utc' => acx_week_start_utc(),
-        'tide' => [
+        'tide' => array_merge([
             'kind' => 'tokens',
-            'tokens_used' => $usage['tide_tokens_used'],
+            'tokens_used' => $tideUsed,
             'tokens_cap' => $tideCap,
-        ],
-        'flair' => [
-            'tokens_used' => $usage['flair_tokens_used'],
+        ], $tideG),
+        'flair' => array_merge([
+            'tokens_used' => $flairUsed,
             'tokens_cap' => $flairCap,
-        ],
-        'pine' => [
+        ], $flairG),
+        'pine' => array_merge([
             'kind' => 'requests',
-            'tokens_used' => $usage['pine_tokens_used'],
+            'tokens_used' => $pineUsed,
             'tokens_cap' => $pineCap,
-            'requests_used' => $usage['pine_tokens_used'],
+            'requests_used' => $pineUsed,
             'requests_cap' => $pineCap,
-        ],
+        ], $pineG),
         'images' => [
             'kind' => 'daily',
             'used' => $imgUsed,
             'cap' => $imgCap,
             'remaining' => max(0, $imgCap - $imgUsed),
+            'remaining_pct' => $imgCap > 0 ? (int) round(min(100, max(0, (($imgCap - $imgUsed) / $imgCap) * 100))) : 0,
+            'gauge_fill' => $imgCap > 0 ? (int) round(min(100, max(0, (($imgCap - $imgUsed) / $imgCap) * 100))) : 0,
         ],
-        'unlimited' => !empty($limitsCfg['unlimited']),
+        'unlimited' => $globalUnlimited,
     ];
     $out['subscription'] = acx_subscription_public_for_user((int) $u['internal_id']);
     $out['guest_usage'] = null;

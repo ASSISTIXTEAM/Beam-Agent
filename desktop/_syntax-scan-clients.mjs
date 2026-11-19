@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 
 for (const tree of [
   "runtime/app/dsh/node_modules/@deepseek-ai",
-  "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai",
+  "dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai",
 ]) {
   console.log("\n===", tree.includes("runtime") ? "runtime" : "dist");
   let bad = 0;

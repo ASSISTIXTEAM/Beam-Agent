@@ -20,12 +20,12 @@ const CACHE = `strictloc${Date.now().toString(36)}`;
 
 const APP_TREES = [
   path.join(ROOT, "runtime", "app"),
-  path.join(ROOT, "dist", "Beam Agent", "resources", "app"),
+  path.join(ROOT, "dist", "Beam-Agent", "resources", "app"),
 ].filter((p) => fs.existsSync(p));
 
 const BRIDGE_FILES = [
   path.join(ROOT, "desktop", "bridge", "server.js"),
-  path.join(ROOT, "dist", "Beam Agent", "bridge", "server.js"),
+  path.join(ROOT, "dist", "Beam-Agent", "bridge", "server.js"),
 ].filter((p) => fs.existsSync(p));
 
 const PHRASES = [

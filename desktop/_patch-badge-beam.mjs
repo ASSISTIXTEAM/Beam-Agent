@@ -39,12 +39,12 @@ If attribution should not be linked, use:
 const files = [
   "runtime/app/beam/node_modules/@assistix/beam-skill-badge/assets/dsh-badge.md",
   "runtime/app/beam/node_modules/@assistix/beam-skill-badge/lib/index.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-skill-badge/assets/dsh-badge.md",
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-skill-badge/lib/index.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-skill-badge/assets/dsh-badge.md",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-skill-badge/lib/index.js",
   "runtime/app/beam/node_modules/@deepseek-ai/dsh-skill-badge/assets/dsh-badge.md",
   "runtime/app/beam/node_modules/@deepseek-ai/dsh-skill-badge/lib/index.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-skill-badge/assets/dsh-badge.md",
-  "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-skill-badge/lib/index.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-skill-badge/assets/dsh-badge.md",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-skill-badge/lib/index.js",
 ];
 
 for (const rel of files) {

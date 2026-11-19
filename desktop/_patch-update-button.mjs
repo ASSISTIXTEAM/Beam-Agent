@@ -12,19 +12,19 @@ const ROOT = path.resolve(__dirname, '..')
 const HTML_TARGETS = [
   path.join(ROOT, 'runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html'),
   path.join(ROOT, 'runtime/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html'),
-  path.join(ROOT, 'dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html'),
-  path.join(ROOT, 'dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html'),
-  'C:/Users/Alexa/BeamAgent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html',
-  'C:/Users/Alexa/BeamAgent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html',
+  path.join(ROOT, 'dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html'),
+  path.join(ROOT, 'dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html'),
+  'C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html',
+  'C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html',
 ]
 
 const CSS_TARGETS = [
   path.join(ROOT, 'runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/beam-override.css'),
   path.join(ROOT, 'runtime/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/beam-override.css'),
-  path.join(ROOT, 'dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/beam-override.css'),
-  path.join(ROOT, 'dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/beam-override.css'),
-  'C:/Users/Alexa/BeamAgent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/beam-override.css',
-  'C:/Users/Alexa/BeamAgent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/beam-override.css',
+  path.join(ROOT, 'dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/beam-override.css'),
+  path.join(ROOT, 'dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/beam-override.css'),
+  'C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/beam-override.css',
+  'C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/beam-override.css',
 ]
 
 const CSS_BLOCK = `

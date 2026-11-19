@@ -34,33 +34,73 @@ if ($method === 'GET') {
         'memories' => $memories,
         'memory_limits' => $memoryLimits,
         'subscription' => acx_subscription_public_for_user($logged['internal_id']),
-        'usage' => [
-            'week_start_utc' => acx_week_start_utc(),
-            'flair' => [
-                'tokens_used' => $usage['flair_tokens_used'],
-                'tokens_cap' => $flairCap,
-            ],
-            'pine' => [
-                'tokens_used' => $usage['pine_tokens_used'],
-                'tokens_cap' => $pineCap,
-            ],
-            'unlimited' => !empty($limitsCfg['unlimited']),
-        ],
+        'usage' => (static function () use ($usage, $flairCap, $pineCap, $limitsCfg) {
+            $unlimited = !empty($limitsCfg['unlimited']);
+            $tier = static function (int $used, $cap) use ($unlimited): array {
+                if ($unlimited || $cap === null) {
+                    return [
+                        'tokens_used' => $used,
+                        'tokens_cap' => $cap,
+                        'remaining' => null,
+                        'remaining_pct' => 100,
+                        'gauge_fill' => 100,
+                        'unlimited' => true,
+                    ];
+                }
+                $capN = max(0, (int) $cap);
+                $remaining = max(0, $capN - $used);
+                $pct = $capN > 0 ? (int) round(min(100, max(0, ($remaining / $capN) * 100))) : 0;
+                return [
+                    'tokens_used' => $used,
+                    'tokens_cap' => $cap,
+                    'remaining' => $remaining,
+                    'remaining_pct' => $pct,
+                    'gauge_fill' => $pct,
+                    'unlimited' => false,
+                ];
+            };
+            return [
+                'week_start_utc' => acx_week_start_utc(),
+                'flair' => $tier((int) $usage['flair_tokens_used'], $flairCap),
+                'pine' => $tier((int) $usage['pine_tokens_used'], $pineCap),
+                'unlimited' => $unlimited,
+            ];
+        })(),
         // Beam Code использует тот же недельный бюджет (единая таблица weekly_usage),
         // поэтому здесь показываем, сколько уже израсходовано в экосистеме в целом.
-        'beam' => [
-            'app' => 'Beam Code',
-            'url' => 'https://code.assistix.org',
-            'shared_budget' => true,
-            'flair' => [
-                'tokens_used' => $usage['flair_tokens_used'],
-                'tokens_cap' => $flairCap,
-            ],
-            'pine' => [
-                'tokens_used' => $usage['pine_tokens_used'],
-                'tokens_cap' => $pineCap,
-            ],
-        ],
+        'beam' => (static function () use ($usage, $flairCap, $pineCap, $limitsCfg) {
+            $unlimited = !empty($limitsCfg['unlimited']);
+            $tier = static function (int $used, $cap) use ($unlimited): array {
+                if ($unlimited || $cap === null) {
+                    return [
+                        'tokens_used' => $used,
+                        'tokens_cap' => $cap,
+                        'remaining' => null,
+                        'remaining_pct' => 100,
+                        'gauge_fill' => 100,
+                        'unlimited' => true,
+                    ];
+                }
+                $capN = max(0, (int) $cap);
+                $remaining = max(0, $capN - $used);
+                $pct = $capN > 0 ? (int) round(min(100, max(0, ($remaining / $capN) * 100))) : 0;
+                return [
+                    'tokens_used' => $used,
+                    'tokens_cap' => $cap,
+                    'remaining' => $remaining,
+                    'remaining_pct' => $pct,
+                    'gauge_fill' => $pct,
+                    'unlimited' => false,
+                ];
+            };
+            return [
+                'app' => 'Beam Code',
+                'url' => 'https://code.assistix.org',
+                'shared_budget' => true,
+                'flair' => $tier((int) $usage['flair_tokens_used'], $flairCap),
+                'pine' => $tier((int) $usage['pine_tokens_used'], $pineCap),
+            ];
+        })(),
     ]);
 }
 

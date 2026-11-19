@@ -12,16 +12,16 @@ const BRIDGE_SRC = path.join(ROOT, "desktop/bridge/server.js");
 const BRIDGE_DIST = path.join(ROOT, "dist/Beam Agent/bridge/server.js");
 const INDEX = path.join(
   ROOT,
-  "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html"
+  "dist/Beam Agent/resources/app/dsh/node_modules/@beam-ai/dsh-web-frontend/dist/index.html"
 );
 const CSS = path.join(
   ROOT,
-  "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/beam-override.css"
+  "dist/Beam Agent/resources/app/dsh/node_modules/@beam-ai/dsh-web-frontend/dist/assets/beam-override.css"
 );
 const MAIN = path.join(ROOT, "dist/Beam Agent/resources/app/lib/main.js");
 const RUNTIME_INDEX = path.join(
   ROOT,
-  "runtime/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html"
+  "runtime/app/dsh/node_modules/@beam-ai/dsh-web-frontend/dist/index.html"
 );
 
 function patchBridge(file) {
@@ -58,7 +58,7 @@ function serveCallbackBounce(res, ok, detail = '') {
 <script>
 (function(){
   try { location.replace(\${JSON.stringify('beam-agent://auth/callback')}); } catch (e) {}
-  setTimeout(function(){ try { location.replace('dsh://open'); } catch (e) {} }, 40);
+  setTimeout(function(){ try { location.replace('beam://open'); } catch (e) {} }, 40);
   setTimeout(function(){ try { window.close(); } catch (e) {} }, 180);
 })();
 </script>
@@ -350,13 +350,13 @@ function patchMain(file) {
   let s = fs.readFileSync(file, "utf8");
   // Register beam-agent protocol
   s = s.replace(
-    'if (app.isPackaged || process.env.DSH_DESKTOP_DEV_APP === "1") app.setAsDefaultProtocolClient("dsh");',
-    `if (app.isPackaged || process.env.DSH_DESKTOP_DEV_APP === "1") {
-\t\tapp.setAsDefaultProtocolClient("dsh");
+    'if (app.isPackaged || process.env.BEAM_DESKTOP_DEV_APP === "1") app.setAsDefaultProtocolClient("beam");',
+    `if (app.isPackaged || process.env.BEAM_DESKTOP_DEV_APP === "1") {
+\t\tapp.setAsDefaultProtocolClient("beam");
 \t\tapp.setAsDefaultProtocolClient("beam-agent");
 \t} else {
 \t\tapp.setAsDefaultProtocolClient("beam-agent", process.execPath, [pathToFileURL(join(app.getAppPath(), "lib/main.js")).href]);
-\t\ttry { app.setAsDefaultProtocolClient("dsh"); } catch {}
+\t\ttry { app.setAsDefaultProtocolClient("beam"); } catch {}
 \t}`
   );
 
@@ -364,8 +364,8 @@ function patchMain(file) {
   if (!s.includes("pathToFileURL") && s.includes('setAsDefaultProtocolClient("beam-agent"')) {
     // fallback simpler registration without pathToFileURL for unpackaged
     s = s.replace(
-      /if \(app\.isPackaged \|\| process\.env\.DSH_DESKTOP_DEV_APP === "1"\) \{[\s\S]*?\} else \{[\s\S]*?\n\t\}/,
-      `app.setAsDefaultProtocolClient("dsh");
+      /if \(app\.isPackaged \|\| process\.env\.BEAM_DESKTOP_DEV_APP === "1"\) \{[\s\S]*?\} else \{[\s\S]*?\n\t\}/,
+      `app.setAsDefaultProtocolClient("beam");
 \tapp.setAsDefaultProtocolClient("beam-agent");`
     );
   }
@@ -373,11 +373,11 @@ function patchMain(file) {
   s = s.replace(
     `app.on("open-url", (event, url) => {
 \t\tevent.preventDefault();
-\t\tif (url === "dsh://open" || url === "dsh://open/") focusPrimaryWindow();
+\t\tif (url === "beam://open" || url === "beam://open/") focusPrimaryWindow();
 \t});`,
     `app.on("open-url", (event, url) => {
 \t\tevent.preventDefault();
-\t\tif (url === "dsh://open" || url === "dsh://open/" || String(url).startsWith("beam-agent://")) {
+\t\tif (url === "beam://open" || url === "beam://open/" || String(url).startsWith("beam-agent://")) {
 \t\t\tfocusPrimaryWindow();
 \t\t\ttry {
 \t\t\t\tconst win = currentMainWindow?.() ?? mainWindow;
@@ -408,7 +408,7 @@ function patchMain(file) {
 }))`,
     `if (claimDesktopSingleInstance(app, (argv = []) => {
 \tfocusPrimaryWindow();
-\tconst hit = (Array.isArray(argv) ? argv : []).find((a) => typeof a === "string" && (a.startsWith("beam-agent://") || a.startsWith("dsh://")));
+\tconst hit = (Array.isArray(argv) ? argv : []).find((a) => typeof a === "string" && (a.startsWith("beam-agent://") || a.startsWith("beam://")));
 \tif (hit) {
 \t\ttry {
 \t\t\tconst win = typeof currentMainWindow === "function" ? currentMainWindow() : mainWindow;

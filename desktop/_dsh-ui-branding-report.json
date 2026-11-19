@@ -1,13 +1,13 @@
 {
   "files": [
-    "C:\\Users\\Alexa\\OneDrive\\Documents\\Beam Agent\\runtime\\app\\lib\\main.js",
-    "C:\\Users\\Alexa\\OneDrive\\Documents\\Beam Agent\\runtime\\app\\beam\\node_modules\\@assistix\\beam-web-frontend\\dist\\index.html",
-    "C:\\Users\\Alexa\\OneDrive\\Documents\\Beam Agent\\runtime\\app\\beam\\node_modules\\@deepseek-ai\\dsh-web-frontend\\dist\\index.html",
-    "C:\\Users\\Alexa\\OneDrive\\Documents\\Beam Agent\\dist\\Beam Agent\\resources\\app\\lib\\main.js",
-    "C:\\Users\\Alexa\\OneDrive\\Documents\\Beam Agent\\dist\\Beam Agent\\resources\\app\\beam\\node_modules\\@assistix\\beam-web-frontend\\dist\\index.html",
-    "C:\\Users\\Alexa\\OneDrive\\Documents\\Beam Agent\\dist\\Beam Agent\\resources\\app\\beam\\node_modules\\@deepseek-ai\\dsh-web-frontend\\dist\\index.html",
-    "C:\\Users\\Alexa\\OneDrive\\Documents\\Beam Agent\\desktop\\bridge\\server.js",
-    "C:\\Users\\Alexa\\OneDrive\\Documents\\Beam Agent\\dist\\Beam Agent\\bridge\\server.js"
+    "C:\\Beam-Agent\\runtime\\app\\lib\\main.js",
+    "C:\\Beam-Agent\\runtime\\app\\beam\\node_modules\\@assistix\\beam-web-frontend\\dist\\index.html",
+    "C:\\Beam-Agent\\runtime\\app\\beam\\node_modules\\@deepseek-ai\\dsh-web-frontend\\dist\\index.html",
+    "C:\\Beam-Agent\\dist\\Beam-Agent\\resources\\app\\lib\\main.js",
+    "C:\\Beam-Agent\\dist\\Beam-Agent\\resources\\app\\beam\\node_modules\\@assistix\\beam-web-frontend\\dist\\index.html",
+    "C:\\Beam-Agent\\dist\\Beam-Agent\\resources\\app\\beam\\node_modules\\@deepseek-ai\\dsh-web-frontend\\dist\\index.html",
+    "C:\\Beam-Agent\\desktop\\bridge\\server.js",
+    "C:\\Beam-Agent\\dist\\Beam-Agent\\bridge\\server.js"
   ],
   "stringSamples": [
     "/(?<![A-Za-z0-9_/@.-])dsh(?![A-Za-z0-9_/-])/g → beam"

@@ -17,8 +17,8 @@ const MARK = "BEAM_CHAT_ISNULLABLE_FIX";
 const FILES = [
   "runtime/app/beam/node_modules/@assistix/beam-client-ui-chat/lib/client.js",
   "runtime/app/beam/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-chat/lib/client.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-chat/lib/client.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js",
 ];
 
 const RESTORE = `

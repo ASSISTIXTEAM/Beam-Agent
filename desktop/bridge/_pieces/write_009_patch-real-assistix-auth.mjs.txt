@@ -16,11 +16,11 @@ const bridges = [
 const indexes = [
   path.join(
     ROOT,
-    "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html"
+    "dist/Beam Agent/resources/app/dsh/node_modules/@beam-ai/dsh-web-frontend/dist/index.html"
   ),
   path.join(
     ROOT,
-    "runtime/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html"
+    "runtime/app/dsh/node_modules/@beam-ai/dsh-web-frontend/dist/index.html"
   ),
 ].filter((p) => fs.existsSync(p));
 
@@ -222,7 +222,7 @@ for (const i of indexes) patchIndex(i);
 // CSS error style
 const cssPath = path.join(
   ROOT,
-  "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/beam-override.css"
+  "dist/Beam Agent/resources/app/dsh/node_modules/@beam-ai/dsh-web-frontend/dist/assets/beam-override.css"
 );
 let css = fs.readFileSync(cssPath, "utf8");
 if (!css.includes("#beam-auth-gate .bag-error")) {

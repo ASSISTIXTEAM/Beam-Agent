@@ -286,7 +286,7 @@ function authErrorRu(code) {
 
 const htmlFiles = [
   path.join(ROOT, "runtime/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html"),
 ];
 
 for (const f of htmlFiles) {
@@ -295,7 +295,7 @@ for (const f of htmlFiles) {
 }
 
 const bridgeSrc = path.join(ROOT, "desktop/bridge/server.js");
-const bridgeDist = path.join(ROOT, "dist/Beam Agent/bridge/server.js");
+const bridgeDist = path.join(ROOT, "dist/Beam-Agent/bridge/server.js");
 patchBridge(bridgeSrc);
 fs.copyFileSync(bridgeSrc, bridgeDist);
 console.log("synced bridge → dist");

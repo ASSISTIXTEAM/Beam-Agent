@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const APP_ROOTS = [
-  path.join(ROOT, "dist", "Beam Agent", "resources", "app"),
+  path.join(ROOT, "dist", "Beam-Agent", "resources", "app"),
   path.join(ROOT, "runtime", "app"),
 ].filter((p) => fs.existsSync(p));
 

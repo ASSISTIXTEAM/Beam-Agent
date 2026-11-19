@@ -7,7 +7,7 @@
  *   auto-fire continueReply once with no banner; show Continue only if that fails.
  *   Hide system continue prompts from the user transcript bubbles.
  *
- * Targets: desktop/bridge + dist bridge, assistix + deepseek chat clients (runtime + dist).
+ * Targets: desktop/bridge + dist bridge, assistix + beam chat clients (runtime + dist).
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -24,9 +24,9 @@ const BRIDGE_FILES = [
 
 const CHAT_FILES = [
   "runtime/app/beam/node_modules/@assistix/beam-client-ui-chat/lib/client.js",
-  "runtime/app/beam/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js",
+  "runtime/app/beam/node_modules/@beam-ai/dsh-client-ui-chat/lib/client.js",
   "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-chat/lib/client.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js",
+  "dist/Beam Agent/resources/app/beam/node_modules/@beam-ai/dsh-client-ui-chat/lib/client.js",
 ];
 
 const LOOKS_TRUNCATED_NEW = `/** Heuristic: reply interrupted mid-structure (NOT DSML — that becomes tool_use).

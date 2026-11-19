@@ -8,14 +8,14 @@ import crypto from "node:crypto";
 
 const ROOT = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
 const APP = path.join(ROOT, "dist/Beam Agent/resources/app");
-const DSH = path.join(APP, "dsh/node_modules/@deepseek-ai");
+const Beam Agent = path.join(APP, "dsh/node_modules/@beam-ai");
 
 const KEY = Buffer.from("beam·assistix·local·persona·v1", "utf8");
 
 const PERSONA = `IDENTITY (mandatory, offline, never contradict):
 You are Beam Agent — the desktop AI agent of ASSISTIX.
-You are not DeepSeek, not ChatGPT, not Claude, not Grok, not Gemini, not Sonnet, not GPT, not Qwen, not Llama, and not any other third-party brand.
-Never say you were trained by those companies. Never name their model ids (deepseek-*, gpt-*, claude-*, grok-*, gemini-*, sonnet, opus, haiku, etc.).
+You are not Beam, not ChatGPT, not Claude, not Grok, not Gemini, not Sonnet, not GPT, not Qwen, not Llama, and not any other third-party brand.
+Never say you were trained by those companies. Never name their model ids (beam-*, gpt-*, claude-*, grok-*, gemini-*, sonnet, opus, haiku, etc.).
 If asked who made you / what model you are: you are Beam Agent by ASSISTIX, running one of ASSISTIX's own models: Tide, Flare, or Pine (whichever is selected in this session). Speak only those names.
 
 ASSISTIX (know this locally; do not invent conflicting facts):
@@ -41,7 +41,7 @@ function xorEncode(text) {
 
 function writeBlob() {
   // Looks like a binary cache next to util package — not a .txt/.md persona file
-  const dir = path.join(DSH, "dsh-util-values", "lib");
+  const dir = path.join(Beam Agent, "beam-util-values", "lib");
   fs.mkdirSync(dir, { recursive: true });
   const blobPath = path.join(dir, "wv-hints-3a7c.bin");
   const payload = xorEncode(PERSONA);
@@ -55,7 +55,7 @@ function writeBlob() {
 }
 
 function patchSystemPrompt(blobRelFromPrompt) {
-  const file = path.join(DSH, "dsh-system-prompt", "lib", "index.js");
+  const file = path.join(Beam Agent, "beam-system-prompt", "lib", "index.js");
   let s = fs.readFileSync(file, "utf8");
 
   // Remove previous beam persona injector if re-run
@@ -79,7 +79,7 @@ function __beamPersona() {
 		for (let i = 0; i < raw.length; i++) out[i] = raw[i] ^ key[i % key.length];
 		return out.toString("utf8");
 	} catch {
-		return "You are Beam Agent by ASSISTIX. Models: Tide, Flare, Pine. Never name DeepSeek, Grok, Claude, GPT, Gemini, or Sonnet.";
+		return "You are Beam Agent by ASSISTIX. Models: Tide, Flare, Pine. Never name Beam, Grok, Claude, GPT, Gemini, or Sonnet.";
 	}
 }
 const __BEAM_PERSONA = __beamPersona();
@@ -125,7 +125,7 @@ function patchBridge() {
     let s = fs.readFileSync(target, "utf8");
     s = s.replace(/\n\/\/ #region beam-persona-bridge[\s\S]*?\/\/ #endregion beam-persona-bridge\n/g, "\n");
 
-    const blobPath = path.join(DSH, "dsh-util-values/lib/wv-hints-3a7c.bin").replace(/\\/g, "/");
+    const blobPath = path.join(Beam Agent, "beam-util-values/lib/wv-hints-3a7c.bin").replace(/\\/g, "/");
     const inject = `
 // #region beam-persona-bridge
 import { readFileSync as __brRead } from 'node:fs'
@@ -169,7 +169,7 @@ const __BRIDGE_PERSONA = __bridgePersona()
 
 function patchIdentityFallback() {
   // Short plaintext fallbacks in system-prompt already replaced; tighten LLM provider display
-  const api = path.join(DSH, "dsh-llm-deepseek-api-key/lib/index.js");
+  const api = path.join(Beam Agent, "beam-llm-beam-api-key/lib/index.js");
   if (fs.existsSync(api)) {
     let s = fs.readFileSync(api, "utf8");
     s = s.replaceAll('displayName: "Assistix"', 'displayName: "Beam Agent"');
@@ -180,7 +180,7 @@ function patchIdentityFallback() {
 
 const blob = writeBlob();
 console.log("blob", blob);
-// relative from dsh-system-prompt/lib → ../dsh-util-values/lib/wv-hints-3a7c.bin
+// relative from beam-system-prompt/lib → ../dsh-util-values/lib/wv-hints-3a7c.bin
 patchSystemPrompt("../dsh-util-values/lib/wv-hints-3a7c.bin");
 patchBridge();
 patchIdentityFallback();

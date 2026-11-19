@@ -8,13 +8,13 @@
 #define MyAppURL "https://agent.assistix.org/download/"
 #define MyAppExeName "Start Beam Agent.vbs"
 #ifndef SourceDir
-  #define SourceDir "..\..\dist\Beam Agent"
+  #define SourceDir "..\..\dist\Beam-Agent"
 #endif
 #ifndef OutDir
   #define OutDir "..\..\dist\installers"
 #endif
 #ifndef IconFile
-  #define IconFile "..\..\dist\Beam Agent\resources\app.ico"
+  #define IconFile "..\..\dist\Beam-Agent\resources\app.ico"
 #endif
 
 [Setup]
@@ -26,7 +26,7 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL=https://assistix.org
 AppSupportURL=https://agent.assistix.org
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={localappdata}\Programs\Beam Agent
+DefaultDirName={localappdata}\Programs\Beam-Agent
 DefaultGroupName=Beam Agent
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest

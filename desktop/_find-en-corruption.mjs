@@ -2,8 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 
 const roots = [
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/beam/node_modules/@assistix",
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/beam/node_modules/@assistix",
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@assistix",
+  "C:/Beam-Agent/runtime/app/beam/node_modules/@assistix",
 ];
 
 const reBroken = /\{\s*:\s*\$/;

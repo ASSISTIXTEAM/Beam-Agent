@@ -13,7 +13,7 @@ import { spawnSync } from "node:child_process";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
-const DIST = path.join(ROOT, "dist", "Beam Agent");
+const DIST = path.join(ROOT, "dist", "Beam-Agent");
 
 const MAIN_FILES = [
   path.join(ROOT, "runtime", "app", "lib", "main.js"),
@@ -304,11 +304,11 @@ End If
 
   fs.writeFileSync(
     path.join(ROOT, "Start Beam Agent.vbs"),
-    `' Root convenience — silent launch (no console).\r\nSet sh = CreateObject("WScript.Shell")\r\nSet fso = CreateObject("Scripting.FileSystemObject")\r\nroot = fso.GetParentFolderName(WScript.ScriptFullName)\r\nsh.Run "wscript //nologo """ & root & "\\dist\\Beam Agent\\Start Beam Agent.vbs""", 0, False\r\n`
+    `' Root convenience — silent launch (no console).\r\nSet sh = CreateObject("WScript.Shell")\r\nSet fso = CreateObject("Scripting.FileSystemObject")\r\nroot = fso.GetParentFolderName(WScript.ScriptFullName)\r\nsh.Run "wscript //nologo """ & root & "\\dist\\Beam-Agent\\Start Beam Agent.vbs""", 0, False\r\n`
   );
   fs.writeFileSync(
     path.join(ROOT, "Start Beam Agent.cmd"),
-    `@echo off\r\nREM Prefer Start Beam Agent.vbs (silent). This .cmd may flash once if opened directly.\r\nstart "" /B wscript //nologo "%~dp0dist\\Beam Agent\\Start Beam Agent.vbs"\r\nexit /b 0\r\n`
+    `@echo off\r\nREM Prefer Start Beam Agent.vbs (silent). This .cmd may flash once if opened directly.\r\nstart "" /B wscript //nologo "%~dp0dist\\Beam-Agent\\Start Beam Agent.vbs"\r\nexit /b 0\r\n`
   );
   report.push("launchers rewritten (VBS primary)");
 }
@@ -319,8 +319,8 @@ function writeIdentityPs1() {
 $ErrorActionPreference = 'SilentlyContinue'
 $report = @()
 
-$beamSrc = 'C:\\Users\\Alexa\\OneDrive\\Documents\\Beam Agent\\dist\\Beam Agent'
-$beamDst = Join-Path $env:LOCALAPPDATA 'Programs\\Beam Agent'
+$beamSrc = 'C:\\Beam-Agent\\dist\\Beam-Agent'
+$beamDst = Join-Path $env:LOCALAPPDATA 'Programs\\Beam-Agent'
 $legacy = Join-Path $env:LOCALAPPDATA 'Programs\\DeepSeek Harness'
 $vbs = Join-Path $beamSrc 'Start Beam Agent.vbs'
 $wscript = Join-Path $env:SystemRoot 'System32\\wscript.exe'
@@ -431,7 +431,7 @@ function Set-Silent($p) {
 }
 $desk = [Environment]::GetFolderPath('Desktop')
 @(
-  (Join-Path $env:APPDATA 'Microsoft\\Windows\\Start Menu\\Programs\\Beam Agent.lnk'),
+  (Join-Path $env:APPDATA 'Microsoft\\Windows\\Start Menu\\Programs\\Beam-Agent.lnk'),
   (Join-Path $desk 'Beam Agent.lnk'),
   (Join-Path $env:APPDATA 'Microsoft\\Internet Explorer\\Quick Launch\\User Pinned\\TaskBar\\Beam Agent.lnk')
 ) | ForEach-Object { Set-Silent $_ }
@@ -478,7 +478,7 @@ function fixDetachHarnessRegression() {
   $s.Description = 'Beam Agent'
   $s.Save()`,
         `$s.TargetPath = Join-Path $env:SystemRoot 'System32\\wscript.exe'
-  $s.Arguments = '//nologo "C:\\Users\\Alexa\\OneDrive\\Documents\\Beam Agent\\dist\\Beam Agent\\Start Beam Agent.vbs"'
+  $s.Arguments = '//nologo "C:\\Beam-Agent\\dist\\Beam-Agent\\Start Beam Agent.vbs"'
   $s.WorkingDirectory = Split-Path $beamExe
   $s.WindowStyle = 7
   $s.IconLocation = $beamExe

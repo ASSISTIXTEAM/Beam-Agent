@@ -6,7 +6,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const ROOT = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
+const ROOT = "C:/Beam-Agent";
 const SRC_CANDIDATES = [
   path.join(
     process.env.USERPROFILE || "C:/Users/Alexa",
@@ -22,7 +22,7 @@ const ASSET_DIRS = [
   ),
   path.join(
     ROOT,
-    "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets"
+    "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets"
   ),
   path.join(
     ROOT,
@@ -30,7 +30,7 @@ const ASSET_DIRS = [
   ),
   path.join(
     ROOT,
-    "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets"
+    "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets"
   ),
 ];
 

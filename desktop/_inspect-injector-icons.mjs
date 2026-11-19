@@ -1,6 +1,6 @@
 import fs from "fs";
 const html = fs.readFileSync(
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
   "utf8",
 );
 let idx = 0;
@@ -32,7 +32,7 @@ for (const needle of [
 
 // Look for CSS that targets class*=newSession without svg
 const css = fs.readFileSync(
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/beam-override.css",
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/beam-override.css",
   "utf8",
 );
 const m = css.match(/\[class\*="newSession"\][^{]*\{[^}]+\}/g) || [];

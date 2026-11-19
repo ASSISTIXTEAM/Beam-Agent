@@ -11,8 +11,8 @@ try {
 '''
 
 FILES = [
-    Path(r"C:\Users\Alexa\OneDrive\Documents\Beam Agent\runtime\app\lib\main.js"),
-    Path(r"C:\Users\Alexa\OneDrive\Documents\Beam Agent\dist\Beam Agent\resources\app\lib\main.js"),
+    Path(r"C:\Beam-Agent\runtime\app\lib\main.js"),
+    Path(r"C:\Beam-Agent\dist\Beam-Agent\resources\app\lib\main.js"),
 ]
 
 for p in FILES:

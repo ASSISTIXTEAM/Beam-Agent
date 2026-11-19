@@ -1,12 +1,12 @@
-﻿import fs from "node:fs";
+import fs from "node:fs";
 import path from "node:path";
 
-const ROOT = "c:/Users/Alexa/OneDrive/Documents/Beam Agent";
+const ROOT = "c:/Users/Alexa/Beam-Agent";
 const checks = [];
 for (const label of ["runtime", "dist"]) {
   const tree = label === "runtime"
     ? path.join(ROOT, "runtime/app/beam/node_modules/@assistix")
-    : path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@assistix");
+    : path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@assistix");
   const files = {
     permUi: fs.readFileSync(path.join(tree, "beam-client-ui-permission-presets/lib/client.js"), "utf8"),
     permHost: fs.readFileSync(path.join(tree, "beam-permission-presets/lib/index.js"), "utf8"),

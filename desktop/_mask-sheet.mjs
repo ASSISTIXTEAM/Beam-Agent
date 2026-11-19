@@ -5,11 +5,11 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sharp = createRequire(import.meta.url)(
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/sharp")
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/sharp")
 );
 const OUT = path.join(ROOT, "desktop/_verify-icons-v4-out");
 const bold =
-  "C:/Users/Alexa/BeamAgent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/beam-icons/bold";
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/beam-icons/bold";
 const names = [
   "settings",
   "user",

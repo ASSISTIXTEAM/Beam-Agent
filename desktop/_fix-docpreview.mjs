@@ -1,6 +1,6 @@
 import fs from "node:fs";
 const p =
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-sidebar-documentpreview/lib/client.js";
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-sidebar-documentpreview/lib/client.js";
 let s = fs.readFileSync(p, "utf8");
 console.log("includes zh: zh$", s.includes("zh: zh$"));
 const i = s.indexOf('locale.register("documentMarkdown"');

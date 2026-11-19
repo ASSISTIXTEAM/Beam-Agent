@@ -1,8 +1,8 @@
 import fs from "fs";
 
 const files = [
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/beam/node_modules/@assistix/beam-client-ui-workspace/lib/client.js",
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-workspace/lib/client.js",
+  "C:/Beam-Agent/runtime/app/beam/node_modules/@assistix/beam-client-ui-workspace/lib/client.js",
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-workspace/lib/client.js",
 ];
 
 const pairs = [

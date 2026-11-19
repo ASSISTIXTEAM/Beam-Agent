@@ -10,9 +10,9 @@ const BRIDGE_SRC =
 const BRIDGE_DIST =
   "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/bridge/server.js";
 const INDEX =
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html";
+  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/dsh/node_modules/@beam-ai/dsh-web-frontend/dist/index.html";
 const INDEX_RT =
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html";
+  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/dsh/node_modules/@beam-ai/dsh-web-frontend/dist/index.html";
 
 let main = fs.readFileSync(MAIN, "utf8");
 
@@ -74,7 +74,7 @@ const oldClaim = `if (claimDesktopSingleInstance(app, (argv = []) => {
 
 const newClaim = `if (claimDesktopSingleInstance(app, (argv = []) => {
 	try {
-		const deep = (argv || []).find((a) => typeof a === "string" && (a.startsWith("beam-agent://") || a.startsWith("dsh://")));
+		const deep = (argv || []).find((a) => typeof a === "string" && (a.startsWith("beam-agent://") || a.startsWith("beam://")));
 		if (deep) {
 			focusPrimaryWindow();
 			for (const win of BrowserWindow.getAllWindows()) {
@@ -96,7 +96,7 @@ if (!main.includes("beam-agent://auth")) {
   main = main.replace(
     `app.on("open-url", (event, url) => {
 		event.preventDefault();
-		if (url === "dsh://open" || url === "dsh://open/" || String(url).startsWith("beam-agent://")) {
+		if (url === "beam://open" || url === "beam://open/" || String(url).startsWith("beam-agent://")) {
 			focusPrimaryWindow();
 			try {
 				const win = currentMainWindow?.() ?? mainWindow;
@@ -106,7 +106,7 @@ if (!main.includes("beam-agent://auth")) {
 	});`,
     `app.on("open-url", (event, url) => {
 		event.preventDefault();
-		if (url === "dsh://open" || url === "dsh://open/" || String(url).startsWith("beam-agent://")) {
+		if (url === "beam://open" || url === "beam://open/" || String(url).startsWith("beam-agent://")) {
 			focusPrimaryWindow();
 			try {
 				for (const win of BrowserWindow.getAllWindows()) {

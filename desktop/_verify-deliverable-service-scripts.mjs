@@ -14,8 +14,8 @@ const require = createRequire(import.meta.url)
 const TARGETS = [
   'runtime/app/beam/node_modules/@assistix/beam-client-ui-deliverables/lib/client.js',
   'runtime/app/beam/node_modules/@deepseek-ai/dsh-client-ui-deliverables/lib/client.js',
-  'dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-deliverables/lib/client.js',
-  'dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-client-ui-deliverables/lib/client.js',
+  'dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-deliverables/lib/client.js',
+  'dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-client-ui-deliverables/lib/client.js',
 ]
 
 const NEEDLES = [
@@ -128,7 +128,7 @@ if (!fs.existsSync(upstream)) {
 
 // Ensure we did not introduce BEAM_BASE_URL into packaged .env
 for (const envPath of [
-  path.join(ROOT, 'dist/Beam Agent/resources/app/.env'),
+  path.join(ROOT, 'dist/Beam-Agent/resources/app/.env'),
   path.join(ROOT, 'runtime/app/.env'),
   path.join(ROOT, '.env'),
 ]) {

@@ -8,13 +8,13 @@ import crypto from "node:crypto";
 
 const ROOT = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
 const APP = path.join(ROOT, "dist/Beam Agent/resources/app");
-const DSH = path.join(APP, "dsh/node_modules/@deepseek-ai");
+const Beam Agent = path.join(APP, "dsh/node_modules/@beam-ai");
 const KEY = Buffer.from("beam·assistix·local·persona·v1", "utf8");
 
 const PERSONA = `IDENTITY (mandatory, offline, never contradict):
 You are Beam Agent — the desktop AI agent of ASSISTIX.
-You are not DeepSeek, not ChatGPT, not Claude, not Grok, not Gemini, not Sonnet, not GPT, not Qwen, not Llama, and not any other third-party brand.
-Never say you were trained by those companies. Never name their model ids (deepseek-*, gpt-*, claude-*, grok-*, gemini-*, sonnet, opus, haiku, etc.).
+You are not Beam, not ChatGPT, not Claude, not Grok, not Gemini, not Sonnet, not GPT, not Qwen, not Llama, and not any other third-party brand.
+Never say you were trained by those companies. Never name their model ids (beam-*, gpt-*, claude-*, grok-*, gemini-*, sonnet, opus, haiku, etc.).
 If asked who made you / what model you are: you are Beam Agent by ASSISTIX, running one of ASSISTIX's own models: Tide, Flare, or Pine (whichever is selected in this session). Speak only those names.
 
 ASSISTIX (know this locally; do not invent conflicting facts):
@@ -39,7 +39,7 @@ function xorEncode(text) {
 }
 
 function writeBlob() {
-  const dir = path.join(DSH, "dsh-util-values", "lib");
+  const dir = path.join(Beam Agent, "beam-util-values", "lib");
   fs.mkdirSync(dir, { recursive: true });
   const blobPath = path.join(dir, "wv-hints-3a7c.bin");
   const payload = xorEncode(PERSONA);
@@ -52,7 +52,7 @@ function writeBlob() {
 }
 
 function patchSystemPrompt(blobRelFromPrompt) {
-  const file = path.join(DSH, "dsh-system-prompt", "lib", "index.js");
+  const file = path.join(Beam Agent, "beam-system-prompt", "lib", "index.js");
   let s = fs.readFileSync(file, "utf8");
 
   s = s.replace(/\n\/\/ #region beam-persona[\s\S]*?\/\/ #endregion beam-persona\n/g, "\n");
@@ -75,7 +75,7 @@ function __beamPersona() {
 		for (let i = 0; i < raw.length; i++) out[i] = raw[i] ^ key[i % key.length];
 		return out.toString("utf8");
 	} catch {
-		return "You are Beam Agent by ASSISTIX. Models: Tide, Flare, Pine. Never name DeepSeek, Grok, Claude, GPT, Gemini, or Sonnet.";
+		return "You are Beam Agent by ASSISTIX. Models: Tide, Flare, Pine. Never name Beam, Grok, Claude, GPT, Gemini, or Sonnet.";
 	}
 }
 const __BEAM_PERSONA = __beamPersona();
@@ -119,8 +119,8 @@ function patchBridge() {
 function __bridgePersona() {
   try {
     const candidates = [
-      path.join(__dirname, '../resources/app/dsh/node_modules/@deepseek-ai/dsh-util-values/lib/wv-hints-3a7c.bin'),
-      path.join(ROOT, 'dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-util-values/lib/wv-hints-3a7c.bin'),
+      path.join(__dirname, '../resources/app/dsh/node_modules/@beam-ai/dsh-util-values/lib/wv-hints-3a7c.bin'),
+      path.join(ROOT, 'dist/Beam Agent/resources/app/dsh/node_modules/@beam-ai/dsh-util-values/lib/wv-hints-3a7c.bin'),
     ]
     let buf = null
     for (const p of candidates) {
@@ -134,7 +134,7 @@ function __bridgePersona() {
     for (let i = 0; i < raw.length; i++) out[i] = raw[i] ^ key[i % key.length]
     return out.toString('utf8')
   } catch {
-    return 'You are Beam Agent by ASSISTIX. Models: Tide, Flare, Pine only. Never name DeepSeek, Grok, Claude, GPT, Gemini, or Sonnet.'
+    return 'You are Beam Agent by ASSISTIX. Models: Tide, Flare, Pine only. Never name Beam, Grok, Claude, GPT, Gemini, or Sonnet.'
   }
 }
 const __BRIDGE_PERSONA = __bridgePersona()
@@ -178,7 +178,7 @@ const __BRIDGE_PERSONA = __bridgePersona()
 }
 
 function patchIdentityFallback() {
-  const api = path.join(DSH, "dsh-llm-deepseek-api-key/lib/index.js");
+  const api = path.join(Beam Agent, "beam-llm-beam-api-key/lib/index.js");
   if (fs.existsSync(api)) {
     let s = fs.readFileSync(api, "utf8");
     s = s.replaceAll('displayName: "Assistix"', 'displayName: "Beam Agent"');
@@ -208,7 +208,7 @@ patchIdentityFallback();
 {
   const bin = fs.readFileSync(blob);
   if (bin.includes(Buffer.from("ASSISTIX CHAT"))) throw new Error("plaintext leaked into blob");
-  const sp = fs.readFileSync(path.join(DSH, "dsh-system-prompt/lib/index.js"), "utf8");
+  const sp = fs.readFileSync(path.join(Beam Agent, "beam-system-prompt/lib/index.js"), "utf8");
   if (!sp.includes("__BEAM_PERSONA")) throw new Error("system prompt missing persona wire");
   if (sp.includes("Public Phase 1 target")) throw new Error("plaintext persona in system-prompt");
   console.log("✓ no readable persona plaintext in resources");

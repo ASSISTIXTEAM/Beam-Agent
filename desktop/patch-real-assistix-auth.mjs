@@ -8,15 +8,15 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const ROOT = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
+const ROOT = "C:/Beam-Agent";
 const bridges = [
   path.join(ROOT, "desktop/bridge/server.js"),
-  path.join(ROOT, "dist/Beam Agent/bridge/server.js"),
+  path.join(ROOT, "dist/Beam-Agent/bridge/server.js"),
 ];
 const indexes = [
   path.join(
     ROOT,
-    "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html"
+    "dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html"
   ),
   path.join(
     ROOT,
@@ -222,7 +222,7 @@ for (const i of indexes) patchIndex(i);
 // CSS error style
 const cssPath = path.join(
   ROOT,
-  "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/beam-override.css"
+  "dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/beam-override.css"
 );
 let css = fs.readFileSync(cssPath, "utf8");
 if (!css.includes("#beam-auth-gate .bag-error")) {

@@ -200,8 +200,8 @@ function bumpHtml(htmlPath) {
 const ASSET_DIRS = [
   path.join(ROOT, "runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets"),
   path.join(ROOT, "runtime/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets"),
 ];
 
 let total = 0;

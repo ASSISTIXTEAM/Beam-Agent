@@ -18,7 +18,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const TARGETS = [
   path.join(ROOT, "runtime", "app", "lib", "main.js"),
-  path.join(ROOT, "dist", "Beam Agent", "resources", "app", "lib", "main.js"),
+  path.join(ROOT, "dist", "Beam-Agent", "resources", "app", "lib", "main.js"),
   path.join(process.env.USERPROFILE || "", "BeamAgent", "resources", "app", "lib", "main.js"),
 ].filter((p) => fs.existsSync(p));
 

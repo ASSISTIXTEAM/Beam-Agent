@@ -7,13 +7,13 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const ROOT = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
+const ROOT = "C:/Beam-Agent";
 const BRIDGE_SRC = path.join(ROOT, "desktop/bridge/server.js");
-const BRIDGE_DIST = path.join(ROOT, "dist/Beam Agent/bridge/server.js");
-const MAIN = path.join(ROOT, "dist/Beam Agent/resources/app/lib/main.js");
+const BRIDGE_DIST = path.join(ROOT, "dist/Beam-Agent/bridge/server.js");
+const MAIN = path.join(ROOT, "dist/Beam-Agent/resources/app/lib/main.js");
 const INDEX_DIST = path.join(
   ROOT,
-  "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html"
+  "dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html"
 );
 const INDEX_RT = path.join(
   ROOT,

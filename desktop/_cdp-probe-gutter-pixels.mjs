@@ -93,7 +93,7 @@ const detail = await send("Runtime.evaluate", {
 
 const val = detail.result?.result?.value;
 fs.writeFileSync(
-  "c:/Users/Alexa/OneDrive/Documents/Beam Agent/desktop/_proof-gutter-probe.json",
+  "c:/Users/Alexa/Beam-Agent/desktop/_proof-gutter-probe.json",
   JSON.stringify(val, null, 2)
 );
 console.log("rail", val.rail, "strips", val.strips, "rows", val.rows.length);
@@ -114,7 +114,7 @@ if (nested) {
     fromSurface: true,
     clip: { x: c.x, y: c.y - 2, width: Math.min(220, c.w), height: c.h + 4, scale: 2 },
   });
-  const p = "c:/Users/Alexa/OneDrive/Documents/Beam Agent/desktop/_proof-row-gutter-zoom.png";
+  const p = "c:/Users/Alexa/Beam-Agent/desktop/_proof-row-gutter-zoom.png";
   fs.writeFileSync(p, Buffer.from(shot.result.data, "base64"));
   console.log("zoom", p);
 }

@@ -4,7 +4,7 @@
  *
  * Updates / Network / Notifications UI live inside О приложении.
  * Coolicons duocolor PNG masks for nav (incl. about = circle-info).
- * Idempotent. Syncs runtime + dist + C:/Users/Alexa/BeamAgent.
+ * Idempotent. Syncs runtime + dist + C:/Beam-Agent/dist/Beam-Agent.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -16,17 +16,17 @@ const MARKER = "/* beam-settings-nav-extras */";
 
 const TREES = [
   path.join(ROOT, "runtime/app/beam/node_modules/@assistix"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@assistix"),
-  "C:/Users/Alexa/BeamAgent/resources/app/beam/node_modules/@assistix",
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@assistix"),
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@assistix",
 ];
 
 const WEBS = [
   path.join(ROOT, "runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
   path.join(ROOT, "runtime/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist"),
-  "C:/Users/Alexa/BeamAgent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist",
-  "C:/Users/Alexa/BeamAgent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist",
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist"),
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist",
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist",
 ];
 
 const NAV_ICON_ABOUT_ONLY = `if (id === "limits") return (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconDataOutlineMedium, {

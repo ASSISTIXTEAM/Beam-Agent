@@ -1,6 +1,6 @@
 import fs from "node:fs";
 for (const f of [
-  "dist/Beam Agent/resources/app/lib/main.js",
+  "dist/Beam-Agent/resources/app/lib/main.js",
   "runtime/app/lib/main.js",
 ]) {
   const s = fs.readFileSync(f, "utf8");

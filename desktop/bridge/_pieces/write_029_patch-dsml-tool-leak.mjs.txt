@@ -1,7 +1,7 @@
 /**
- * Stop DeepSeek DSML tool XML + file payloads from dumping into Beam chat prose.
+ * Stop Beam DSML tool XML + file payloads from dumping into Beam chat prose.
  *
- * Root cause: Tide (deepseek-v4*) emits tool calls as DSML text
+ * Root cause: Tide (beam-v4*) emits tool calls as DSML text
  *   <｜DSML｜ calls>…<｜DSML｜ invoke>…</｜DSML｜ calls>
  * Kumo often returns that as delta.content instead of structured tool_calls.
  * Bridge was forwarding it as Anthropic text_delta → chat wall of code/XML.
@@ -23,7 +23,7 @@ const CHAT_MARK = 'BEAM_DSML_DISPLAY_SCRUB'
 
 const DSML_REGION = `
 // #region ${BRIDGE_MARK}
-/** DeepSeek V4/V4.1 DSML tool markup (fullwidth ｜ or ASCII |, optional spaces). */
+/** Beam V4/V4.1 DSML tool markup (fullwidth ｜ or ASCII |, optional spaces). */
 const DSML_PIPE = '[|｜]'
 const DSML_TAG = \`<\\\\s*\${DSML_PIPE}\\\\s*DSML\\\\s*\${DSML_PIPE}\`
 const DSML_CLOSE_TAG = \`</\\\\s*\${DSML_PIPE}\\\\s*DSML\\\\s*\${DSML_PIPE}\`
@@ -663,9 +663,9 @@ function main() {
 
   const chats = [
     path.join(ROOT, 'runtime', 'app', 'beam', 'node_modules', '@assistix', 'beam-client-ui-chat', 'lib', 'client.js'),
-    path.join(ROOT, 'runtime', 'app', 'beam', 'node_modules', '@deepseek-ai', 'dsh-client-ui-chat', 'lib', 'client.js'),
+    path.join(ROOT, 'runtime', 'app', 'beam', 'node_modules', '@beam-ai', 'beam-client-ui-chat', 'lib', 'client.js'),
     path.join(ROOT, 'dist', 'Beam Agent', 'resources', 'app', 'beam', 'node_modules', '@assistix', 'beam-client-ui-chat', 'lib', 'client.js'),
-    path.join(ROOT, 'dist', 'Beam Agent', 'resources', 'app', 'beam', 'node_modules', '@deepseek-ai', 'dsh-client-ui-chat', 'lib', 'client.js'),
+    path.join(ROOT, 'dist', 'Beam Agent', 'resources', 'app', 'beam', 'node_modules', '@beam-ai', 'beam-client-ui-chat', 'lib', 'client.js'),
   ]
   for (const c of chats) {
     try { patchChatClient(c) } catch (e) { console.error('chat patch fail', c, e.message) }

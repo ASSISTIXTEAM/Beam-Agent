@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const require = createRequire(import.meta.url);
 const sharp = require(
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/sharp")
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/sharp")
 );
 
 const CACHE_BUST = "coolicons-everywhere-v4";
@@ -22,10 +22,10 @@ const COOL = path.join(ROOT, "desktop/_coolicons_svg/package/duocolor/round");
 const FRONTENDS = [
   path.join(ROOT, "runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
   path.join(ROOT, "runtime/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist"),
-  "C:/Users/Alexa/BeamAgent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist",
-  "C:/Users/Alexa/BeamAgent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist",
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist"),
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist",
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist",
 ];
 
 /** role → coolicons basename (duocolor/round) */
@@ -50,7 +50,8 @@ const ROLE_ICONS = {
   reload: "reload",
   logout: "log-out",
   login: "log-in",
-  settings: "settings",
+  settings: "slider-1",
+  "slider-1": "slider-1",
   general: "settings",
   "settings-sliders": "slider-2",
   sliders: "slider-2",
@@ -76,7 +77,9 @@ const ROLE_ICONS = {
   monitor: "desktop",
   desktop: "desktop",
   folder: "folder",
-  "folder-plus": "folder-plus",
+  "folder-plus": "folder-plus-corner",
+  "folder-plus-corner": "folder-plus-corner",
+  "folder-add": "folder-plus-corner",
   workspace: "folder",
   "window-sidebar": "window-sidebar",
   expand: "expand",

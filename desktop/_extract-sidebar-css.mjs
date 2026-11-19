@@ -1,7 +1,7 @@
 import fs from "node:fs";
 
 const p =
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-sidebar/lib/client.js";
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-sidebar/lib/client.js";
 const s = fs.readFileSync(p, "utf8");
 const m = s.match(/const css = "([^"]+)"/);
 if (!m) {

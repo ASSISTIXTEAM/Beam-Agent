@@ -221,8 +221,8 @@ try {
                 tide_used INT UNSIGNED NOT NULL DEFAULT 0,
                 flare_used INT UNSIGNED NOT NULL DEFAULT 0,
                 pine_used INT UNSIGNED NOT NULL DEFAULT 0,
-                tide_limit INT UNSIGNED NOT NULL DEFAULT 100000,
-                flare_limit INT UNSIGNED NOT NULL DEFAULT 50000,
+                tide_limit INT UNSIGNED NOT NULL DEFAULT 500000,
+                flare_limit INT UNSIGNED NOT NULL DEFAULT 100000,
                 pine_limit INT UNSIGNED NOT NULL DEFAULT 10000,
                 updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -265,7 +265,7 @@ try {
                 'week_start' => $weekStart,
                 'reset_at' => $resetAt,
                 'week_boundary' => 'monday_00_00_utc',
-                'defaults' => ['tide' => 100000, 'flare' => 50000, 'pine' => 10000],
+                'defaults' => ['tide' => 500000, 'flare' => 100000, 'pine' => 10000],
             ];
             $urow = null;
             if ($idUid > 0) {
@@ -305,7 +305,7 @@ try {
                 'week_start' => null,
                 'reset_at' => null,
                 'week_boundary' => 'monday_00_00_utc',
-                'defaults' => ['tide' => 100000, 'flare' => 50000, 'pine' => 10000],
+                'defaults' => ['tide' => 500000, 'flare' => 100000, 'pine' => 10000],
             ],
             'security' => [],
             'sessions' => [],

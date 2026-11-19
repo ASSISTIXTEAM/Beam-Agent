@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const p =
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html";
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html";
 const h = fs.readFileSync(p, "utf8");
 console.log("len", h.length);
 console.log("root", /id=["']root["']/.test(h));

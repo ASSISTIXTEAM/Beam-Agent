@@ -4,7 +4,7 @@
 import fs from "node:fs";
 
 const files = [
-  "dist/Beam Agent/resources/app/lib/main.js",
+  "dist/Beam-Agent/resources/app/lib/main.js",
   "runtime/app/lib/main.js",
 ];
 

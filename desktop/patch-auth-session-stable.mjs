@@ -20,7 +20,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 function targets() {
 	const rels = [
-		"dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
+		"dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
 		"runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
 		path.join(process.env.USERPROFILE || "", "BeamAgent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html"),
 	];

@@ -81,7 +81,7 @@ console.log(JSON.stringify(v, null, 2));
 fs.writeFileSync(path.join(__dirname, "_docpreview-around.txt"), (v?.around6190||[]).map((l,i)=>`${6186+i}|${l}`).join("\n"));
 
 // also check disk file around same area
-const disk = "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-sidebar-documentpreview/lib/client.js";
+const disk = "C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-sidebar-documentpreview/lib/client.js";
 const dlines = fs.readFileSync(disk,"utf8").split(/\\n/);
 console.log("DISK around 6188:");
 for (let i=6185;i<6198;i++) console.log((i+1)+"|"+(dlines[i]||"").slice(0,200));

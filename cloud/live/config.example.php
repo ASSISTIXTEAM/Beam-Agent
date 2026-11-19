@@ -22,7 +22,15 @@ return [
         'client_secret' => '',
     ],
     /**
-     * Kumo Router — основной LLM/image (OpenAI-compatible).
+     * Assistix LLM Hub (канон). Prefer over direct Kumo when service_key is set.
+     * getenv ASSISTIX_CHAT_SERVICE_KEY — plaintext ax_sk_chat_… (hash lives on api.assistix.org).
+     */
+    'assistix_hub' => [
+        'api_url' => 'https://api.assistix.org/v1/chat/completions',
+        'service_key' => '',
+    ],
+    /**
+     * Kumo Router — legacy direct LLM/image (OpenAI-compatible).
      * getenv CHAT_KUMO_API_KEY / KUMO_API_KEY или строка ниже. Ключ только на сервере.
      */
     'kumo' => [

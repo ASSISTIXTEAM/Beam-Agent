@@ -11,7 +11,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
 const TARGETS = [
   path.join(ROOT, 'runtime', 'app', 'lib', 'main.js'),
-  path.join(ROOT, 'dist', 'Beam Agent', 'resources', 'app', 'lib', 'main.js'),
+  path.join(ROOT, 'dist', 'Beam-Agent', 'resources', 'app', 'lib', 'main.js'),
 ]
 
 const INNO_HOOK = `
@@ -224,7 +224,7 @@ for (const file of TARGETS) patchFile(file)
 
 const ymlSrc = path.join(ROOT, 'desktop', 'installer', 'app-update.yml')
 const ymlDests = [
-  path.join(ROOT, 'dist', 'Beam Agent', 'resources', 'app-update.yml'),
+  path.join(ROOT, 'dist', 'Beam-Agent', 'resources', 'app-update.yml'),
 ]
 for (const dest of ymlDests) {
   if (!fs.existsSync(path.dirname(dest))) continue

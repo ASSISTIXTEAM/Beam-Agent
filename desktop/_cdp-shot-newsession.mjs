@@ -43,7 +43,7 @@ const shot = await send("Page.captureScreenshot", clip
   : { format: "png", fromSurface: true });
 const b64 = shot.result?.data;
 if (!b64) throw new Error("no shot " + JSON.stringify(shot).slice(0, 300));
-const out = "C:/Users/Alexa/OneDrive/Documents/Beam Agent/assets/_ui-newsession-fix.png";
+const out = "C:/Beam-Agent/assets/_ui-newsession-fix.png";
 fs.writeFileSync(out, Buffer.from(b64, "base64"));
 console.log("wrote", out, "clip", clip);
 ws.close();

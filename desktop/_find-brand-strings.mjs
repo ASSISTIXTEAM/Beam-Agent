@@ -3,9 +3,9 @@ import path from "node:path";
 
 const roots = [
   "runtime/app/dsh/node_modules/@deepseek-ai",
-  "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai",
+  "dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai",
   "runtime/app",
-  "dist/Beam Agent/resources/app",
+  "dist/Beam-Agent/resources/app",
   "desktop",
 ];
 

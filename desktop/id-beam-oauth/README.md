@@ -6,7 +6,7 @@ ISPmanager `:1500` also unreachable while VPN is on. Computer Use cannot click e
 
 ## Deploy (after VPN off / DIRECT works)
 ```powershell
-python "C:\Users\Alexa\OneDrive\Documents\Beam Agent\desktop\id-beam-oauth\deploy_beam_oauth.py"
+python "C:\Beam-Agent\desktop\id-beam-oauth\deploy_beam_oauth.py"
 ```
 
 Patches on server (when reachable):

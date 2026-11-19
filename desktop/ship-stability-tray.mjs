@@ -15,7 +15,7 @@ import { spawnSync } from "node:child_process";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
-const DIST = path.join(ROOT, "dist", "Beam Agent");
+const DIST = path.join(ROOT, "dist", "Beam-Agent");
 const MARK = "BEAM_STABILITY_TRAY";
 
 const MAIN_FILES = [

@@ -6,11 +6,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
-const ROOT = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
+const ROOT = "C:/Beam-Agent";
 const TMP = path.join(ROOT, "_tmp_app/dsh/node_modules/@deepseek-ai");
 const TREES = [
   path.join(ROOT, "runtime/app/dsh/node_modules/@deepseek-ai"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai"),
 ];
 
 function isBroken(s) {

@@ -25,7 +25,7 @@
 | Flare | `flare` | 50 000 |
 | Pine | `pine` | 10 000 |
 
-Локальный bridge ходит в Assistix API (`https://agent.assistix.org/llm` / `api.assistix.org`) с Assistix ID. Маппинг на upstream и ключ провайдера — только на сервере.
+Локальный bridge ходит в Assistix API (`https://api.assistix.org/v1`, зеркало `https://assistix.org/api/v1`) с Assistix ID. Маппинг на upstream и ключ провайдера — только на сервере.
 
 ## Пересборка
 

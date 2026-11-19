@@ -657,15 +657,15 @@ function main() {
   console.log('=== DSML tool-leak fix ===')
   const bridges = [
     path.join(ROOT, 'desktop', 'bridge', 'server.js'),
-    path.join(ROOT, 'dist', 'Beam Agent', 'bridge', 'server.js'),
+    path.join(ROOT, 'dist', 'Beam-Agent', 'bridge', 'server.js'),
   ]
   for (const b of bridges) patchBridge(b)
 
   const chats = [
     path.join(ROOT, 'runtime', 'app', 'beam', 'node_modules', '@assistix', 'beam-client-ui-chat', 'lib', 'client.js'),
     path.join(ROOT, 'runtime', 'app', 'beam', 'node_modules', '@deepseek-ai', 'dsh-client-ui-chat', 'lib', 'client.js'),
-    path.join(ROOT, 'dist', 'Beam Agent', 'resources', 'app', 'beam', 'node_modules', '@assistix', 'beam-client-ui-chat', 'lib', 'client.js'),
-    path.join(ROOT, 'dist', 'Beam Agent', 'resources', 'app', 'beam', 'node_modules', '@deepseek-ai', 'dsh-client-ui-chat', 'lib', 'client.js'),
+    path.join(ROOT, 'dist', 'Beam-Agent', 'resources', 'app', 'beam', 'node_modules', '@assistix', 'beam-client-ui-chat', 'lib', 'client.js'),
+    path.join(ROOT, 'dist', 'Beam-Agent', 'resources', 'app', 'beam', 'node_modules', '@deepseek-ai', 'dsh-client-ui-chat', 'lib', 'client.js'),
   ]
   for (const c of chats) {
     try { patchChatClient(c) } catch (e) { console.error('chat patch fail', c, e.message) }

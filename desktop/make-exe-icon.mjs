@@ -1,4 +1,4 @@
-﻿import fs from 'node:fs'
+import fs from 'node:fs'
 import sharp from 'sharp'
 import pngToIco from 'png-to-ico'
 import rceditImport from 'rcedit'
@@ -10,11 +10,11 @@ for (const s of sizes) {
   bufs.push(await sharp(svg).resize(s,s,{fit:'contain',background:{r:0,g:0,b:0,alpha:0}}).png().toBuffer())
 }
 const ico = await pngToIco(bufs)
-fs.writeFileSync('dist/Beam Agent/resources/app.ico', ico)
-fs.writeFileSync('dist/Beam Agent/resources/tray.ico', ico)
-fs.writeFileSync('dist/Beam Agent/resources/icon.png', bufs[bufs.length-1])
-await rcedit('dist/Beam Agent/Beam Agent.exe', {
-  icon: 'dist/Beam Agent/resources/app.ico',
+fs.writeFileSync('dist/Beam-Agent/resources/app.ico', ico)
+fs.writeFileSync('dist/Beam-Agent/resources/tray.ico', ico)
+fs.writeFileSync('dist/Beam-Agent/resources/icon.png', bufs[bufs.length-1])
+await rcedit('dist/Beam-Agent/Beam Agent.exe', {
+  icon: 'dist/Beam-Agent/resources/app.ico',
   'product-version': '0.1.8',
   'file-version': '0.1.6.0',
   'version-string': {

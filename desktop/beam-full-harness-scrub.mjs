@@ -11,7 +11,7 @@ import { execSync } from "node:child_process";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const TREES = [
   path.join(ROOT, "runtime", "app"),
-  path.join(ROOT, "dist", "Beam Agent", "resources", "app"),
+  path.join(ROOT, "dist", "Beam-Agent", "resources", "app"),
 ].filter((p) => fs.existsSync(p));
 
 const report = { files: [], windows: [], notes: [] };
@@ -68,7 +68,7 @@ for (const tree of TREES) {
 
 // --- 2) Start scripts: Beam-first env names ---
 for (const cmd of [
-  path.join(ROOT, "dist", "Beam Agent", "Start Beam Agent.cmd"),
+  path.join(ROOT, "dist", "Beam-Agent", "Start Beam Agent.cmd"),
   path.join(ROOT, "Start Beam Agent.cmd"),
 ]) {
   patchFile(cmd, (s) => {
@@ -87,7 +87,7 @@ for (const cmd of [
 // --- 3) Bridge comments ---
 for (const bridge of [
   path.join(ROOT, "desktop", "bridge", "server.js"),
-  path.join(ROOT, "dist", "Beam Agent", "bridge", "server.js"),
+  path.join(ROOT, "dist", "Beam-Agent", "bridge", "server.js"),
 ]) {
   patchFile(bridge, (s) => {
     s = s.replace(
@@ -171,11 +171,11 @@ fs.writeFileSync(
 $ErrorActionPreference = 'SilentlyContinue'
 $report = @()
 
-$beamSrc = 'C:\\Users\\Alexa\\OneDrive\\Documents\\Beam Agent\\dist\\Beam Agent'
-$beamDst = Join-Path $env:LOCALAPPDATA 'Programs\\Beam Agent'
+$beamSrc = 'C:\\Beam-Agent\\dist\\Beam-Agent'
+$beamDst = Join-Path $env:LOCALAPPDATA 'Programs\\Beam-Agent'
 $legacy = Join-Path $env:LOCALAPPDATA 'Programs\\DeepSeek Harness'
 
-# Ensure Programs\\Beam Agent has current build (junction/copy of launcher files)
+# Ensure Programs\\Beam-Agent has current build (junction/copy of launcher files)
 New-Item -ItemType Directory -Force -Path $beamDst | Out-Null
 # Copy essential launchers (not full electron tree if huge — prefer shortcut to dist)
 $lnkDir = Join-Path $env:APPDATA 'Microsoft\\Windows\\Start Menu\\Programs'
@@ -236,7 +236,7 @@ Get-ChildItem $unKey | ForEach-Object {
   }
 }
 
-# Write a marker so Programs\\Beam Agent points users to the right place
+# Write a marker so Programs\\Beam-Agent points users to the right place
 @"
 Beam Agent
 Install root: $beamSrc
@@ -300,7 +300,7 @@ report.notes.push(
   "Internal npm scopes @deepseek-ai/* remain (runtime packages). User-facing identity is Beam Agent / ASSISTIX / ~/.beam / Assistix.BeamAgent."
 );
 report.notes.push(
-  "Legacy folder %LOCALAPPDATA%\\Programs\\DeepSeek Harness retired (exe renamed). Use dist\\Beam Agent or Start Menu 'Beam Agent'."
+  "Legacy folder %LOCALAPPDATA%\\Programs\\DeepSeek Harness retired (exe renamed). Use dist\\Beam-Agent or Start Menu 'Beam Agent'."
 );
 
 console.log(JSON.stringify(report, null, 2));

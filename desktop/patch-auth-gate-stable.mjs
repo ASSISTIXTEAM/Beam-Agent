@@ -516,7 +516,7 @@ function patch(file) {
 
 const files = [
   path.join(ROOT, "runtime/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html"),
 ];
 
 for (const f of files) {

@@ -1,10 +1,10 @@
 import fs from "node:fs";
 
 const files = [
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.js",
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.js",
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-model-selection/lib/client.js",
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-model-selection/lib/client.js",
+  "C:/Beam-Agent/runtime/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.js",
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.js",
+  "C:/Beam-Agent/runtime/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-model-selection/lib/client.js",
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-model-selection/lib/client.js",
 ];
 
 const pairs = [

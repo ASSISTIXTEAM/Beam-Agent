@@ -101,7 +101,7 @@ function extractObjectLiteral(src, startIdx) {
 
 for (const p of [
   "runtime/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js",
-  "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js",
+  "dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js",
 ]) {
   let s = fs.readFileSync(p, "utf8");
   const marker = "const ruDict = {";

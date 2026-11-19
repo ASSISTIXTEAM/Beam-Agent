@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const files = [
   "runtime/app/beam/node_modules/@assistix/beam-client-ui-trajectory/lib/client.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-trajectory/lib/client.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-trajectory/lib/client.js",
 ];
 const pairs = [
   ['"toolbar.aria": "Process toolbar"', '"toolbar.aria": "Панель процесса"'],

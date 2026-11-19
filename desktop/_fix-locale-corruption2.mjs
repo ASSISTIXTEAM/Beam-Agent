@@ -4,9 +4,9 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const files = [
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-sidebar-documentpreview/lib/client.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-client-ui-sidebar-documentpreview/lib/client.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-client-ui-schedule/lib/client.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-sidebar-documentpreview/lib/client.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-client-ui-sidebar-documentpreview/lib/client.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-client-ui-schedule/lib/client.js",
   "runtime/app/beam/node_modules/@assistix/beam-client-ui-sidebar-documentpreview/lib/client.js",
   "runtime/app/beam/node_modules/@deepseek-ai/dsh-client-ui-sidebar-documentpreview/lib/client.js",
   "runtime/app/beam/node_modules/@deepseek-ai/dsh-client-ui-schedule/lib/client.js",
@@ -30,7 +30,7 @@ for (const file of files) {
 
 // global leftover scan
 for (const base of [
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules"),
   path.join(ROOT, "runtime/app/beam/node_modules"),
 ]) {
   if (!fs.existsSync(base)) continue;

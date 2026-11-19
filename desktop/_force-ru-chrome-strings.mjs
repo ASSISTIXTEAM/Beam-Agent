@@ -1,10 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const ROOT = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
+const ROOT = "C:/Beam-Agent";
 const TREES = [
   path.join(ROOT, "runtime/app/dsh/node_modules/@deepseek-ai"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai"),
 ];
 
 /** Force user-facing chrome to RU even inside en/zh dicts (Beam RU-first). */

@@ -7,8 +7,8 @@ import re
 from pathlib import Path
 
 ROOTS = [
-    Path(r"C:\Users\Alexa\OneDrive\Documents\Beam Agent\dist\Beam Agent\resources\app\beam\node_modules\@assistix"),
-    Path(r"C:\Users\Alexa\OneDrive\Documents\Beam Agent\runtime\app\beam\node_modules\@assistix"),
+    Path(r"C:\Beam-Agent\dist\Beam-Agent\resources\app\beam\node_modules\@assistix"),
+    Path(r"C:\Beam-Agent\runtime\app\beam\node_modules\@assistix"),
 ]
 
 KEEP = re.compile(

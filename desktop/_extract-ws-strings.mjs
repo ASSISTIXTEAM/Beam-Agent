@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 
 const roots = [
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/beam/node_modules/@assistix",
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@assistix",
 ];
 const pkgs = [
   "beam-client-ui-workspace",

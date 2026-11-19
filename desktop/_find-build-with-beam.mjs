@@ -4,7 +4,7 @@ import path from "node:path";
 const roots = [
   "desktop",
   "runtime/app",
-  "dist/Beam Agent/resources/app",
+  "dist/Beam-Agent/resources/app",
   "runtime/app/dsh/node_modules/@deepseek-ai/dsh-client-locale",
   "runtime/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-sidebar",
   "runtime/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend",

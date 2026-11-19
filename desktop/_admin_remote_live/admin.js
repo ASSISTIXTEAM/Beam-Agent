@@ -124,7 +124,7 @@
     view.querySelectorAll("[data-user]").forEach((b) => b.onclick = async () => {
       const ud = await api("user.get", { query: { id: b.dataset.user } });
       const u = ud.user;
-      const DEFAULTS = { tide: 100000, flare: 50000, pine: 10000 };
+      const DEFAULTS = { tide: 500000, flare: 100000, pine: 10000 };
       const bu = ud.beam_usage || {};
       const bl = ud.beam_limits || {};
       const weekMeta = ud.beam_week || {};
@@ -237,7 +237,7 @@
         });
       };
       const paintLive = (usage, limits, week) => {
-        const d = { tide: 100000, flare: 50000, pine: 10000 };
+        const d = { tide: 500000, flare: 100000, pine: 10000 };
         const bu2 = usage || {};
         const bl2 = limits || {};
         const fmtLine = (id) => {

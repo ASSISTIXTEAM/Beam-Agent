@@ -15,7 +15,7 @@ try {
 }
 
 const html = fs.readFileSync(
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
   "utf8"
 );
 console.log("html V7", html.includes("__beamCooliconsForceV7"));

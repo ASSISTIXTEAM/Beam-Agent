@@ -2,8 +2,8 @@
 $ErrorActionPreference = 'SilentlyContinue'
 $report = @()
 
-$beamSrc = 'C:\Users\Alexa\OneDrive\Documents\Beam Agent\dist\Beam Agent'
-$beamDst = Join-Path $env:LOCALAPPDATA 'Programs\Beam Agent'
+$beamSrc = 'C:\Beam-Agent\dist\Beam-Agent'
+$beamDst = Join-Path $env:LOCALAPPDATA 'Programs\Beam-Agent'
 $legacy = Join-Path $env:LOCALAPPDATA 'Programs\DeepSeek Harness'
 $vbs = Join-Path $beamSrc 'Start Beam Agent.vbs'
 $wscript = Join-Path $env:SystemRoot 'System32\wscript.exe'

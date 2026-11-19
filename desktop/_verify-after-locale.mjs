@@ -2,8 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 
 const roots = [
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/beam/node_modules",
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/beam/node_modules",
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules",
+  "C:/Beam-Agent/runtime/app/beam/node_modules",
 ];
 
 let broken = 0;
@@ -37,7 +37,7 @@ for (const root of roots) {
 }
 
 const html =
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html";
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html";
 const h = fs.readFileSync(html, "utf8");
 const cssPath = html.replace("index.html", "assets/beam-override.css");
 const css = fs.readFileSync(cssPath, "utf8");

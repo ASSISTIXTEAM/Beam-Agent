@@ -12,14 +12,14 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const INDEX_FILES = [
   "runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/index-BXV-oxvX.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/index-BXV-oxvX.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/index-BXV-oxvX.js",
   "runtime/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/index-BXV-oxvX.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/index-BXV-oxvX.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/index-BXV-oxvX.js",
 ].map((p) => path.join(ROOT, p));
 
 const MAIN_FILES = [
   path.join(ROOT, "runtime/app/lib/main.js"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/lib/main.js"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/lib/main.js"),
 ];
 
 function check(src, label) {

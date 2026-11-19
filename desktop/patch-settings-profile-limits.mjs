@@ -10,14 +10,14 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
-const ROOT = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
+const ROOT = "C:/Beam-Agent";
 const TREES = [
   path.join(ROOT, "runtime/app/beam/node_modules/@assistix"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@assistix"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@assistix"),
 ];
 const WEBS = [
   path.join(ROOT, "runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
 ];
 
 function restoreAccountSection(clientPath) {
@@ -131,12 +131,12 @@ function ensureLimitsSection(generalPath) {
 			}, []);
 			const snap = (typeof window !== "undefined" && window.__beamLimitsSnapshot) || { models: [] };
 			const ru = ((document.documentElement.lang || "").toLowerCase().startsWith("ru")) || ((document.documentElement.dataset.beamLang || "") === "ru");
-			const intro = ru ? "Недельные лимиты Tide, Flare и Pine. У каждой модели свой счётчик: использовано / лимит." : "Weekly limits for Tide, Flare, and Pine. Each model has its own used / limit counter."; /* beam-quotas-ux-clarity: re-run patch-quotas-ux-clarity.mjs after this */
+			const intro = ru ? "Недельные лимиты Tide, Flare и Pine. Полоска показывает остаток токенов (полная = есть запас, пустая = исчерпано, ∞ = безлимит)." : "Weekly limits for Tide, Flare, and Pine. The bar shows remaining tokens (full = headroom, empty = exhausted, ∞ = unlimited)."; /* beam-quotas-ux-clarity: re-run patch-quotas-ux-clarity.mjs after this */
 			const refreshLabel = ru ? "Обновить" : "Refresh";
 			const models = Array.isArray(snap.models) && snap.models.length ? snap.models : [
-				{ id: "tide", name: "Tide", tag: ru ? "Быстрая" : "Fast", desc: ru ? "Повседневное мышление — быстрые задачи и код" : "Everyday thinking — fast tasks and code", used: 0, limit: 1, color: "#f59e0b" },
-				{ id: "flare", name: "Flare", tag: ru ? "Стиль" : "Style", desc: ru ? "Стиль и креатив — тексты, полировка, идеи" : "Style and creative work", used: 0, limit: 1, color: "#a78bfa" },
-				{ id: "pine", name: "Pine", tag: ru ? "Точная" : "Precise", desc: ru ? "Точность — сложные задачи и длинный контекст" : "Accuracy — hard tasks and long context", used: 0, limit: 1, color: "#34d399" }
+				{ id: "tide", name: "Tide", tag: ru ? "Быстрая" : "Fast", desc: ru ? "Повседневное мышление — быстрые задачи и код" : "Everyday thinking — fast tasks and code", used: 0, limit: 500000, unlimited: false, color: "#f59e0b" },
+				{ id: "flare", name: "Flare", tag: ru ? "Стиль" : "Style", desc: ru ? "Стиль и креатив — тексты, полировка, идеи" : "Style and creative work", used: 0, limit: 100000, unlimited: false, color: "#a78bfa" },
+				{ id: "pine", name: "Pine", tag: ru ? "Точная" : "Precise", desc: ru ? "Точность — сложные задачи и длинный контекст" : "Accuracy — hard tasks and long context", used: 0, limit: 10000, unlimited: false, color: "#34d399" }
 			];
 			const fmt = (n) => {
 				const v = Number(n) || 0;
@@ -152,7 +152,7 @@ function ensureLimitsSection(generalPath) {
 					(0, react_jsx_runtime.jsx)("div", {
 						className: "beam-settings-limits-list",
 						children: models.map((m) => {
-							const pct = Math.min(100, Math.round((m.used / Math.max(1, m.limit)) * 100));
+							const remaining = Math.max(0, Math.max(1, m.limit) - (Number(m.used) || 0)); const pct = (m.unlimited || m.limit == null) ? 100 : Math.min(100, Math.round((remaining / Math.max(1, m.limit)) * 100)); const pctLabel = (m.unlimited || m.limit == null) ? "∞" : (pct + "%");
 							return (0, react_jsx_runtime.jsxs)("div", {
 								className: "beam-settings-limits-row",
 								children: [
@@ -172,7 +172,7 @@ function ensureLimitsSection(generalPath) {
 												className: "beam-settings-limits-meta",
 												children: [
 													(0, react_jsx_runtime.jsx)("span", { children: (ru ? "Лимиты недели " : "Weekly ") + fmt(m.used) + " / " + fmt(m.limit) }),
-													(0, react_jsx_runtime.jsx)("span", { children: pct + "%" })
+													(0, react_jsx_runtime.jsx)("span", { children: (typeof pctLabel !== "undefined" ? pctLabel : (pct + "%")) })
 												]
 											}),
 											(0, react_jsx_runtime.jsx)("div", {

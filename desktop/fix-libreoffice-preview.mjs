@@ -26,7 +26,7 @@ function exists(p) {
 
 function findKitProgramDirs() {
   const roots = [
-    path.join(ROOT, "dist", "Beam Agent", "resources", "app", "beam", "node_modules"),
+    path.join(ROOT, "dist", "Beam-Agent", "resources", "app", "beam", "node_modules"),
     path.join(ROOT, "runtime", "app", "beam", "node_modules"),
     path.join(ROOT, "_tmp_app", "dsh", "node_modules"),
     path.join(ROOT, "_tmp_app", "node_modules"),
@@ -45,7 +45,7 @@ function findKitProgramDirs() {
 function findRdbSource() {
   const candidates = [
     path.join(ROOT, "runtime", "app", "beam", "node_modules", "@assistix", "libreoffice-kit-win32-x64", "program", "program"),
-    path.join(ROOT, "dist", "Beam Agent", "resources", "app.asar.unpacked", "dsh", "node_modules", "@deepseek-ai", "libreoffice-kit-win32-x64", "program", "program"),
+    path.join(ROOT, "dist", "Beam-Agent", "resources", "app.asar.unpacked", "dsh", "node_modules", "@deepseek-ai", "libreoffice-kit-win32-x64", "program", "program"),
     path.join(ROOT, "_tmp_app", "dsh", "node_modules", "@deepseek-ai", "libreoffice-kit-win32-x64", "program", "program"),
     path.join(process.env.LOCALAPPDATA || "", "Programs", "DeepSeek Harness", "resources", "app.asar.unpacked", "dsh", "node_modules", "@deepseek-ai", "libreoffice-kit-win32-x64", "program", "program"),
     path.join(process.env.LOCALAPPDATA || "", "Programs", "Beam Code", "resources", "app.asar.unpacked", "dsh", "node_modules", "@deepseek-ai", "libreoffice-kit-win32-x64", "program", "program"),
@@ -79,14 +79,14 @@ function restoreRdbFiles() {
 
 function documentPreviewClients() {
   return [
-    path.join(ROOT, "dist", "Beam Agent", "resources", "app", "beam", "node_modules", "@assistix", "beam-client-ui-sidebar-documentpreview", "lib", "client.js"),
+    path.join(ROOT, "dist", "Beam-Agent", "resources", "app", "beam", "node_modules", "@assistix", "beam-client-ui-sidebar-documentpreview", "lib", "client.js"),
     path.join(ROOT, "runtime", "app", "beam", "node_modules", "@assistix", "beam-client-ui-sidebar-documentpreview", "lib", "client.js"),
   ].filter(exists);
 }
 
 function officeToPdfLibs() {
   return [
-    path.join(ROOT, "dist", "Beam Agent", "resources", "app", "beam", "node_modules", "@assistix", "beam-office-to-pdf", "lib", "index.js"),
+    path.join(ROOT, "dist", "Beam-Agent", "resources", "app", "beam", "node_modules", "@assistix", "beam-office-to-pdf", "lib", "index.js"),
     path.join(ROOT, "runtime", "app", "beam", "node_modules", "@assistix", "beam-office-to-pdf", "lib", "index.js"),
   ].filter(exists);
 }

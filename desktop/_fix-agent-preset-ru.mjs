@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 
 for (const tree of [
   "runtime/app/dsh/node_modules/@deepseek-ai",
-  "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai",
+  "dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai",
 ]) {
   const p = path.join(tree, "dsh-client-ui-agent-preset/lib/client.js");
   if (!fs.existsSync(p)) continue;

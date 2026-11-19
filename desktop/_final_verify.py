@@ -3,13 +3,13 @@ import re
 import urllib.request
 
 ms = Path(
-    r"C:\Users\Alexa\OneDrive\Documents\Beam Agent\dist\Beam Agent\resources\app\beam\node_modules\@assistix\beam-client-ui-model-selection\lib\client.js"
+    r"C:\Beam-Agent\dist\Beam-Agent\resources\app\beam\node_modules\@assistix\beam-client-ui-model-selection\lib\client.js"
 ).read_text(encoding="utf-8")
 acc = Path(
-    r"C:\Users\Alexa\OneDrive\Documents\Beam Agent\dist\Beam Agent\resources\app\beam\node_modules\@assistix\beam-llm-deepseek-account\lib\index.js"
+    r"C:\Beam-Agent\dist\Beam-Agent\resources\app\beam\node_modules\@assistix\beam-llm-deepseek-account\lib\index.js"
 ).read_text(encoding="utf-8")
 html = Path(
-    r"C:\Users\Alexa\OneDrive\Documents\Beam Agent\dist\Beam Agent\resources\app\beam\node_modules\@assistix\beam-web-frontend\dist\index.html"
+    r"C:\Beam-Agent\dist\Beam-Agent\resources\app\beam\node_modules\@assistix\beam-web-frontend\dist\index.html"
 ).read_text(encoding="utf-8")
 
 ru_empty = re.search(r'const ru = \{[\s\S]*?"empty\.models": "([^"]+)"', ms)

@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const bases = [
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules"),
   path.join(ROOT, "runtime/app/beam/node_modules"),
 ];
 

@@ -5,10 +5,10 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sharp = createRequire(import.meta.url)(
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/sharp")
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/sharp")
 );
 
-const bold = "C:/Users/Alexa/BeamAgent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/beam-icons/bold";
+const bold = "C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/beam-icons/bold";
 const names = ["settings", "user", "activity", "sun", "moon", "desktop", "cpu", "plus", "clock", "search"];
 
 for (const name of names) {

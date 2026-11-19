@@ -1,12 +1,12 @@
 import fs from "node:fs";
 
 const files = [
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-agent-preset/lib/client.js",
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-agent-preset/lib/client.js",
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-sidebar/lib/client.js",
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-sidebar/lib/client.js",
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js",
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js",
+  "C:/Beam-Agent/runtime/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-agent-preset/lib/client.js",
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-agent-preset/lib/client.js",
+  "C:/Beam-Agent/runtime/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-sidebar/lib/client.js",
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-sidebar/lib/client.js",
+  "C:/Beam-Agent/runtime/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js",
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js",
 ];
 
 const enOnlyPairs = [

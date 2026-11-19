@@ -58,8 +58,8 @@ const FIX = {
 };
 
 const DIRS = [
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/beam-icons",
-  "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/beam-icons",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/beam-icons",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/beam-icons",
   "runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/beam-icons",
   "runtime/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/beam-icons",
 ].map((p) => path.join(ROOT, p));

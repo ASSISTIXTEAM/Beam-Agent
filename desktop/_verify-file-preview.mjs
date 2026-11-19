@@ -1,14 +1,14 @@
 /**
  * End-to-end checks for common file open/preview paths after LO kit restore.
  */
-import { createConverter } from "../dist/Beam Agent/resources/app/beam/node_modules/@assistix/libreoffice-kit/lib/index.js";
+import { createConverter } from "../dist/Beam-Agent/resources/app/beam/node_modules/@assistix/libreoffice-kit/lib/index.js";
 import { mkdir, writeFile, readFile, stat, copyFile, unlink } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { spawn } from "node:child_process";
 import { inflateRawSync } from "node:zlib";
 
-const outDir = "C:\\Users\\Alexa\\OneDrive\\Documents\\Beam Agent\\_tmp_lo_test";
+const outDir = "C:\\Beam-Agent\\_tmp_lo_test";
 const ws = "C:\\Users\\Alexa\\.beam\\default-workspace";
 const musk = join(ws, "Илон_Маск_биография.docx");
 await mkdir(outDir, { recursive: true });
@@ -26,7 +26,7 @@ function fail(name, err) {
 
 // 1) types.rdb present in dist assistix kit
 const typesRdb =
-  "C:\\Users\\Alexa\\OneDrive\\Documents\\Beam Agent\\dist\\Beam Agent\\resources\\app\\beam\\node_modules\\@assistix\\libreoffice-kit-win32-x64\\program\\program\\types.rdb";
+  "C:\\Beam-Agent\\dist\\Beam-Agent\\resources\\app\\beam\\node_modules\\@assistix\\libreoffice-kit-win32-x64\\program\\program\\types.rdb";
 if (existsSync(typesRdb) && (await stat(typesRdb)).size > 1000) ok("types.rdb present", { bytes: (await stat(typesRdb)).size });
 else fail("types.rdb present", "missing or empty");
 
@@ -98,7 +98,7 @@ try {
 
 // 6) Soft-fail / fix markers present in dist client
 const client =
-  "C:\\Users\\Alexa\\OneDrive\\Documents\\Beam Agent\\dist\\Beam Agent\\resources\\app\\beam\\node_modules\\@assistix\\beam-client-ui-sidebar-documentpreview\\lib\\client.js";
+  "C:\\Beam-Agent\\dist\\Beam-Agent\\resources\\app\\beam\\node_modules\\@assistix\\beam-client-ui-sidebar-documentpreview\\lib\\client.js";
 const src = await readFile(client, "utf8");
 for (const marker of [
   "beam-lo-softfail",

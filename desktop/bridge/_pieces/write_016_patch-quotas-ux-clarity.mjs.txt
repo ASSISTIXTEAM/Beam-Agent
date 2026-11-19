@@ -35,7 +35,7 @@ function webHtmlFiles() {
   const out = [];
   for (const app of appRoots()) {
     for (const ns of ["@assistix/beam-web-frontend", "@deepseek-ai/dsh-web-frontend"]) {
-      for (const base of ["beam", "dsh"]) {
+      for (const base of ["beam", "beam"]) {
         const f = path.join(app, base, "node_modules", ns, "dist", "index.html");
         if (fs.existsSync(f)) out.push(f);
       }
@@ -48,7 +48,7 @@ function webCssFiles() {
   const out = [];
   for (const app of appRoots()) {
     for (const ns of ["@assistix/beam-web-frontend", "@deepseek-ai/dsh-web-frontend"]) {
-      for (const base of ["beam", "dsh"]) {
+      for (const base of ["beam", "beam"]) {
         const f = path.join(app, base, "node_modules", ns, "dist", "assets", "beam-override.css");
         if (fs.existsSync(f)) out.push(f);
       }
@@ -64,7 +64,7 @@ function generalClientFiles() {
       "@assistix/beam-client-ui-settings-general",
       "@deepseek-ai/dsh-client-ui-settings-general",
     ]) {
-      for (const base of ["beam", "dsh"]) {
+      for (const base of ["beam", "beam"]) {
         const f = path.join(app, base, "node_modules", ns, "lib", "client.js");
         if (fs.existsSync(f)) out.push(f);
       }
@@ -77,7 +77,7 @@ function chatClientFiles() {
   const out = [];
   for (const app of appRoots()) {
     for (const ns of ["@assistix/beam-client-ui-chat", "@deepseek-ai/dsh-client-ui-chat"]) {
-      for (const base of ["beam", "dsh"]) {
+      for (const base of ["beam", "beam"]) {
         const f = path.join(app, base, "node_modules", ns, "lib", "client.js");
         if (fs.existsSync(f)) out.push(f);
       }

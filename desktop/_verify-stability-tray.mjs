@@ -13,7 +13,7 @@ const check = (label, cond) => {
 
 for (const rel of [
   "runtime/app/lib/main.js",
-  "dist/Beam Agent/resources/app/lib/main.js",
+  "dist/Beam-Agent/resources/app/lib/main.js",
 ]) {
   const s = fs.readFileSync(path.join(ROOT, rel), "utf8");
   check(`${rel} AUMID`, s.includes('setAppUserModelId("Assistix.BeamAgent")'));
@@ -28,7 +28,7 @@ for (const rel of [
 
 for (const rel of [
   "runtime/app/lib/preload-app.cjs",
-  "dist/Beam Agent/resources/app/lib/preload-app.cjs",
+  "dist/Beam-Agent/resources/app/lib/preload-app.cjs",
 ]) {
   const s = fs.readFileSync(path.join(ROOT, rel), "utf8");
   check(`${rel} Приложение`, s.includes('application: "Приложение"'));
@@ -36,7 +36,7 @@ for (const rel of [
   check(`${rel} ru-first`, s.includes("BEAM_STABILITY_TRAY: ru-first"));
 }
 
-check("tray.ico size", fs.statSync(path.join(ROOT, "dist/Beam Agent/resources/tray.ico")).size > 4096);
+check("tray.ico size", fs.statSync(path.join(ROOT, "dist/Beam-Agent/resources/tray.ico")).size > 4096);
 check("runtime tray-windows.ico", fs.existsSync(path.join(ROOT, "runtime/app/resources/tray-windows.ico")));
 
 const envPath = path.join(os.homedir(), ".beam", ".env");

@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const root =
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/dsh/node_modules/@deepseek-ai";
+  "C:/Beam-Agent/runtime/app/dsh/node_modules/@deepseek-ai";
 const bad = [];
 function walk(d) {
   for (const e of fs.readdirSync(d, { withFileTypes: true })) {

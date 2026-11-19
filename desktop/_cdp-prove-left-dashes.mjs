@@ -109,7 +109,7 @@ const shot = await send("Page.captureScreenshot", { format: "png", fromSurface: 
 const b64 = shot.result?.data;
 if (b64) {
   const fs = await import("node:fs");
-  const path = "c:/Users/Alexa/OneDrive/Documents/Beam Agent/desktop/_proof-left-sidebar.png";
+  const path = "c:/Users/Alexa/Beam-Agent/desktop/_proof-left-sidebar.png";
   fs.writeFileSync(path, Buffer.from(b64, "base64"));
   console.log("screenshot", path, "bytes", Buffer.from(b64, "base64").length);
 }

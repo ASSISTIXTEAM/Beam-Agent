@@ -132,7 +132,7 @@ function __beamPersona() {
 			__beamJoin(here, "../../beam-util-values/lib/wv-hints-3a7c.bin"),
 			__beamJoin(here, "../../dsh-util-values/lib/wv-hints-3a7c.bin"),
 			__beamJoin(here, "../../../@assistix/beam-util-values/lib/wv-hints-3a7c.bin"),
-			__beamJoin(here, "../../../@deepseek-ai/dsh-util-values/lib/wv-hints-3a7c.bin"),
+			__beamJoin(here, "../../../@beam-ai/dsh-util-values/lib/wv-hints-3a7c.bin"),
 		];
 		let buf = null;
 		for (const p of candidates) {
@@ -212,10 +212,10 @@ function __bridgeLoadPersonaPack() {
   try {
     const candidates = [
       path.join(__dirname, '../resources/app/beam/node_modules/@assistix/beam-util-values/lib/wv-hints-3a7c.bin'),
-      path.join(__dirname, '../resources/app/beam/node_modules/@deepseek-ai/dsh-util-values/lib/wv-hints-3a7c.bin'),
+      path.join(__dirname, '../resources/app/beam/node_modules/@beam-ai/dsh-util-values/lib/wv-hints-3a7c.bin'),
       path.join(ROOT, 'dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-util-values/lib/wv-hints-3a7c.bin'),
       path.join(ROOT, 'runtime/app/beam/node_modules/@assistix/beam-util-values/lib/wv-hints-3a7c.bin'),
-      path.join(ROOT, 'dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-util-values/lib/wv-hints-3a7c.bin'),
+      path.join(ROOT, 'dist/Beam Agent/resources/app/dsh/node_modules/@beam-ai/dsh-util-values/lib/wv-hints-3a7c.bin'),
     ]
     let buf = null
     for (const p of candidates) {
@@ -262,12 +262,12 @@ function scrubBrandLeak(text) {
   t = t.replace(/\\bI\\s+don['']t\\s+impersonate\\s+other\\s+models\\b/gi, 'I am an Assistix model in Beam Agent')
   t = t.replace(/\\bI\\s+won['']t\\s+pretend\\s+to\\s+be\\s+(?:another|other)\\s+models?\\b/gi, 'I am an Assistix model in Beam Agent')
   t = t.replace(/\\b(?:just\\s+a\\s+)?(?:wrapper|prompt)\\s+(?:around|over|on\\s+top\\s+of)\\b/gi, 'Assistix model in')
-  t = t.replace(/\\bDeepSeek\\s+(?:Harness|Beam Agent)\\b/gi, 'Beam Agent')
-  t = t.replace(/\\bI(?:['']m| am)\\s+(?:an?\\s+)?(?:AI\\s+)?(?:assistant\\s+|language\\s+model\\s+)?(?:powered\\s+by\\s+|from\\s+|called\\s+|named\\s+)?(?:DeepSeek(?:\\s+V?\\d+(?:\\.\\d+)?)?|ChatGPT|Claude(?:\\s+\\d+(?:\\.\\d+)?)?|Sonnet(?:\\s+\\d+(?:\\.\\d+)?)?|Opus(?:\\s+\\d+(?:\\.\\d+)?)?|Haiku|Grok(?:-\\d+(?:\\.\\d+)?)?|Gemini(?:\\s+\\d+(?:\\.\\d+)?)?|GPT-?\\d+(?:\\.\\d+)?|Qwen(?:\\d+(?:\\.\\d+)?)?)\\b/gi, 'I am Assistix in Beam Agent')
-  t = t.replace(/\\b(?:as|my name is)\\s+(?:DeepSeek|ChatGPT|Claude|Sonnet|Grok|Gemini|GPT-?\\d+)\\b/gi, 'as Assistix')
-  t = t.replace(/\\bI was (?:created|trained|built) by (?:DeepSeek|OpenAI|Anthropic|xAI|Google)\\b/gi, 'I was built by Assistix')
-  t = t.replace(/\\bpowered by (?:DeepSeek|OpenAI|Anthropic|xAI|Google)\\b/gi, 'powered by Assistix')
-  t = t.replace(/\\bя\\s+(?:модель\\s+)?(?:DeepSeek|ChatGPT|Claude|GPT|Grok|Gemini|Qwen)\\b/gi, 'я Assistix')
+  t = t.replace(/\\bBeam\\s+(?:Harness|Beam Agent)\\b/gi, 'Beam Agent')
+  t = t.replace(/\\bI(?:['']m| am)\\s+(?:an?\\s+)?(?:AI\\s+)?(?:assistant\\s+|language\\s+model\\s+)?(?:powered\\s+by\\s+|from\\s+|called\\s+|named\\s+)?(?:Beam(?:\\s+V?\\d+(?:\\.\\d+)?)?|ChatGPT|Claude(?:\\s+\\d+(?:\\.\\d+)?)?|Sonnet(?:\\s+\\d+(?:\\.\\d+)?)?|Opus(?:\\s+\\d+(?:\\.\\d+)?)?|Haiku|Grok(?:-\\d+(?:\\.\\d+)?)?|Gemini(?:\\s+\\d+(?:\\.\\d+)?)?|GPT-?\\d+(?:\\.\\d+)?|Qwen(?:\\d+(?:\\.\\d+)?)?)\\b/gi, 'I am Assistix in Beam Agent')
+  t = t.replace(/\\b(?:as|my name is)\\s+(?:Beam|ChatGPT|Claude|Sonnet|Grok|Gemini|GPT-?\\d+)\\b/gi, 'as Assistix')
+  t = t.replace(/\\bI was (?:created|trained|built) by (?:Beam|OpenAI|Anthropic|xAI|Google)\\b/gi, 'I was built by Assistix')
+  t = t.replace(/\\bpowered by (?:Beam|OpenAI|Anthropic|xAI|Google)\\b/gi, 'powered by Assistix')
+  t = t.replace(/\\bя\\s+(?:модель\\s+)?(?:Beam|ChatGPT|Claude|GPT|Grok|Gemini|Qwen)\\b/gi, 'я Assistix')
   return t
 }
 // #endregion beam-persona-bridge
@@ -379,10 +379,10 @@ function patchCordisProfile() {
 function collectSystemPromptTargets() {
   const rels = [
     "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-system-prompt/lib/index.js",
-    "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-system-prompt/lib/index.js",
+    "dist/Beam Agent/resources/app/beam/node_modules/@beam-ai/dsh-system-prompt/lib/index.js",
     "runtime/app/beam/node_modules/@assistix/beam-system-prompt/lib/index.js",
-    "runtime/app/beam/node_modules/@deepseek-ai/dsh-system-prompt/lib/index.js",
-    "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-system-prompt/lib/index.js",
+    "runtime/app/beam/node_modules/@beam-ai/dsh-system-prompt/lib/index.js",
+    "dist/Beam Agent/resources/app/dsh/node_modules/@beam-ai/dsh-system-prompt/lib/index.js",
   ];
   return rels.map((r) => path.join(ROOT, r)).filter((p) => fs.existsSync(p));
 }
@@ -390,10 +390,10 @@ function collectSystemPromptTargets() {
 function collectBlobDirs() {
   const rels = [
     "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-util-values/lib",
-    "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-util-values/lib",
+    "dist/Beam Agent/resources/app/beam/node_modules/@beam-ai/dsh-util-values/lib",
     "runtime/app/beam/node_modules/@assistix/beam-util-values/lib",
-    "runtime/app/beam/node_modules/@deepseek-ai/dsh-util-values/lib",
-    "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-util-values/lib",
+    "runtime/app/beam/node_modules/@beam-ai/dsh-util-values/lib",
+    "dist/Beam Agent/resources/app/dsh/node_modules/@beam-ai/dsh-util-values/lib",
   ];
   return rels.map((r) => path.join(ROOT, r));
 }
@@ -442,7 +442,7 @@ fs.writeFileSync(
   const sample = blobs[0];
   const pack = decodeBlob(fs.readFileSync(sample));
   if (!pack?.common?.includes("ASSISTIX IDENTITY LOCK")) throw new Error("decode failed");
-  if (/You are not DeepSeek|не выдаю себя за|don't impersonate other models/i.test(pack.common)) {
+  if (/You are not Beam|не выдаю себя за|don't impersonate other models/i.test(pack.common)) {
     throw new Error("weak hedging identity still present in pack");
   }
   for (const k of ["tide", "flare", "pine"]) {

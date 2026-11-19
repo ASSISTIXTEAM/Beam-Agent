@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Beam Agent — restyle Electron shell dialogs (tray/about/update) + ASSISTIX-official aliases.
  * Safe to re-run. Does not touch auth/oauth.
  */
@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const copies = [
   path.join(root, 'runtime', 'app'),
-  path.join(root, 'dist', 'Beam Agent', 'resources', 'app'),
+  path.join(root, 'dist', 'Beam-Agent', 'resources', 'app'),
 ]
 
 function patchFile(file, transform) {

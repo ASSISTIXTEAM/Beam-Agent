@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const TREES = [
   path.join(ROOT, "runtime", "app", "beam", "node_modules", "@assistix"),
-  path.join(ROOT, "dist", "Beam Agent", "resources", "app", "beam", "node_modules", "@assistix"),
+  path.join(ROOT, "dist", "Beam-Agent", "resources", "app", "beam", "node_modules", "@assistix"),
 ].filter((p) => fs.existsSync(p));
 
 const MARK = "/* beam-clarify-menus-access */";

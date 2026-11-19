@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const src = 'C:/Users/Alexa/AppData/Local/Programs/DeepSeek Harness/resources/app.asar'
-const dest = 'C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist'
+const dest = 'C:/Beam-Agent/dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist'
 
 fs.rmSync(dest, { recursive: true, force: true })
 fs.mkdirSync(dest, { recursive: true })

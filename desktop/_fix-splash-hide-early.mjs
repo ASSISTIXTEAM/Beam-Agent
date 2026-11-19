@@ -6,9 +6,9 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const htmls = [
   "runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
   "runtime/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html",
-  "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html",
 ].map((p) => path.join(ROOT, p));
 
 const oldHide = `const hideEarly = () => {
@@ -42,7 +42,7 @@ for (const f of htmls) {
 
 const mains = [
   path.join(ROOT, "runtime/app/lib/main.js"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/lib/main.js"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/lib/main.js"),
 ];
 
 const oldBoot =

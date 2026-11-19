@@ -43,7 +43,7 @@ function patchFile(file, fn) {
 function appRoots() {
   return [
     path.join(ROOT, "runtime", "app"),
-    path.join(ROOT, "dist", "Beam Agent", "resources", "app"),
+    path.join(ROOT, "dist", "Beam-Agent", "resources", "app"),
   ].filter((p) => fs.existsSync(p));
 }
 
@@ -114,7 +114,7 @@ function ensurePrefs() {
 
 /** ---------- Bridge restore + Auto routing ---------- */
 const BRIDGE_SRC = path.join(ROOT, "desktop", "bridge", "server.js");
-const BRIDGE_DIST = path.join(ROOT, "dist", "Beam Agent", "bridge", "server.js");
+const BRIDGE_DIST = path.join(ROOT, "dist", "Beam-Agent", "bridge", "server.js");
 const BRIDGE_ORIG = path.join(ROOT, "desktop", "bridge", "_restored_from_transcript.js");
 
 function buildBridge() {
@@ -442,17 +442,20 @@ const AUTO_HELPERS = `
 			const m = (snap.models || []).find((x) => x.id === id) || null;
 			const defaults = { tide: 1e6, flare: 1e5, pine: 1e4 };
 			const used = Number(m?.used) || 0;
-			const limit = Math.max(1, Number(m?.limit) || defaults[id] || 1);
-			const pct = Math.min(100, Math.round((used / limit) * 100));
+			const rawLim = m?.limit == null || m?.limit === "" ? NaN : Number(m.limit);
+			const unlimited = !!(m?.unlimited || !Number.isFinite(rawLim) || rawLim >= 1e9 || rawLim >= 2147483640);
+			const limit = unlimited ? null : Math.max(1, Number.isFinite(rawLim) ? rawLim : (defaults[id] || 1));
+			const remaining = unlimited ? null : Math.max(0, limit - used);
+			const pct = unlimited ? 100 : Math.min(100, Math.round((remaining / limit) * 100));
 			const color = m?.color || ({ tide: "#f97316", flare: "#a78bfa", pine: "#34d399" }[id] || "#00B3BC");
-			return { used, limit, pct, color };
+			return { used, limit, remaining, unlimited, pct, pctLabel: unlimited ? "∞" : (pct + "%"), color };
 		}
 		function BeamMiniRing({ modelId }) {
 			const q = beamQuotaFor(modelId);
 			const r = 7, c = 2 * Math.PI * r, dash = (q.pct / 100) * c;
 			return (0, react_jsx_runtime.jsxs)("span", {
 				className: "beam-mini-ring",
-				title: q.pct + "%",
+				title: q.pctLabel,
 				"aria-hidden": "true",
 				children: [
 					(0, react_jsx_runtime.jsxs)("svg", {
@@ -834,4 +837,4 @@ console.log("patch-auto-model:");
 for (const f of report) console.log(" -", f);
 console.log(`done (${report.length} files)`);
 console.log("prefs:", PREFS);
-console.log("relaunch: quit Beam Agent, start dist/Beam Agent/Beam Agent.exe (bridge :17865)");
+console.log("relaunch: quit Beam Agent, start dist/Beam-Agent/Beam Agent.exe (bridge :17865)");

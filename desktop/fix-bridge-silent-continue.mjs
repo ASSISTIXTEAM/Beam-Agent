@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const FILES = [
   path.join(ROOT, "desktop/bridge/server.js"),
-  path.join(ROOT, "dist/Beam Agent/bridge/server.js"),
+  path.join(ROOT, "dist/Beam-Agent/bridge/server.js"),
 ];
 const SNIP = path.join(ROOT, "desktop/bridge/_persona_dsml_snip.js");
 
@@ -97,7 +97,7 @@ function patchFile(file) {
   const snip = fs.readFileSync(SNIP, "utf8");
   const dsml = extractDsmlRegion(snip);
 
-  // ROOT: desktop/bridge needs ../.. ; dist/Beam Agent/bridge needs ..
+  // ROOT: desktop/bridge needs ../.. ; dist/Beam-Agent/bridge needs ..
   if (file.includes(`${path.sep}dist${path.sep}`)) {
     s = s.replace(
       /const ROOT = path\.resolve\(__dirname, '[^']+'\)/,

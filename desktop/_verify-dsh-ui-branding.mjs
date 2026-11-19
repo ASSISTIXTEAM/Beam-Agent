@@ -6,12 +6,12 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const files = [
   "runtime/app/beam/node_modules/@assistix/beam-client-ui-chat/lib/client.js",
   "runtime/app/beam/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-chat/lib/client.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-chat/lib/client.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js",
   "runtime/app/lib/main.js",
-  "dist/Beam Agent/resources/app/lib/main.js",
+  "dist/Beam-Agent/resources/app/lib/main.js",
   "desktop/bridge/server.js",
-  "dist/Beam Agent/bridge/server.js",
+  "dist/Beam-Agent/bridge/server.js",
 ];
 
 let fail = 0;
@@ -40,8 +40,8 @@ for (const rel of files) {
 const roots = [
   "runtime/app/beam/node_modules/@assistix",
   "runtime/app/beam/node_modules/@deepseek-ai",
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix",
-  "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai",
 ].map((r) => path.join(ROOT, r));
 
 const leftover = [];

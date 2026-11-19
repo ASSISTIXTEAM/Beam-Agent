@@ -4,9 +4,9 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const ROOT = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
-const APP = path.join(ROOT, "dist/Beam Agent/resources/app");
-const DIST = path.join(ROOT, "dist/Beam Agent");
+const ROOT = "C:/Beam-Agent";
+const APP = path.join(ROOT, "dist/Beam-Agent/resources/app");
+const DIST = path.join(ROOT, "dist/Beam-Agent");
 const DSH = path.join(APP, "dsh/node_modules/@deepseek-ai");
 const BEAM_VERSION = "0.1.8";
 

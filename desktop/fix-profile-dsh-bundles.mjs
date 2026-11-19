@@ -14,13 +14,13 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const MAINS = [
 	path.join(ROOT, "runtime", "app", "lib", "main.js"),
-	path.join(ROOT, "dist", "Beam Agent", "resources", "app", "lib", "main.js"),
+	path.join(ROOT, "dist", "Beam-Agent", "resources", "app", "lib", "main.js"),
 	path.join(process.env.USERPROFILE || "", "BeamAgent", "resources", "app", "lib", "main.js"),
 ].filter((p) => fs.existsSync(p));
 
 const BOOTS = [
 	path.join(ROOT, "runtime", "app", "beam", "node_modules", "@assistix", "beam-app-boot", "lib", "index.js"),
-	path.join(ROOT, "dist", "Beam Agent", "resources", "app", "beam", "node_modules", "@assistix", "beam-app-boot", "lib", "index.js"),
+	path.join(ROOT, "dist", "Beam-Agent", "resources", "app", "beam", "node_modules", "@assistix", "beam-app-boot", "lib", "index.js"),
 	path.join(process.env.USERPROFILE || "", "BeamAgent", "resources", "app", "beam", "node_modules", "@assistix", "beam-app-boot", "lib", "index.js"),
 ].filter((p) => fs.existsSync(p));
 
@@ -235,7 +235,7 @@ if (fs.existsSync(profilesRoot)) {
 /* Ensure package dsh.bundle on beam-base / beam-web-app in every tree */
 for (const tree of [
 	path.join(ROOT, "runtime", "app", "beam", "node_modules", "@assistix"),
-	path.join(ROOT, "dist", "Beam Agent", "resources", "app", "beam", "node_modules", "@assistix"),
+	path.join(ROOT, "dist", "Beam-Agent", "resources", "app", "beam", "node_modules", "@assistix"),
 	path.join(process.env.USERPROFILE || "", "BeamAgent", "resources", "app", "beam", "node_modules", "@assistix"),
 ]) {
 	if (!fs.existsSync(tree)) continue;

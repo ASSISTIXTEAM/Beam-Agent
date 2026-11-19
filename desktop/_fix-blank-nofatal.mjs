@@ -10,7 +10,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const MARK = "beam-blank-nofatal";
 const files = [
   path.join(ROOT, "runtime/app/lib/main.js"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/lib/main.js"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/lib/main.js"),
 ];
 
 const OLD = `		const remountApplication = (why) => {

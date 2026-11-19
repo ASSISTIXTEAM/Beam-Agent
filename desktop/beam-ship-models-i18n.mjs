@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const TREES = [
   path.join(ROOT, "runtime", "app"),
-  path.join(ROOT, "dist", "Beam Agent", "resources", "app"),
+  path.join(ROOT, "dist", "Beam-Agent", "resources", "app"),
 ].filter((p) => fs.existsSync(p));
 
 const MODEL_SELECTION_RU = {
@@ -519,7 +519,7 @@ const bridgeSrc = path.join(ROOT, "desktop", "bridge", "server.js");
 if (patchBridgeAuth(bridgeSrc)) summary.bridge++;
 if (hardenStream(bridgeSrc)) summary.stream++;
 
-const bridgeDst = path.join(ROOT, "dist", "Beam Agent", "bridge", "server.js");
+const bridgeDst = path.join(ROOT, "dist", "Beam-Agent", "bridge", "server.js");
 fs.mkdirSync(path.dirname(bridgeDst), { recursive: true });
 fs.copyFileSync(bridgeSrc, bridgeDst);
 summary.bridgeSync = true;

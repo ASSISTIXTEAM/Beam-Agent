@@ -4,8 +4,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const ROOT = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
-const DIST = path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@assistix");
+const ROOT = "C:/Beam-Agent";
+const DIST = path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@assistix");
 
 const mustHide = [
   ["beam-client-ui-settings-models/lib/client.js", "models"],

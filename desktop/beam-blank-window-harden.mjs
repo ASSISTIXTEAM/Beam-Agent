@@ -13,7 +13,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 const TREES = [
   path.join(ROOT, "runtime", "app"),
-  path.join(ROOT, "dist", "Beam Agent", "resources", "app"),
+  path.join(ROOT, "dist", "Beam-Agent", "resources", "app"),
 ].filter((p) => fs.existsSync(path.join(p, "lib", "main.js")));
 
 const MARK = "beam-blank-window-harden";

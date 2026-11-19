@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const files = [
   path.join(ROOT, "runtime/app/beam/node_modules/@assistix/beam-api-workspace-controller/lib/typert.host.js"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-api-workspace-controller/lib/typert.host.js"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-api-workspace-controller/lib/typert.host.js"),
   path.join(ROOT, "runtime/app/beam/node_modules/@assistix/beam-api-workspace-controller/lib/typert.remote-client.js"),
 ];
 

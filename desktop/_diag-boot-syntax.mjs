@@ -2,9 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 
-const ROOT = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
+const ROOT = "C:/Beam-Agent";
 const dists = [
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist",
   "runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist",
 ];
 

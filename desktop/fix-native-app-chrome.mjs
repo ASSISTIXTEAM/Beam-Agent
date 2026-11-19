@@ -21,13 +21,13 @@ const MARK = "BEAM_NATIVE_APP_CHROME";
 
 const MAIN_FILES = [
   path.join(ROOT, "runtime", "app", "lib", "main.js"),
-  path.join(ROOT, "dist", "Beam Agent", "resources", "app", "lib", "main.js"),
+  path.join(ROOT, "dist", "Beam-Agent", "resources", "app", "lib", "main.js"),
 ];
 
 const HTML_FILES = [
   path.join(ROOT, "runtime", "app", "beam", "node_modules", "@assistix", "beam-web-frontend", "dist", "index.html"),
-  path.join(ROOT, "dist", "Beam Agent", "resources", "app", "beam", "node_modules", "@assistix", "beam-web-frontend", "dist", "index.html"),
-  path.join(ROOT, "dist", "Beam Agent", "resources", "app", "beam", "node_modules", "@deepseek-ai", "dsh-web-frontend", "dist", "index.html"),
+  path.join(ROOT, "dist", "Beam-Agent", "resources", "app", "beam", "node_modules", "@assistix", "beam-web-frontend", "dist", "index.html"),
+  path.join(ROOT, "dist", "Beam-Agent", "resources", "app", "beam", "node_modules", "@deepseek-ai", "dsh-web-frontend", "dist", "index.html"),
 ];
 
 const report = [];

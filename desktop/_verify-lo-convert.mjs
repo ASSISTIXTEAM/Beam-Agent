@@ -1,12 +1,12 @@
 /**
  * Verify LibreOffice kit can convert the Musk biography docx after types.rdb restore.
  */
-import { createConverter } from "../dist/Beam Agent/resources/app/beam/node_modules/@assistix/libreoffice-kit/lib/index.js";
+import { createConverter } from "../dist/Beam-Agent/resources/app/beam/node_modules/@assistix/libreoffice-kit/lib/index.js";
 import { mkdir, writeFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 
 const inputPath = "C:\\Users\\Alexa\\.beam\\default-workspace\\Илон_Маск_биография.docx";
-const outDir = "C:\\Users\\Alexa\\OneDrive\\Documents\\Beam Agent\\_tmp_lo_test";
+const outDir = "C:\\Beam-Agent\\_tmp_lo_test";
 const outputPath = join(outDir, "musk-verify.pdf");
 
 await mkdir(outDir, { recursive: true });

@@ -4,7 +4,7 @@ import paramiko
 
 HOST="31.31.196.221"; USER="u3354161"
 PASS=os.environ["BP"]; TOKEN=os.environ["BEAM_UPDATE_TOKEN"]
-ROOT=Path(r"C:\Users\Alexa\OneDrive\Documents\Beam Agent")
+ROOT=Path(r"C:\Beam-Agent")
 PKG=ROOT/"dist/installers/Beam-Agent-0.1.5-Setup.exe"
 API="/var/www/u3354161/data/www/agent.assistix.org/api"
 # Stable remote name for resume across restarts

@@ -1,7 +1,7 @@
 import fs from "node:fs";
 
 const p =
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js";
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js";
 let s = fs.readFileSync(p, "utf8");
 
 const brainPath =

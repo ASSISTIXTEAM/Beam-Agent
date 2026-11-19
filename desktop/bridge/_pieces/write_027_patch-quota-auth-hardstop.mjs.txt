@@ -2,7 +2,7 @@
  * Beam Agent: fix false ACCOUNT_SIGN_IN_REQUIRED + hard-stop weekly quota UX.
  *
  * Root cause: agent-default-model / some sessions used provider `assistix-account`
- * (DeepSeek platform grant). Beam auth is Assistix ID via local bridge +
+ * (Beam platform grant). Beam auth is Assistix ID via local bridge +
  * `assistix-official` + BEAM_API_KEY — so resolveToken() returned undefined.
  *
  * Also: bridge weekly quota returned HTTP 429/rate_limit_error (retryable) instead
@@ -41,7 +41,7 @@ function llmIndexFiles() {
     for (const ns of ["@assistix/beam-llm", "@deepseek-ai/dsh-llm"]) {
       const f = path.join(app, "beam", "node_modules", ns, "lib", "index.js");
       if (fs.existsSync(f)) out.push(f);
-      const f2 = path.join(app, "dsh", "node_modules", ns, "lib", "index.js");
+      const f2 = path.join(app, "beam", "node_modules", ns, "lib", "index.js");
       if (fs.existsSync(f2)) out.push(f2);
     }
   }
@@ -55,7 +55,7 @@ function chatClientFiles() {
       "@assistix/beam-client-ui-chat",
       "@deepseek-ai/dsh-client-ui-chat",
     ]) {
-      for (const base of ["beam", "dsh"]) {
+      for (const base of ["beam", "beam"]) {
         const f = path.join(app, base, "node_modules", ns, "lib", "client.js");
         if (fs.existsSync(f)) out.push(f);
       }
@@ -71,7 +71,7 @@ function accountClientFiles() {
       "@assistix/beam-client-ui-settings-account",
       "@deepseek-ai/dsh-client-ui-settings-account",
     ]) {
-      for (const base of ["beam", "dsh"]) {
+      for (const base of ["beam", "beam"]) {
         const f = path.join(app, base, "node_modules", ns, "lib", "client.js");
         if (fs.existsSync(f)) out.push(f);
       }
@@ -85,10 +85,10 @@ function accountLlmFiles() {
   for (const app of appRoots()) {
     for (const ns of [
       "@assistix/beam-llm-assistix-account",
-      "@assistix/beam-llm-deepseek-account",
+      "@assistix/beam-llm-beam-account",
       "@deepseek-ai/dsh-llm-deepseek-account",
     ]) {
-      for (const base of ["beam", "dsh"]) {
+      for (const base of ["beam", "beam"]) {
         const f = path.join(app, base, "node_modules", ns, "lib", "index.js");
         if (fs.existsSync(f)) out.push(f);
       }
@@ -101,14 +101,14 @@ function accountLlmFiles() {
 for (const file of llmIndexFiles()) {
   patchFile(file, (s) => {
     const bad =
-      'if (lower === "assistix-account" || lower === "deepseek-account") return this.adapters.has("assistix-account") ? "assistix-account" : p;';
+      'if (lower === "assistix-account" || lower === "beam-account") return this.adapters.has("assistix-account") ? "assistix-account" : p;';
     const good =
-      'if (lower === "assistix-account" || lower === "deepseek-account") return this.adapters.has("assistix-official") ? "assistix-official" : (this.adapters.has("assistix-account") ? "assistix-account" : p); /* Beam: account→official (Assistix ID + bridge) */';
+      'if (lower === "assistix-account" || lower === "beam-account") return this.adapters.has("assistix-official") ? "assistix-official" : (this.adapters.has("assistix-account") ? "assistix-account" : p); /* Beam: account→official (Assistix ID + bridge) */';
     if (s.includes("account→official")) return s;
     if (s.includes(bad)) return s.replace(bad, good);
     // Also patch shell-dialogs style if slightly different
     return s.replace(
-      /if \(lower === "assistix-account" \|\| lower === "deepseek-account"\) return this\.adapters\.has\("assistix-account"\) \? "assistix-account" : p;/,
+      /if \(lower === "assistix-account" \|\| lower === "beam-account"\) return this\.adapters\.has\("assistix-account"\) \? "assistix-account" : p;/,
       good,
     );
   });
@@ -120,7 +120,7 @@ for (const file of accountLlmFiles()) {
     if (s.includes("Beam Agent: bridge session auth")) return s;
     const needle =
       'const token = await account()?.resolveToken(connection.baseURL);\n\t\tif (token === void 0) throw new LlmError("Sign in to ASSISTIX to use the account provider. The request destination must allow account authentication.", "ACCOUNT_SIGN_IN_REQUIRED");';
-    const repl = `const token = await account()?.resolveToken(connection.baseURL);\n\t\t/* Beam Agent: bridge session auth — Assistix ID + local bridge; never require DeepSeek platform grant. */\n\t\tif (token === void 0) {\n\t\t\tlet bridgeOk = false;\n\t\t\ttry {\n\t\t\t\tconst origin = new URL(connection.baseURL).origin;\n\t\t\t\tif (/^https?:\\/\\/(127\\.0\\.0\\.1|localhost|\\[::1\\])(:\\d+)?$/i.test(origin)) {\n\t\t\t\t\tconst st = await fetch(origin + "/assistix/status", { signal: AbortSignal.timeout(2500) }).then((r) => r.json()).catch(() => null);\n\t\t\t\t\tbridgeOk = !!st?.signedIn;\n\t\t\t\t}\n\t\t\t} catch {}\n\t\t\tif (!bridgeOk) throw new LlmError("Sign in to ASSISTIX to use the account provider. The request destination must allow account authentication.", "ACCOUNT_SIGN_IN_REQUIRED");\n\t\t\treturn {\n\t\t\t\theaders: { [TOKEN_HEADER]: "beam-assistix-local" },\n\t\t\t\tonRequestError: async (error) => {\n\t\t\t\t\tif (!(error instanceof LlmError)) return error;\n\t\t\t\t\tif (error.code === QUOTA_EXCEEDED_CODE) return new LlmError(error.message, ACCOUNT_QUOTA_EXCEEDED_CODE, { ...error.failure, cause: error });\n\t\t\t\t\treturn error;\n\t\t\t\t}\n\t\t\t};\n\t\t}`;
+    const repl = `const token = await account()?.resolveToken(connection.baseURL);\n\t\t/* Beam Agent: bridge session auth — Assistix ID + local bridge; never require Beam platform grant. */\n\t\tif (token === void 0) {\n\t\t\tlet bridgeOk = false;\n\t\t\ttry {\n\t\t\t\tconst origin = new URL(connection.baseURL).origin;\n\t\t\t\tif (/^https?:\\/\\/(127\\.0\\.0\\.1|localhost|\\[::1\\])(:\\d+)?$/i.test(origin)) {\n\t\t\t\t\tconst st = await fetch(origin + "/assistix/status", { signal: AbortSignal.timeout(2500) }).then((r) => r.json()).catch(() => null);\n\t\t\t\t\tbridgeOk = !!st?.signedIn;\n\t\t\t\t}\n\t\t\t} catch {}\n\t\t\tif (!bridgeOk) throw new LlmError("Sign in to ASSISTIX to use the account provider. The request destination must allow account authentication.", "ACCOUNT_SIGN_IN_REQUIRED");\n\t\t\treturn {\n\t\t\t\theaders: { [TOKEN_HEADER]: "beam-assistix-local" },\n\t\t\t\tonRequestError: async (error) => {\n\t\t\t\t\tif (!(error instanceof LlmError)) return error;\n\t\t\t\t\tif (error.code === QUOTA_EXCEEDED_CODE) return new LlmError(error.message, ACCOUNT_QUOTA_EXCEEDED_CODE, { ...error.failure, cause: error });\n\t\t\t\t\treturn error;\n\t\t\t\t}\n\t\t\t};\n\t\t}`;
     if (!s.includes(needle)) return s;
     return s.replace(needle, repl);
   });
@@ -228,7 +228,7 @@ patchFile(profilePatch, (s) => {
     "$1assistix-official$2",
   );
   out = out.replace(
-    /(- id: agent-default-model\n[\s\S]*?provider:\s*)deepseek-account(\n)/,
+    /(- id: agent-default-model\n[\s\S]*?provider:\s*)beam-account(\n)/,
     "$1assistix-official$2",
   );
   return out;
@@ -251,12 +251,12 @@ function migrateSessions(dir) {
     }
     if (!name.endsWith(".json")) continue;
     patchFile(full, (s) => {
-      if (!s.includes('"assistix-account"') && !s.includes('"deepseek-account"')) return s;
+      if (!s.includes('"assistix-account"') && !s.includes('"beam-account"')) return s;
       return s
         .replaceAll('"provider": "assistix-account"', '"provider": "assistix-official"')
         .replaceAll('"provider":"assistix-account"', '"provider":"assistix-official"')
-        .replaceAll('"provider": "deepseek-account"', '"provider": "assistix-official"')
-        .replaceAll('"provider":"deepseek-account"', '"provider":"assistix-official"');
+        .replaceAll('"provider": "beam-account"', '"provider": "assistix-official"')
+        .replaceAll('"provider":"beam-account"', '"provider":"assistix-official"');
     });
   }
 }

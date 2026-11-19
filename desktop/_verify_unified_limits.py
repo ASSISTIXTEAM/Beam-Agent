@@ -93,7 +93,7 @@ def main():
 
     # Sync + restart bridge
     src = ROOT / "bridge" / "server.js"
-    runtime = Path(r"C:\Users\Alexa\BeamAgent\bridge\server.js")
+    runtime = Path(r"C:\Beam-Agent\dist\Beam-Agent\bridge\server.js")
     runtime.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
     print("synced bridge")
     import subprocess
@@ -102,8 +102,8 @@ def main():
          "Get-NetTCPConnection -LocalPort 17865 -ErrorAction SilentlyContinue | "
          "ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }; "
          "Start-Sleep -Seconds 1; "
-         "if (Test-Path 'C:\\Users\\Alexa\\BeamAgent\\start-bridge-hidden.vbs') { "
-         "wscript 'C:\\Users\\Alexa\\BeamAgent\\start-bridge-hidden.vbs' }"],
+         "if (Test-Path 'C:\\Beam-Agent\\dist\\Beam-Agent\\start-bridge-hidden.vbs') { "
+         "wscript 'C:\\Beam-Agent\\dist\\Beam-Agent\\start-bridge-hidden.vbs' }"],
         timeout=60,
     )
     time.sleep(2)

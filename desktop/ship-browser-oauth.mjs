@@ -34,7 +34,7 @@ function patch(file, fn) {
 // --- Bridge client ---
 const bridges = [
   path.join(ROOT, "desktop", "bridge", "server.js"),
-  path.join(ROOT, "dist", "Beam Agent", "bridge", "server.js"),
+  path.join(ROOT, "dist", "Beam-Agent", "bridge", "server.js"),
 ];
 
 for (const file of bridges) {

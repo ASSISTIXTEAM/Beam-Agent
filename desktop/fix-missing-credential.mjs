@@ -34,7 +34,7 @@ function patchFile(file, fn) {
 
 const homePathFiles = [
   path.join(ROOT, "runtime/app/beam/node_modules/@assistix/beam-home-paths/lib/index.js"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-home-paths/lib/index.js"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-home-paths/lib/index.js"),
 ];
 
 for (const file of homePathFiles) {
@@ -72,7 +72,7 @@ for (const file of homePathFiles) {
 
 const llmFiles = [
   path.join(ROOT, "runtime/app/beam/node_modules/@assistix/beam-llm-assistix/lib/index.js"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-llm-assistix/lib/index.js"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-llm-assistix/lib/index.js"),
 ];
 
 for (const file of llmFiles) {
@@ -88,7 +88,7 @@ for (const file of llmFiles) {
 
 const apiKeyFiles = [
   path.join(ROOT, "runtime/app/beam/node_modules/@assistix/beam-llm-assistix-api-key/lib/index.js"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-llm-assistix-api-key/lib/index.js"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-llm-assistix-api-key/lib/index.js"),
 ];
 
 for (const file of apiKeyFiles) {
@@ -233,7 +233,7 @@ const LAUNCH_ENV_SNIPPET = `/* BEAM_LAUNCH_ENV: ensure host inherits Beam home +
 
 const mainFiles = [
   path.join(ROOT, "runtime/app/lib/main.js"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/lib/main.js"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/lib/main.js"),
 ];
 
 for (const file of mainFiles) {

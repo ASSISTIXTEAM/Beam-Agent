@@ -4,8 +4,8 @@ import path from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import WebSocket from "ws";
 
-const ROOT = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
-const DIST = path.join(ROOT, "dist", "Beam Agent");
+const ROOT = "C:/Beam-Agent";
+const DIST = path.join(ROOT, "dist", "Beam-Agent");
 const HOME = path.join(process.env.USERPROFILE, ".beam");
 const EXE = path.join(DIST, "Beam Agent.exe");
 const NODE = path.join(DIST, "resources/runtime/primary-runtime/dependencies/node/bin/node.exe");

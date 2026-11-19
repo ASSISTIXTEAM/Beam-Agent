@@ -17,7 +17,7 @@ function serveCallbackBounce(res, ok, detail = '') {
 <title>Beam Agent — ${title}</title>
 <script>
 (function(){
-  var targets = [${JSON.stringify(target)}, 'beam-agent://open', 'dsh://open'];
+  var targets = [${JSON.stringify(target)}, 'beam-agent://open', 'beam://open'];
   function go(i){
     try { location.href = targets[i] || targets[0]; } catch (e) {}
   }

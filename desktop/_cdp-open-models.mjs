@@ -49,7 +49,7 @@ console.log("menu", JSON.stringify(menu.result?.result?.value, null, 2));
 const shot = await send("Page.captureScreenshot", { format: "png" });
 const fs = await import("node:fs");
 fs.writeFileSync(
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/_ui-models.png",
+  "C:/Beam-Agent/_ui-models.png",
   Buffer.from(shot.result.data, "base64")
 );
 ws.close();

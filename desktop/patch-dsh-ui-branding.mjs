@@ -14,7 +14,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const APP_TREES = [
   path.join(ROOT, "runtime", "app"),
-  path.join(ROOT, "dist", "Beam Agent", "resources", "app"),
+  path.join(ROOT, "dist", "Beam-Agent", "resources", "app"),
 ].filter((p) => fs.existsSync(p));
 
 const report = {
@@ -467,7 +467,7 @@ for (const tree of APP_TREES) {
 
 for (const bridge of [
   path.join(ROOT, "desktop", "bridge", "server.js"),
-  path.join(ROOT, "dist", "Beam Agent", "bridge", "server.js"),
+  path.join(ROOT, "dist", "Beam-Agent", "bridge", "server.js"),
 ]) {
   patchBridgeScrub(bridge);
 }

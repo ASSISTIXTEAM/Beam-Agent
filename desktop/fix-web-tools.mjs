@@ -53,7 +53,7 @@ function realPath(file) {
 function collect(relParts) {
   const trees = [
     path.join(ROOT, "runtime/app/beam/node_modules"),
-    path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules"),
+    path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules"),
   ];
   const scopes = ["@assistix", "@deepseek-ai"];
   const out = [];

@@ -1,6 +1,6 @@
 import fs from "fs";
 const css = fs.readFileSync(
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/beam-override.css",
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/beam-override.css",
   "utf8",
 );
 // Extract all rules mentioning plus or newSession

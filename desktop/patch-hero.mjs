@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const ROOT = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
+const ROOT = "C:/Beam-Agent";
 const logo = fs
   .readFileSync(path.join(ROOT, "logo.svg"), "utf8")
   .replaceAll('fill="#00B3BC"', 'fill="currentColor"');
@@ -10,7 +10,7 @@ const LOGO =
 
 const p = path.join(
   ROOT,
-  "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js"
+  "dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js"
 );
 let s = fs.readFileSync(p, "utf8");
 

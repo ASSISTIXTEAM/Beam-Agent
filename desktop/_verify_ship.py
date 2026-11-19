@@ -1,9 +1,9 @@
 from pathlib import Path
 
-ms = Path(r"C:\Users\Alexa\OneDrive\Documents\Beam Agent\dist\Beam Agent\resources\app\beam\node_modules\@assistix\beam-client-ui-model-selection\lib\client.js")
-acc = Path(r"C:\Users\Alexa\OneDrive\Documents\Beam Agent\dist\Beam Agent\resources\app\beam\node_modules\@assistix\beam-llm-deepseek-account\lib\index.js")
-br = Path(r"C:\Users\Alexa\OneDrive\Documents\Beam Agent\dist\Beam Agent\bridge\server.js")
-html = Path(r"C:\Users\Alexa\OneDrive\Documents\Beam Agent\dist\Beam Agent\resources\app\beam\node_modules\@assistix\beam-web-frontend\dist\index.html")
+ms = Path(r"C:\Beam-Agent\dist\Beam-Agent\resources\app\beam\node_modules\@assistix\beam-client-ui-model-selection\lib\client.js")
+acc = Path(r"C:\Beam-Agent\dist\Beam-Agent\resources\app\beam\node_modules\@assistix\beam-llm-deepseek-account\lib\index.js")
+br = Path(r"C:\Beam-Agent\dist\Beam-Agent\bridge\server.js")
+html = Path(r"C:\Beam-Agent\dist\Beam-Agent\resources\app\beam\node_modules\@assistix\beam-web-frontend\dist\index.html")
 
 for label, p, needles in [
     ("model-selection", ms, ["empty.models", "Нет доступных моделей", "No models available", "Выбрать модель", "Select model"]),

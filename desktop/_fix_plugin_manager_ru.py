@@ -5,8 +5,8 @@ import re
 from pathlib import Path
 
 files = [
-    Path(r"C:\Users\Alexa\OneDrive\Documents\Beam Agent\dist\Beam Agent\resources\app\beam\node_modules\@assistix\beam-client-ui-plugin-manager\lib\client.js"),
-    Path(r"C:\Users\Alexa\OneDrive\Documents\Beam Agent\runtime\app\beam\node_modules\@assistix\beam-client-ui-plugin-manager\lib\client.js"),
+    Path(r"C:\Beam-Agent\dist\Beam-Agent\resources\app\beam\node_modules\@assistix\beam-client-ui-plugin-manager\lib\client.js"),
+    Path(r"C:\Beam-Agent\runtime\app\beam\node_modules\@assistix\beam-client-ui-plugin-manager\lib\client.js"),
 ]
 
 broken = re.compile(

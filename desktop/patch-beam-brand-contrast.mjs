@@ -9,16 +9,16 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const ROOT = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
+const ROOT = "C:/Beam-Agent";
 
 const WEBS = [
   path.join(ROOT, "runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
 ];
 
 const USER_Q = [
   path.join(ROOT, "runtime/app/beam/node_modules/@assistix/beam-client-ui-user-questions/lib/client.js"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-user-questions/lib/client.js"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-user-questions/lib/client.js"),
 ];
 
 const MARKER = "/* ===== BEAM brand contrast / recommended badge ===== */";

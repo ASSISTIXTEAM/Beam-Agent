@@ -270,16 +270,21 @@
   }
 
   function usagePct(used, cap) {
+    /* remaining fill: null cap = unlimited = 100 */
+    if (cap == null) return 100;
     if (!cap || cap <= 0) return 0;
     var u = Math.max(0, Number(used) || 0);
-    var exact = Math.min(100, (u / cap) * 100);
-    return u > 0 ? Math.max(exact, 0.8) : 0;
+    var rem = Math.max(0, cap - u);
+    var exact = Math.min(100, (rem / cap) * 100);
+    return rem > 0 ? Math.max(exact, 0.8) : 0;
   }
   function usagePctLabel(used, cap) {
+    if (cap == null) return "∞";
     if (!cap || cap <= 0) return "0%";
     var u = Math.max(0, Number(used) || 0);
-    var exact = Math.min(100, (u / cap) * 100);
-    if (u <= 0) return "0%";
+    var rem = Math.max(0, cap - u);
+    var exact = Math.min(100, (rem / cap) * 100);
+    if (rem <= 0) return "0%";
     if (exact < 0.1) return "<0.1%";
     if (exact < 1) return exact.toFixed(1).replace(/\.0$/, "") + "%";
     return Math.round(exact) + "%";

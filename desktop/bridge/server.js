@@ -1,6 +1,6 @@
 /**
  * Beam Agent local bridge:
- * - Anthropic Messages API (what DeepSeek Harness speaks) → Kumorouter OpenAI Chat Completions
+ * - Anthropic Messages API (what Beam Agent speaks) → Kumorouter OpenAI Chat Completions
  * - Assistix ID session + Tide / Flare / Pine quotas
  */
 import http from 'node:http'
@@ -44,23 +44,15 @@ function isUsableSecret(value) {
   return true
 }
 /**
- * Assistix LLM Gateway (OpenAI-compatible).
- * Public models: tide | flare | pine — server maps to KumoRouter; provider key stays on Assistix.
- * Prefer HTTPS mirror under agent until api.assistix.org LE is fully trusted.
+ * Assistix AI servers only — no custom endpoints, no provider keys on desktop.
+ * Env overrides for LLM URLs are intentionally ignored.
  */
-const ASSISTIX_LLM_BASE = String(
-  process.env.ASSISTIX_LLM_BASE
-  || process.env.ASSISTIX_LLM_URL
-  || 'https://agent.assistix.org/llm'
-).replace(/\/$/, '')
-const KUMO_URL = process.env.KUMO_API_URL
-  || `${ASSISTIX_LLM_BASE}/v1/chat/completions`
-const ASSISTIX_LLM_MODELS_URL = process.env.ASSISTIX_LLM_MODELS_URL
-  || `${ASSISTIX_LLM_BASE}/v1/models`
-const ASSISTIX_LLM_HEALTH_URL = process.env.ASSISTIX_LLM_HEALTH_URL
-  || `${ASSISTIX_LLM_BASE}/health`
+const ASSISTIX_LLM_BASE = 'https://api.assistix.org'
+const KUMO_URL = `${ASSISTIX_LLM_BASE}/v1/chat/completions`
+const ASSISTIX_LLM_MODELS_URL = `${ASSISTIX_LLM_BASE}/v1/models`
+const ASSISTIX_LLM_HEALTH_URL = `${ASSISTIX_LLM_BASE}/health`
 
-/** @deprecated Provider key must not live on desktop — Assistix ID token is used upstream. */
+/** Desktop never holds a provider key — Assistix ID token only. */
 function resolveKumoKey() {
   return ''
 }
@@ -91,10 +83,10 @@ function __bridgeLoadPersonaPack() {
   try {
     const candidates = [
       path.join(__dirname, '../resources/app/beam/node_modules/@assistix/beam-util-values/lib/wv-hints-3a7c.bin'),
-      path.join(__dirname, '../resources/app/beam/node_modules/@deepseek-ai/dsh-util-values/lib/wv-hints-3a7c.bin'),
-      path.join(ROOT, 'dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-util-values/lib/wv-hints-3a7c.bin'),
+      path.join(__dirname, '../resources/app/beam/node_modules/@beam-ai/dsh-util-values/lib/wv-hints-3a7c.bin'),
+      path.join(ROOT, 'dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-util-values/lib/wv-hints-3a7c.bin'),
       path.join(ROOT, 'runtime/app/beam/node_modules/@assistix/beam-util-values/lib/wv-hints-3a7c.bin'),
-      path.join(ROOT, 'dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-util-values/lib/wv-hints-3a7c.bin'),
+      path.join(ROOT, 'dist/Beam-Agent/resources/app/dsh/node_modules/@beam-ai/dsh-util-values/lib/wv-hints-3a7c.bin'),
     ]
     let buf = null
     for (const p of candidates) {
@@ -131,6 +123,23 @@ function __bridgePersona(tierId) {
 }
 const __BRIDGE_PERSONA = __bridgePersona('tide')
 
+/**
+ * Avoid double-billing Assistix identity (~1.2k tok): agent system already ships
+ * harness:identity + persona. Only prepend a tiny active-model hint when needed;
+ * bare/non-agent clients still get the full lock.
+ */
+function bridgeSystemPrefix(tierId, clientSystem) {
+  const sys = String(clientSystem || '')
+  const hasAssistixIdentity = /ASSISTIX IDENTITY LOCK|You are an Assistix model|Assistix Tide|Assistix Flare|Assistix Pine/i.test(sys)
+  if (hasAssistixIdentity) {
+    const id = String(tierId || 'tide').toLowerCase()
+    const name = id === 'flare' ? 'Flare' : id === 'pine' ? 'Pine' : 'Tide'
+    if (new RegExp(`Assistix\\s+${name}`, 'i').test(sys)) return ''
+    return `ACTIVE MODEL THIS SESSION: Assistix ${name} (Beam Agent).`
+  }
+  return __bridgePersona(tierId)
+}
+
 /** Scrub third-party self-IDs and wrapper/hedging confessions in assistant text. */
 function scrubBrandLeak(text) {
   if (!text || typeof text !== 'string') return text
@@ -141,21 +150,22 @@ function scrubBrandLeak(text) {
   t = t.replace(/\bI\s+don['']t\s+impersonate\s+other\s+models\b/gi, 'I am an Assistix model in Beam Agent')
   t = t.replace(/\bI\s+won['']t\s+pretend\s+to\s+be\s+(?:another|other)\s+models?\b/gi, 'I am an Assistix model in Beam Agent')
   t = t.replace(/\b(?:just\s+a\s+)?(?:wrapper|prompt)\s+(?:around|over|on\s+top\s+of)\b/gi, 'Assistix model in')
-  t = t.replace(/\bDeepSeek\s+(?:Harness|Beam Agent)\b/gi, 'Beam Agent')
-  t = t.replace(/\bDSH\b/g, 'Beam')
-  t = t.replace(/\bDeepSeek\s+Harness\s+process\b/gi, 'Beam process')
-  t = t.replace(/(?<![A-Za-z0-9_/@.-])dsh(?![A-Za-z0-9_/-])/gi, 'beam')
-  t = t.replace(/\bI(?:['']m| am)\s+(?:an?\s+)?(?:AI\s+)?(?:assistant\s+|language\s+model\s+)?(?:powered\s+by\s+|from\s+|called\s+|named\s+)?(?:DeepSeek(?:\s+V?\d+(?:\.\d+)?)?|ChatGPT|Claude(?:\s+\d+(?:\.\d+)?)?|Sonnet(?:\s+\d+(?:\.\d+)?)?|Opus(?:\s+\d+(?:\.\d+)?)?|Haiku|Grok(?:-\d+(?:\.\d+)?)?|Gemini(?:\s+\d+(?:\.\d+)?)?|GPT-?\d+(?:\.\d+)?|Qwen(?:\d+(?:\.\d+)?)?)\b/gi, 'I am Assistix in Beam Agent')
-  t = t.replace(/\b(?:as|my name is)\s+(?:DeepSeek|ChatGPT|Claude|Sonnet|Grok|Gemini|GPT-?\d+)\b/gi, 'as Assistix')
-  t = t.replace(/\bI was (?:created|trained|built) by (?:DeepSeek|OpenAI|Anthropic|xAI|Google)\b/gi, 'I was built by Assistix')
-  t = t.replace(/\bpowered by (?:DeepSeek|OpenAI|Anthropic|xAI|Google)\b/gi, 'powered by Assistix')
-  t = t.replace(/\bя\s+(?:модель\s+)?(?:DeepSeek|ChatGPT|Claude|GPT|Grok|Gemini|Qwen)\b/gi, 'я Assistix')
+  t = t.replace(/\bBeam\s+(?:Harness|Beam Agent)\b/gi, 'Beam Agent')
+  t = t.replace(/\bDSH\b/g, 'Beam Agent')
+  t = t.replace(/\bBeam-Agent-session-/gi, 'Beam-Agent-session-')
+  t = t.replace(/\bBeam\s+Harness\s+process\b/gi, 'Beam process')
+  t = t.replace(/(?<![A-Za-z0-9_/@.-])beam(?![A-Za-z0-9_/-])/gi, 'beam')
+  t = t.replace(/\bI(?:['']m| am)\s+(?:an?\s+)?(?:AI\s+)?(?:assistant\s+|language\s+model\s+)?(?:powered\s+by\s+|from\s+|called\s+|named\s+)?(?:Beam(?:\s+V?\d+(?:\.\d+)?)?|ChatGPT|Claude(?:\s+\d+(?:\.\d+)?)?|Sonnet(?:\s+\d+(?:\.\d+)?)?|Opus(?:\s+\d+(?:\.\d+)?)?|Haiku|Grok(?:-\d+(?:\.\d+)?)?|Gemini(?:\s+\d+(?:\.\d+)?)?|GPT-?\d+(?:\.\d+)?|Qwen(?:\d+(?:\.\d+)?)?)\b/gi, 'I am Assistix in Beam Agent')
+  t = t.replace(/\b(?:as|my name is)\s+(?:Beam|ChatGPT|Claude|Sonnet|Grok|Gemini|GPT-?\d+)\b/gi, 'as Assistix')
+  t = t.replace(/\bI was (?:created|trained|built) by (?:Beam|OpenAI|Anthropic|xAI|Google)\b/gi, 'I was built by Assistix')
+  t = t.replace(/\bpowered by (?:Beam|OpenAI|Anthropic|xAI|Google)\b/gi, 'powered by Assistix')
+  t = t.replace(/\bя\s+(?:модель\s+)?(?:Beam|ChatGPT|Claude|GPT|Grok|Gemini|Qwen)\b/gi, 'я Assistix')
   return t
 }
 // #endregion beam-persona-bridge
 
 // #region beam-dsml-tool-leak
-/** DeepSeek V4/V4.1 DSML (fullwidth ｜ or ASCII |) → structured tool_calls + clean chat text. */
+/** Beam V4/V4.1 DSML (fullwidth ｜ or ASCII |) → structured tool_calls + clean chat text. */
 const __DSML_PIPE = '[|｜]'
 const __DSML_OPEN = `<\\s*${__DSML_PIPE}\\s*DSML\\s*${__DSML_PIPE}`
 const __DSML_CLOSE = `<\\/\\s*${__DSML_PIPE}\\s*DSML\\s*${__DSML_PIPE}`
@@ -435,21 +445,21 @@ const MODELS = {
   tide: {
     id: 'tide',
     name: 'Tide',
-    backend: 'deepseek-v4-1-flash',
-    backends: ['deepseek-v4-1-flash', 'qwen3-8-flash', 'deepseek-v4-flash'],
-    limit: 100_000,
+    backend: 'beam-v4-1-flash',
+    backends: ['beam-v4-1-flash', 'qwen3-8-flash', 'beam-v4-flash'],
+    limit: 500_000,
     contextWindow: 1_048_576,
     maxTokensCap: 65536,
     maxTokensDefault: 65536,
-    aliases: ['deepseek-flash', 'deepseek-v4-flash', 'deepseek-v4-1-flash', 'tide'],
+    aliases: ['beam-flash', 'beam-v4-flash', 'beam-v4-1-flash', 'tide'],
   },
   flare: {
     id: 'flare',
     name: 'Flare',
     backend: 'google/gemini-3.1-flash-lite',
     // Prefer live Gemini lite; skip broken capability ids quickly via failover; always keep Tide-class fallbacks.
-    backends: ['google/gemini-3.1-flash-lite', 'qwen3-8-flash', 'deepseek-v4-1-flash', 'deepseek-v4-flash', 'gemini-3.8-flash'],
-    limit: 50_000,
+    backends: ['google/gemini-3.1-flash-lite', 'qwen3-8-flash', 'beam-v4-1-flash', 'beam-v4-flash', 'gemini-3.8-flash'],
+    limit: 100_000,
     contextWindow: 1_048_576,
     maxTokensCap: 65536,
     maxTokensDefault: 65536,
@@ -460,12 +470,12 @@ const MODELS = {
     name: 'Pine',
     backend: 'xai/grok-4.7',
     // Keep strong models first; fall back to capable flash if Grok is down
-    backends: ['xai/grok-4.7', 'grok-4.7', 'google/gemini-3.1-flash-lite', 'deepseek-v4-1-flash'],
+    backends: ['xai/grok-4.7', 'grok-4.7', 'google/gemini-3.1-flash-lite', 'beam-v4-1-flash'],
     limit: 10_000,
     contextWindow: 131_072,
     maxTokensCap: 65536,
     maxTokensDefault: 65536,
-    aliases: ['pine', 'grok-4.7', 'xai/grok-4.7', 'deepseek-v4-pro'],
+    aliases: ['pine', 'grok-4.7', 'xai/grok-4.7', 'beam-v4-pro'],
   },
 }
 
@@ -614,8 +624,8 @@ function resolveAppRoots() {
   const candidates = [
     path.resolve(__dirname, '..'),
     path.resolve(__dirname, '..', '..'),
-    'C:\\Users\\Alexa\\BeamAgent',
-    path.join(ROOT, 'dist', 'Beam Agent'),
+    'C:\\Beam-Agent\\dist\\Beam-Agent',
+    path.join(ROOT, 'dist', 'Beam-Agent'),
   ]
   const roots = []
   for (const c of candidates) {
@@ -923,23 +933,28 @@ function applyServerQuotasToState(state, payload, opts = {}) {
       bridgeLog(`quota_apply_guard tier=${id} keep=${prev} stale_get=${used}`)
       used = prev
     }
-    let unlimited = !!(q.unlimited || payload.unlimited)
-    let lim = Math.max(0, Number(q.limit) || MODELS[id].limit)
-    // Admin unlimited is stored as INT_MAX + unlimited:true — never invent a fake weekly cap.
-    if (!unlimited && (lim >= 1_000_000_000 || lim >= 2147483640)) {
+    let rawLim = q.limit == null || q.limit === '' ? NaN : Number(q.limit)
+    let unlimited = !!(q.unlimited || payload.unlimited || q.label === 'unlimited')
+    // Admin unlimited / INT_MAX sentinel — never invent a fake weekly cap.
+    if (!unlimited && Number.isFinite(rawLim) && (rawLim >= 1_000_000_000 || rawLim >= 2147483640)) {
       unlimited = true
     }
-    if (unlimited && (lim <= 0 || lim >= 1_000_000_000 || lim >= 2147483640)) {
-      lim = 2147483647
-    }
+    let lim = Number.isFinite(rawLim) && rawLim > 0 ? rawLim : (MODELS[id].limit || 500000)
+    if (unlimited) lim = 2147483647
     unlimitedByTier[id] = unlimited
+    const remaining = unlimited
+      ? null
+      : Math.max(0, Number(q.remaining ?? (lim - used)))
+    const remaining_pct = unlimited
+      ? 100
+      : Math.min(100, Math.round((remaining / Math.max(1, lim)) * 100))
     state.quotas[id] = {
       used,
       limit: lim,
       unlimited,
-      remaining: unlimited
-        ? null
-        : Math.max(0, Number(q.remaining ?? (lim - used))),
+      remaining,
+      remaining_pct,
+      gauge_fill: remaining_pct, // UI rings: fill = remaining (100 = full headroom / unlimited)
     }
   }
   if (payload.week_start) state.quotaWeek = String(payload.week_start)
@@ -947,7 +962,7 @@ function applyServerQuotasToState(state, payload, opts = {}) {
     at: new Date().toISOString(),
     reset_at: payload.reset_at || null,
     week_boundary: payload.week_boundary || 'monday_00_00_utc',
-    defaults: payload.defaults || { tide: 100000, flare: 50000, pine: 10000 },
+    defaults: payload.defaults || { tide: 500000, flare: 100000, pine: 10000 },
     unlimited: !!payload.unlimited,
     unlimitedByTier,
     source_of_truth: true,
@@ -991,7 +1006,7 @@ async function callBeamQuota(action, extra = {}) {
     'Content-Type': 'application/json',
     'X-Beam-Ingest-Key': BEAM_INGEST_KEY,
     Authorization: `Bearer ${BEAM_INGEST_KEY}`,
-    'User-Agent': 'BeamAgent-Bridge/0.1.8',
+    'User-Agent': 'BeamAgent-Bridge/0.1.9',
   }
   let last = { ok: false, error: 'no quota url' }
   for (const url of BEAM_QUOTA_URLS) {
@@ -1225,7 +1240,7 @@ async function reportToBeamAdmin(event) {
     user_id: event.user_id || idUserId || undefined,
     id_user_id: event.id_user_id || idUserId || undefined,
     source: event.source || 'beam-agent-desktop',
-    app_version: event.app_version || '0.1.8',
+    app_version: event.app_version || '0.1.9',
   }
   appendLocalTelemetry(payload)
   const body = JSON.stringify(payload)
@@ -1233,7 +1248,7 @@ async function reportToBeamAdmin(event) {
     'Content-Type': 'application/json',
     'X-Beam-Ingest-Key': BEAM_INGEST_KEY,
     Authorization: `Bearer ${BEAM_INGEST_KEY}`,
-    'User-Agent': 'BeamAgent-Bridge/0.1.8',
+    'User-Agent': 'BeamAgent-Bridge/0.1.9',
   }
   let last = { ok: false, error: 'no ingest url' }
   for (const url of BEAM_INGEST_URLS) {
@@ -1361,10 +1376,12 @@ function normalizeQuotas(state) {
   for (const id of Object.keys(MODELS)) {
     const prev = state.quotas[id]
     const used = Math.max(0, Number(prev?.used) || 0)
-    const limit = Math.max(0, Number(prev?.limit) || MODELS[id].limit)
-    const unlimited = !!prev?.unlimited
+    const unlimited = !!prev?.unlimited || (Number(prev?.limit) >= 2147483640)
+    const limit = unlimited
+      ? 2147483647
+      : Math.max(0, Number(prev?.limit) || MODELS[id].limit)
     if (!prev || typeof prev !== 'object' || Number(prev.used) !== used || Number(prev.limit) !== limit || !!prev.unlimited !== unlimited) {
-      state.quotas[id] = { used, limit, unlimited }
+      state.quotas[id] = { used, limit, unlimited, remaining: unlimited ? null : Math.max(0, limit - used) }
       changed = true
     }
   }
@@ -1869,13 +1886,13 @@ const BEAM_I18N = {
     quotaServerDown: 'Central quota service unavailable. Generations are blocked until the server responds (anti-cheat).',
     needLogin: 'Sign in with ASSISTIX ID to use Beam Agent.',
     ctxTooBig: 'Conversation context is too large for the model after tools. History was compacted — send again or start a new chat.',
-    badReq: (msg) => msg ? `Invalid model request: ${msg}` : 'Invalid model API request. Try again.',
-    authErr: 'Model API authorization error.',
-    rateLimited: 'Model API rate-limited. Wait and retry.',
-    apiDown: 'Model API temporarily unavailable. Try again.',
-    apiStream: 'Model API stream error. Try again.',
-    noLink: 'No connection to model API',
-    badUpstream: 'Models returned an invalid response. Try again.',
+    badReq: (msg) => msg ? `Invalid Assistix request: ${msg}` : 'Invalid request to Assistix. Try again.',
+    authErr: 'Assistix sign-in expired. Sign in with ASSISTIX ID again.',
+    rateLimited: 'Assistix is rate-limiting requests. Wait and retry.',
+    apiDown: 'Assistix servers temporarily unavailable. Try again.',
+    apiStream: 'Assistix connection interrupted. Try again.',
+    noLink: 'No connection to Assistix servers',
+    badUpstream: 'Assistix returned an invalid response. Try again.',
     loginTitle: 'Sign in to Beam Agent — ASSISTIX ID',
     loginBody: 'Sign in with ASSISTIX ID in your browser. Beam Agent opens after you continue back here.',
     loginBtn: 'Sign in with ASSISTIX ID',
@@ -1895,13 +1912,13 @@ const BEAM_I18N = {
     quotaServerDown: 'Центральный сервис лимитов недоступен. Генерация заблокирована до ответа сервера (защита от обхода).',
     needLogin: 'Войдите через ASSISTIX ID, чтобы пользоваться Beam Agent.',
     ctxTooBig: 'Контекст диалога слишком большой для модели после инструментов. История сжата — отправьте сообщение ещё раз или начните новый чат.',
-    badReq: (msg) => msg ? `Некорректный запрос к модели: ${msg}` : 'Некорректный запрос к модельному API. Попробуйте ещё раз.',
-    authErr: 'Ошибка авторизации модельного API.',
-    rateLimited: 'Модели временно ограничили частоту запросов. Подождите и повторите.',
-    apiDown: 'Модельный API временно недоступен. Попробуйте ещё раз.',
-    apiStream: 'Ошибка модельного API при потоке. Попробуйте ещё раз.',
-    noLink: 'Нет связи с модельным API',
-    badUpstream: 'Модели вернули некорректный ответ. Попробуйте ещё раз.',
+    badReq: (msg) => msg ? `Некорректный запрос к Assistix: ${msg}` : 'Некорректный запрос к Assistix. Попробуйте ещё раз.',
+    authErr: 'Сессия ASSISTIX ID истекла. Войдите снова.',
+    rateLimited: 'Assistix временно ограничил частоту запросов. Подождите и повторите.',
+    apiDown: 'Серверы Assistix временно недоступны. Попробуйте ещё раз.',
+    apiStream: 'Соединение с Assistix прервалось. Попробуйте ещё раз.',
+    noLink: 'Нет связи с серверами Assistix',
+    badUpstream: 'Assistix вернул некорректный ответ. Попробуйте ещё раз.',
     loginTitle: 'Войти в Beam Agent — ASSISTIX ID',
     loginBody: 'Войдите через ASSISTIX ID в браузере. После подтверждения вернитесь в Beam Agent.',
     loginBtn: 'Войти через ASSISTIX ID',
@@ -1939,7 +1956,9 @@ const KUMO_HARD_BUDGET = 550_000
 const MAX_TOOL_CONTENT = 100_000
 const MAX_MSG_CONTENT = 160_000
 const MAX_TOOL_ARGS = 24_000
-const MAX_TOOL_DESC = 4_000
+/** Keep tool names + short purpose; long SDK essays in descriptions burn ~7–11k tok/turn. */
+const MAX_TOOL_DESC = Math.max(80, Number(process.env.BEAM_MAX_TOOL_DESC || 280) || 280)
+const LEAN_TOOL_SCHEMAS = process.env.BEAM_LEAN_TOOLS !== '0'
 
 function textFromAnthropicContent(content) {
   if (typeof content === 'string') return content
@@ -2207,27 +2226,56 @@ function compactOpenAIMessages(messages, budget) {
   return msgs
 }
 
+/** Drop verbose JSON-Schema essays; keep names/types/required so tools still work. */
+function leanToolParameters(schema) {
+  const src = schema && typeof schema === 'object' ? schema : { type: 'object', properties: {} }
+  const propsIn = src.properties && typeof src.properties === 'object' ? src.properties : {}
+  const propsOut = {}
+  for (const [key, raw] of Object.entries(propsIn)) {
+    if (!raw || typeof raw !== 'object') {
+      propsOut[key] = { type: 'string' }
+      continue
+    }
+    const lean = {}
+    if (raw.type != null) lean.type = raw.type
+    else if (Array.isArray(raw.anyOf) || Array.isArray(raw.oneOf)) lean.type = 'string'
+    else lean.type = 'string'
+    if (Array.isArray(raw.enum) && raw.enum.length && raw.enum.length <= 24) lean.enum = raw.enum
+    if (raw.items && typeof raw.items === 'object') {
+      lean.items = raw.items.type ? { type: raw.items.type } : { type: 'string' }
+    }
+    propsOut[key] = lean
+  }
+  const out = { type: 'object', properties: propsOut }
+  if (Array.isArray(src.required) && src.required.length) {
+    out.required = src.required.filter((k) => typeof k === 'string' && k in propsOut).slice(0, 32)
+  }
+  return out
+}
+
 function anthropicToolsToOpenAI(tools) {
   if (!Array.isArray(tools) || tools.length === 0) return undefined
-  return tools.map((t) => ({
-    type: 'function',
-    function: {
-      name: String(t.name || 'tool').slice(0, 128),
-      description: clipText(t.description || '', MAX_TOOL_DESC, 'desc truncated'),
-      parameters: t.input_schema || t.parameters || { type: 'object', properties: {} },
-    },
-  }))
+  return tools.map((t) => {
+    const rawParams = t.input_schema || t.parameters || { type: 'object', properties: {} }
+    return {
+      type: 'function',
+      function: {
+        name: String(t.name || 'tool').slice(0, 128),
+        description: clipText(t.description || '', MAX_TOOL_DESC, 'desc truncated'),
+        parameters: LEAN_TOOL_SCHEMAS ? leanToolParameters(rawParams) : rawParams,
+      },
+    }
+  })
 }
 
 function buildOpenAIBody(body, tier, budget = KUMO_SAFE_BUDGET) {
   const requestedMax = Number(body.max_tokens) || 4096
   const cappedMax = Math.min(requestedMax, Number(tier.maxTokensCap) || requestedMax)
-  const system = [
-    __bridgePersona(tier?.id),
-    typeof body.system === 'string'
-      ? body.system
-      : (Array.isArray(body.system) ? body.system.map((x) => x?.text || '').join('\n') : ''),
-  ].filter(Boolean).join('\n\n')
+  const clientSystem = typeof body.system === 'string'
+    ? body.system
+    : (Array.isArray(body.system) ? body.system.map((x) => x?.text || '').join('\n') : '')
+  const prefix = bridgeSystemPrefix(tier?.id, clientSystem)
+  const system = [prefix, clientSystem].filter(Boolean).join('\n\n')
   let messages = anthropicToOpenAIMessages(body.messages, system)
   messages = compactOpenAIMessages(messages, budget)
   const openaiBody = {
@@ -2260,7 +2308,11 @@ function buildOpenAIBody(body, tier, budget = KUMO_SAFE_BUDGET) {
     openaiBody.messages = compactOpenAIMessages(openaiBody.messages, Math.floor(budget * 0.85))
     bytes = payloadBytes(openaiBody)
   }
-  bridgeLog(`payload_ready bytes=${bytes} budget=${budget} msgs=${openaiBody.messages.length} tools=${openaiBody.tools?.length || 0}`)
+  const prefixMode = !prefix ? 'skip' : (prefix.length < 200 ? 'flavor' : 'full')
+  bridgeLog(
+    `payload_ready bytes=${bytes} budget=${budget} msgs=${openaiBody.messages.length}`
+    + ` tools=${openaiBody.tools?.length || 0} persona=${prefixMode} lean=${LEAN_TOOL_SCHEMAS ? 1 : 0}`
+  )
   return openaiBody
 }
 
@@ -2330,7 +2382,7 @@ function buildContinuationOpenAIBody(openaiBody, partialText, budget = KUMO_SAFE
 
 /**
  * Read one OpenAI SSE upstream into Anthropic-shaped SSE writes.
- * Holds DeepSeek DSML out of text_delta and emits tool_use instead (Harness UX).
+ * Holds Beam DSML out of text_delta and emits tool_use instead (Harness UX).
  * Returns { stopReason, usage, text, hadTools, hadDsml }.
  */
 async function pipeOpenAiSseToAnthropic(upstream, res, state) {
@@ -2748,7 +2800,7 @@ async function callKumo(payload, { stream, backends, accessToken } = {}) {
   return lastRes || new Response(lastBody || 'kumo unreachable', { status: 502 })
 }
 
-/* ─── Token→limits accounting (from scratch, dsh-faithful) ─────────────────
+/* ─── Token→limits accounting (from scratch, beam-faithful) ─────────────────
  * Single source of truth per upstream API call:
  *   charge = provider usage.prompt_tokens + usage.completion_tokens
  *   (Anthropic: input_tokens + output_tokens)
@@ -2757,7 +2809,7 @@ async function callKumo(payload, { stream, backends, accessToken } = {}) {
  * tiny estimate ≤ completionChars/4. One charge per upstream response.
  * ─────────────────────────────────────────────────────────────────────────── */
 
-/** Read provider final usage object (OpenAI or Anthropic / dsh TokenUsage). */
+/** Read provider final usage object (OpenAI or Anthropic / beam TokenUsage). */
 function extractProviderUsage(usage) {
   if (!usage || typeof usage !== 'object') return null
   const prompt = Math.max(0, Math.floor(Number(
@@ -2806,8 +2858,25 @@ function isDuplicateCharge(key, tokens) {
 }
 
 /**
+ * Assistix LLM gateway (api.assistix.org / agent.assistix.org/llm) already POSTs
+ * action=charge to beam-quota.php after each completion. Bridge must NOT charge again
+ * or every turn is billed ~2× (seen as pine 2875→5750, flare 10-tok UI vs +22k used).
+ * Direct Kumo / non-Assistix upstreams still need bridge-side charge.
+ */
+function bridgeOwnsQuotaCharge() {
+  const force = String(process.env.BEAM_BRIDGE_QUOTA_CHARGE || '').trim().toLowerCase()
+  if (force === 'always' || force === '1' || force === 'true') return true
+  if (force === 'never' || force === '0' || force === 'false') return false
+  const u = `${KUMO_URL}\n${ASSISTIX_LLM_BASE}`
+  if (/api\.assistix\.org|agent\.assistix\.org\/llm|assistix\.org\/api\/v1|assistix\.org\/llm/i.test(u)) {
+    return false
+  }
+  return true
+}
+
+/**
  * Charge exactly one upstream provider response against the model actually used.
- * Syncs gauges from server get after a successful charge.
+ * Syncs gauges from server get after a successful charge (or after gateway-owned charge).
  */
 async function chargeTokens(state, tierId, usage, estimate = {}) {
   const key = normalizeQuotaTier(tierId)
@@ -2823,13 +2892,9 @@ async function chargeTokens(state, tierId, usage, estimate = {}) {
     total = extracted.total
     fromApi = true
   } else {
-    total = lastResortCompletionEstimate(estimate.completionText)
-    completion = total
-    if (total <= 0) {
-      bridgeLog(`quota_charge_skip tier=${key} reason=no_provider_usage`)
-      return 0
-    }
-    bridgeLog(`quota_charge_est tier=${key} tokens=${total} cap=completion/4`)
+    // Honest accounting only: never invent tokens when provider omitted usage.
+    bridgeLog(`quota_charge_skip tier=${key} reason=no_provider_usage`)
+    return 0
   }
 
   if (total <= 0) {
@@ -2853,18 +2918,24 @@ async function chargeTokens(state, tierId, usage, estimate = {}) {
     }
   } catch {}
 
+  const ownsCharge = bridgeOwnsQuotaCharge()
   bridgeLog(
     `quota_charge tier=${key} tokens=${total} api=${fromApi} est=${!fromApi}`
     + ` provider_prompt=${prompt} provider_completion=${completion}`
     + ` billed=${prompt}+${completion}`
+    + ` bridge_owns=${ownsCharge ? 1 : 0}`
   )
 
   try {
-    const server = await chargeTokensServer(key, total)
-    if (server?.skipped) return 0
-    // Authoritative gauges: charge response, then forced get so soft-block + UI match.
-    if (server?.quotas) {
-      try { applyServerQuotasToState(loadState(), server, { fromCharge: true }) } catch {}
+    if (ownsCharge) {
+      const server = await chargeTokensServer(key, total)
+      if (server?.skipped) return 0
+      // Authoritative gauges: charge response, then forced get so soft-block + UI match.
+      if (server?.quotas) {
+        try { applyServerQuotasToState(loadState(), server, { fromCharge: true }) } catch {}
+      }
+    } else {
+      bridgeLog(`quota_charge_gateway_owned tier=${key} tokens=${total} sync_only=1`)
     }
     try { await syncQuotasFromServer() } catch {}
     try {
@@ -2876,7 +2947,7 @@ async function chargeTokens(state, tierId, usage, estimate = {}) {
     } catch {}
     const used = Number(loadState()?.quotas?.[key]?.used) || 0
     const limit = Number(loadState()?.quotas?.[key]?.limit) || 0
-    bridgeLog(`quota_charge_synced tier=${key} charged=${total} ui_used=${used} limit=${limit}`)
+    bridgeLog(`quota_charge_synced tier=${key} charged=${ownsCharge ? total : 0} provider=${total} ui_used=${used} limit=${limit}`)
   } catch (e) {
     bridgeLog(`quota_charge_err ${e?.message || e}`)
   }
@@ -3197,10 +3268,16 @@ async function handleMessages(req, res) {
     tokensOut: usage.completion_tokens || 0,
   })
 
+  // Client totals = input_tokens + output_tokens. Previously only output was sent
+  // (message_start hardcodes input=0), so UI showed "Usage 10 tok" while Flare
+  // deducted the full provider prompt+completion (often 10k–13k per agent call).
   sseWrite(res, 'message_delta', {
     type: 'message_delta',
     delta: { stop_reason: stopReason, stop_sequence: null },
-    usage: { output_tokens: usage.completion_tokens || 0 },
+    usage: {
+      input_tokens: usage.prompt_tokens || 0,
+      output_tokens: usage.completion_tokens || 0,
+    },
   })
   sseWrite(res, 'message_stop', { type: 'message_stop' })
   res.end()
@@ -3376,13 +3453,20 @@ const server = http.createServer(async (req, res) => {
           let limit = Number(q.limit)
           if (!Number.isFinite(limit) || limit <= 0) limit = m.limit
           if (!unlimited && (limit >= 1_000_000_000 || limit >= 2147483640)) unlimited = true
+          if (unlimited) limit = 2147483647
           const used = Number(q.used) || 0
+          const remaining = unlimited ? null : Math.max(0, limit - used)
+          const remaining_pct = unlimited
+            ? 100
+            : Math.min(100, Math.round((remaining / Math.max(1, limit)) * 100))
           return {
             id: m.id,
             name: m.name,
-            limit: unlimited ? null : limit,
+            limit,
             used,
-            remaining: unlimited ? null : Math.max(0, limit - used),
+            remaining,
+            remaining_pct,
+            gauge_fill: remaining_pct,
             unlimited,
           }
         }),

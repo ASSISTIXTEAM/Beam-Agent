@@ -15,9 +15,9 @@ const css = path.join(ROOT, "runtime/app/beam/node_modules/@assistix/beam-web-fr
 const general = path.join(ROOT, "runtime/app/beam/node_modules/@assistix/beam-client-ui-settings-general/lib/client.js");
 const chat = path.join(ROOT, "runtime/app/beam/node_modules/@assistix/beam-client-ui-chat/lib/client.js");
 const bridge = path.join(ROOT, "desktop/bridge/server.js");
-const distBridge = path.join(ROOT, "dist/Beam Agent/bridge/server.js");
-const distHtml = path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html");
-const distGeneral = path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-settings-general/lib/client.js");
+const distBridge = path.join(ROOT, "dist/Beam-Agent/bridge/server.js");
+const distHtml = path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html");
+const distGeneral = path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-settings-general/lib/client.js");
 
 const h = fs.readFileSync(html, "utf8");
 ok("rings used/limit", h.includes('class="bsl-used"') && h.includes("usedOf"));

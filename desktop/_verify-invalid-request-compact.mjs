@@ -10,7 +10,7 @@ import { createRequire } from 'node:module'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
-const BRIDGE = path.join(ROOT, 'dist/Beam Agent/bridge/server.js')
+const BRIDGE = path.join(ROOT, 'dist/Beam-Agent/bridge/server.js')
 const PORT = 17865
 const BASE = `http://127.0.0.1:${PORT}`
 

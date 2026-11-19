@@ -98,7 +98,7 @@ async function pipeOpenAiSseToAnthropic(upstream, res, state) {
 ---NEW---
 /**
  * Read one OpenAI SSE upstream into Anthropic-shaped SSE writes.
- * Holds DeepSeek DSML out of text_delta and emits tool_use instead (Harness UX).
+ * Holds Beam DSML out of text_delta and emits tool_use instead (Harness UX).
  * Returns { stopReason, usage, text, hadTools, hadDsml }.
  */
 async function pipeOpenAiSseToAnthropic(upstream, res, state) {

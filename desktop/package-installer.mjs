@@ -10,7 +10,7 @@ import crypto from 'node:crypto'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
-const DIST = path.join(ROOT, 'dist', 'Beam Agent')
+const DIST = path.join(ROOT, 'dist', 'Beam-Agent')
 const RUNTIME_APP = path.join(ROOT, 'runtime', 'app')
 const BRIDGE_SRC = path.join(ROOT, 'desktop', 'bridge')
 const ISS = path.join(ROOT, 'desktop', 'installer', 'beam-agent.iss')
@@ -204,7 +204,7 @@ Installer: \`${INSTALLER_EXE}\`
 
 ## Install (fresh PC)
 
-1. Run \`${INSTALLER_EXE}\` (no admin required — installs under \`%LOCALAPPDATA%\\Programs\\Beam Agent\`).
+1. Run \`${INSTALLER_EXE}\` (no admin required — installs under \`%LOCALAPPDATA%\\Programs\\Beam-Agent\`).
 2. Optional: enable the desktop shortcut.
 3. Finish and launch, or start **Beam Agent (Early Alpha)** from the Start menu.
 
@@ -265,7 +265,7 @@ Use **Удалить Beam Agent** in the Start menu group, or Windows Apps & fea
 }
 
 console.log('=== Beam Agent Early Alpha packager ===')
-mustExist(DIST, 'dist/Beam Agent')
+mustExist(DIST, 'dist/Beam-Agent')
 mustExist(path.join(DIST, 'Beam Agent.exe'))
 mustExist(ISS)
 

@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
-const sharp = require("../dist/Beam Agent/resources/app/beam/node_modules/sharp");
+const sharp = require("../dist/Beam-Agent/resources/app/beam/node_modules/sharp");
 
 const tmp = path.join(__dirname, "_mask_test");
 fs.mkdirSync(tmp, { recursive: true });

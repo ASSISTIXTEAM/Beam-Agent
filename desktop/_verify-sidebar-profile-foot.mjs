@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const ROOT = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
+const ROOT = "C:/Beam-Agent";
 const htmlPath = path.join(
   ROOT,
   "runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html"

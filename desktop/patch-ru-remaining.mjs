@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const DSH =
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai";
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai";
 
 function extractObjectLiteral(src, startIdx) {
   let i = startIdx;

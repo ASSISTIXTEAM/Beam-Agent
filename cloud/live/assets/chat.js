@@ -3011,7 +3011,8 @@
           label: 'ASSISTIX MAX',
           valText: t('usage.unlimited'),
           used: 0,
-          cap: 1,
+          cap: null,
+          unlimited: true,
           color: '#22c55e',
           warn: false,
           hot: false
@@ -3026,7 +3027,8 @@
         label: 'FLAIR',
         valText: flairCap == null ? t('usage.unlimited') : (formatUsageNum(flairUsed) + ' / ' + formatUsageNum(flairCap) + ' ' + t('usage.tokens')),
         used: flairCap == null ? 0 : flairUsed,
-        cap: flairCap == null ? 1 : flairCap,
+        cap: flairCap,
+        unlimited: flairCap == null,
         color: A.modelMeta('FLAIR').color,
         warn: flairCap != null && flairUsed / flairCap >= 0.75,
         hot: flairCap != null && flairUsed >= flairCap
@@ -3035,7 +3037,8 @@
         label: 'PINE',
         valText: pineCap == null ? t('usage.unlimited') : (formatUsageNum(pineUsed) + ' / ' + formatUsageNum(pineCap) + ' ' + t('usage.requests')),
         used: pineCap == null ? 0 : pineUsed,
-        cap: pineCap == null ? 1 : pineCap,
+        cap: pineCap,
+        unlimited: pineCap == null,
         color: A.modelMeta('PINE').color,
         warn: pineCap != null && pineUsed / pineCap >= 0.75,
         hot: pineCap != null && pineUsed >= pineCap
@@ -4453,14 +4456,16 @@
   }
 
   function usageRingHtml(opts) {
+    var unlimited = !!opts.unlimited || opts.cap == null;
     var used = Math.max(0, Number(opts.used) || 0);
-    var cap = Math.max(1, Number(opts.cap) || 1);
-    var pct = Math.min(100, (used / cap) * 100);
-    if (used > 0 && pct < 1.5) pct = 1.5;
+    var cap = unlimited ? 1 : Math.max(1, Number(opts.cap) || 1);
+    var remaining = unlimited ? null : Math.max(0, cap - used);
+    var pct = unlimited ? 100 : Math.min(100, (remaining / cap) * 100);
+    if (!unlimited && remaining > 0 && pct < 1.5) pct = 1.5;
     var r = 17;
     var c = 2 * Math.PI * r;
     var dash = (pct / 100) * c;
-    var pctLabel = pct >= 10 ? Math.round(pct) + '%' : (pct >= 1 ? pct.toFixed(1) + '%' : (used > 0 ? '<1%' : '0%'));
+    var pctLabel = unlimited ? '∞' : (pct >= 10 ? Math.round(pct) + '%' : (pct >= 1 ? pct.toFixed(1) + '%' : (remaining > 0 ? '<1%' : '0%')));
     return '<div class="c-usage-ring' + (opts.warn ? ' is-warn' : '') + (opts.hot ? ' is-hot' : '') + '" style="--ring-color:' + opts.color + '">' +
       '<div class="c-usage-ring-chart" aria-hidden="true">' +
       '<svg viewBox="0 0 44 44" width="44" height="44">' +

@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const assets =
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets";
+  "C:/Beam-Agent/runtime/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets";
 for (const f of fs.readdirSync(assets)) {
   if (!f.endsWith(".js")) continue;
   const s = fs.readFileSync(path.join(assets, f), "utf8");
@@ -29,7 +29,7 @@ for (const needle of ["IconNewChat", "IconAppsAdd", "IconPaperPlane", "IconSend"
 
 // Find primitives module in ModuleLoader registry dumps inside any js under dsh
 const root =
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/dsh/node_modules/@deepseek-ai";
+  "C:/Beam-Agent/runtime/app/dsh/node_modules/@deepseek-ai";
 function walk(dir, depth = 0, acc = []) {
   if (depth > 5) return acc;
   let ents;

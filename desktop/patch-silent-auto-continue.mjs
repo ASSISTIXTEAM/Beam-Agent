@@ -19,14 +19,14 @@ const MARK = "BEAM_SILENT_AUTO_CONTINUE";
 
 const BRIDGE_FILES = [
   "desktop/bridge/server.js",
-  "dist/Beam Agent/bridge/server.js",
+  "dist/Beam-Agent/bridge/server.js",
 ];
 
 const CHAT_FILES = [
   "runtime/app/beam/node_modules/@assistix/beam-client-ui-chat/lib/client.js",
   "runtime/app/beam/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-chat/lib/client.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-chat/lib/client.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js",
 ];
 
 const LOOKS_TRUNCATED_NEW = `/** Heuristic: reply interrupted mid-structure (NOT DSML — that becomes tool_use).

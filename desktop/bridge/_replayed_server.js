@@ -1,6 +1,6 @@
 /**
  * Beam Agent local bridge:
- * - Anthropic Messages API (what DeepSeek Harness speaks) → Kumorouter OpenAI Chat Completions
+ * - Anthropic Messages API (what Beam Agent speaks) → Kumorouter OpenAI Chat Completions
  * - Assistix ID session + Tide / Flare / Pine quotas
  */
 import http from 'node:http'
@@ -29,11 +29,11 @@ const MODELS = {
   tide: {
     id: 'tide',
     name: 'Tide',
-    backend: 'deepseek-v4-1-flash',
-    backends: ['deepseek-v4-1-flash', 'qwen3-8-flash', 'deepseek-v4-flash'],
+    backend: 'beam-v4-1-flash',
+    backends: ['beam-v4-1-flash', 'qwen3-8-flash', 'beam-v4-flash'],
     limit: 1_000_000,
     maxTokensCap: 8192,
-    aliases: ['deepseek-flash', 'deepseek-v4-flash', 'deepseek-v4-1-flash', 'tide'],
+    aliases: ['beam-flash', 'beam-v4-flash', 'beam-v4-1-flash', 'tide'],
   },
   flare: {
     id: 'flare',
@@ -48,10 +48,10 @@ const MODELS = {
     id: 'pine',
     name: 'Pine',
     backend: 'xai/grok-4.7',
-    backends: ['xai/grok-4.7', 'deepseek-v4-pro-0813', 'google/gemini-3.6-flash-high', 'xai/grok-4.6'],
+    backends: ['xai/grok-4.7', 'beam-v4-pro-0813', 'google/gemini-3.6-flash-high', 'xai/grok-4.6'],
     limit: 10_000,
     maxTokensCap: 16384,
-    aliases: ['pine', 'grok-4.7', 'xai/grok-4.7', 'deepseek-v4-pro', 'deepseek-v4-pro-0813'],
+    aliases: ['pine', 'grok-4.7', 'xai/grok-4.7', 'beam-v4-pro', 'beam-v4-pro-0813'],
   },
 }
 

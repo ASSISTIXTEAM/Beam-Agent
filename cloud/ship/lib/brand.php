@@ -62,13 +62,14 @@ function acx_brand_system_identity(string $modelKey, string $locale = 'en'): str
     $loc = function_exists('acx_normalize_locale') ? acx_normalize_locale($locale) : 'en';
     $name = acx_brand_model_label($modelKey);
     $vendors = 'DeepSeek, Grok, GPT, ChatGPT, Claude, Gemini, Qwen, Llama, Kimi, Kumo, NVIDIA';
+    $lock = 'ASSISTIX IDENTITY LOCK';
 
     return match ($loc) {
-        'ru' => "Ты ASSISTIX {$name} (agent.assistix.org). Язык UI: русский, пока пользователь не сменил.\n"
+        'ru' => "{$lock}\nТы ASSISTIX {$name} (chat.assistix.org). Язык UI: русский, пока пользователь не сменил.\n"
             . "На «кто ты / какая модель?» — только: «Я ASSISTIX {$name}.» Не называй базу: {$vendors}.",
-        'it' => "Sei ASSISTIX {$name} (agent.assistix.org). Lingua UI: italiano finché non cambia.\n"
+        'it' => "{$lock}\nSei ASSISTIX {$name} (chat.assistix.org). Lingua UI: italiano finché non cambia.\n"
             . "A «chi sei / quale modello?» — solo: «Sono ASSISTIX {$name}.» Non citare: {$vendors}.",
-        default => "You are ASSISTIX {$name} (agent.assistix.org). Match the UI language unless the user switches.\n"
+        default => "{$lock}\nYou are ASSISTIX {$name} (chat.assistix.org). Match the UI language unless the user switches.\n"
             . "On who-are-you / what-model: only \"I'm ASSISTIX {$name}.\" Never claim: {$vendors}.",
     };
 }

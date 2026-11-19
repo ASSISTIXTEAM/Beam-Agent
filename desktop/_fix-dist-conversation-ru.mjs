@@ -2,7 +2,7 @@ import fs from "node:fs";
 import { spawnSync } from "node:child_process";
 
 for (const p of [
-  "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js",
+  "dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js",
   "runtime/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js",
 ]) {
   let s = fs.readFileSync(p, "utf8");

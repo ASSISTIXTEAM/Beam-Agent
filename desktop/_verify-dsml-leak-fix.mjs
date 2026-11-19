@@ -15,7 +15,7 @@ function check(ok, msg) {
 
 const bridges = [
   path.join(ROOT, 'desktop', 'bridge', 'server.js'),
-  path.join(ROOT, 'dist', 'Beam Agent', 'bridge', 'server.js'),
+  path.join(ROOT, 'dist', 'Beam-Agent', 'bridge', 'server.js'),
 ]
 for (const b of bridges) {
   const s = fs.readFileSync(b, 'utf8')
@@ -30,7 +30,7 @@ for (const b of bridges) {
 
 const chats = [
   path.join(ROOT, 'runtime', 'app', 'beam', 'node_modules', '@assistix', 'beam-client-ui-chat', 'lib', 'client.js'),
-  path.join(ROOT, 'dist', 'Beam Agent', 'resources', 'app', 'beam', 'node_modules', '@assistix', 'beam-client-ui-chat', 'lib', 'client.js'),
+  path.join(ROOT, 'dist', 'Beam-Agent', 'resources', 'app', 'beam', 'node_modules', '@assistix', 'beam-client-ui-chat', 'lib', 'client.js'),
 ]
 for (const c of chats) {
   const s = fs.readFileSync(c, 'utf8')

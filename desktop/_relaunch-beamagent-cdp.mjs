@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 
-const BEAM = "C:/Users/Alexa/BeamAgent";
+const BEAM = "C:/Beam-Agent/dist/Beam-Agent";
 const EXE = path.join(BEAM, "Beam Agent.exe");
 const NODE = path.join(BEAM, "resources/runtime/primary-runtime/dependencies/node/bin/node.exe");
 const BRIDGE = path.join(BEAM, "bridge/server.js");

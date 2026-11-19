@@ -102,7 +102,9 @@ def main() -> None:
     }, indent=2))
 
     assert got.get("ok") is True
-    assert got.get("defaults", {}).get("tide") == 100000
+    assert got.get("defaults", {}).get("tide") == 500000
+    assert got.get("defaults", {}).get("flare") == 100000
+    assert got.get("defaults", {}).get("pine") == 10000
     assert got.get("defaults", {}).get("flare") == 50000
     assert got.get("defaults", {}).get("pine") == 10000
     assert got["quotas"]["tide"]["limit"] == 100000
@@ -182,7 +184,7 @@ def main() -> None:
 
     # Copy bridge into runtime if present
     src_bridge = ROOT / "bridge" / "server.js"
-    runtime = Path(r"C:\Users\Alexa\BeamAgent\bridge\server.js")
+    runtime = Path(r"C:\Beam-Agent\dist\Beam-Agent\bridge\server.js")
     if src_bridge.is_file() and runtime.parent.is_dir():
         runtime.write_text(src_bridge.read_text(encoding="utf-8"), encoding="utf-8")
         print("synced runtime bridge", runtime)
@@ -198,7 +200,7 @@ def main() -> None:
             capture_output=True, text=True, timeout=30,
         )
         print("bridge port clear", ps.returncode)
-        starter = Path(r"C:\Users\Alexa\BeamAgent\start-bridge-hidden.vbs")
+        starter = Path(r"C:\Beam-Agent\dist\Beam-Agent\start-bridge-hidden.vbs")
         if starter.is_file():
             subprocess.Popen(["wscript", str(starter)], cwd=str(starter.parent))
             time.sleep(2)

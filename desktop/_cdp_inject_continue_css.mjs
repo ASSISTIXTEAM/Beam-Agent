@@ -2,7 +2,7 @@ import fs from "node:fs";
 import WebSocket from "ws";
 
 const cssPath =
-  "c:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/beam-override.css";
+  "c:/Users/Alexa/Beam-Agent/runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/beam-override.css";
 const css = fs.readFileSync(cssPath, "utf8");
 const start = css.indexOf("/* ===== BEAM_CONTINUE_LAYOUT_FIX ===== */");
 if (start < 0) throw new Error("CSS block missing");

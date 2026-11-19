@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Fix sticky Assistix session blocking logout (Выйти).
  *
  * Root cause: stickySigned kept the last signed-in user even after
@@ -21,12 +21,12 @@ const HOME = process.env.USERPROFILE || process.env.HOME || "";
 const targets = [
   path.join(ROOT, "runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html"),
   path.join(ROOT, "runtime/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html"),
   path.join(HOME, "BeamAgent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html"),
   path.join(HOME, "BeamAgent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html"),
-  path.join(HOME, "AppData/Local/Programs/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html"),
-  path.join(HOME, "AppData/Local/Programs/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html"),
+  path.join(HOME, "AppData/Local/Programs/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html"),
+  path.join(HOME, "AppData/Local/Programs/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html"),
 ];
 
 const MARK = "/* BEAM_LOGOUT_STICKY_FIX */";

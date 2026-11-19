@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const TREES = [
   path.join(ROOT, "runtime", "app"),
-  path.join(ROOT, "dist", "Beam Agent", "resources", "app"),
+  path.join(ROOT, "dist", "Beam-Agent", "resources", "app"),
 ].filter((p) => fs.existsSync(p));
 
 const PHRASE_EN_TO_RU = {
@@ -590,7 +590,7 @@ function patchBridgeModelsAuth(file) {
 
 function syncBridge() {
   const src = path.join(ROOT, "desktop", "bridge", "server.js");
-  const dst = path.join(ROOT, "dist", "Beam Agent", "bridge", "server.js");
+  const dst = path.join(ROOT, "dist", "Beam-Agent", "bridge", "server.js");
   if (fs.existsSync(src) && fs.existsSync(path.dirname(dst))) {
     fs.copyFileSync(src, dst);
     return true;
@@ -639,7 +639,7 @@ if (patchBridgeModelsAuth(bridgeDesktop)) summary.bridgeAuth++;
 if (syncBridge()) summary.bridgeSync = true;
 
 // Also patch dist bridge auth if copy didn't include it yet
-const bridgeDist = path.join(ROOT, "dist", "Beam Agent", "bridge", "server.js");
+const bridgeDist = path.join(ROOT, "dist", "Beam-Agent", "bridge", "server.js");
 if (patchBridgeModelsAuth(bridgeDist)) summary.bridgeAuth++;
 
 console.log(JSON.stringify(summary, null, 2));

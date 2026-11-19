@@ -1,8 +1,8 @@
 import fs from "fs";
 
 const files = [
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/lib/main.js",
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/lib/main.js",
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/lib/main.js",
+  "C:/Beam-Agent/runtime/app/lib/main.js",
 ];
 
 /** Map EN desktop chrome → RU inside the `const ru = { ... }` (or `ru = {`) messages object. */

@@ -98,7 +98,7 @@ function extractObjectLiteral(src, startIdx) {
 }
 
 for (const file of [
-  "dist/Beam Agent/resources/app/lib/main.js",
+  "dist/Beam-Agent/resources/app/lib/main.js",
   "runtime/app/lib/main.js",
 ]) {
   let s = fs.readFileSync(file, "utf8");

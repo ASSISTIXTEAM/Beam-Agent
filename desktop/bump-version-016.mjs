@@ -21,16 +21,16 @@ const textFiles = [
 	"desktop/installer/write-update-feeds.mjs",
 	"desktop/UPDATES.md",
 	"desktop/publish-desktop-update.py",
-	"dist/Beam Agent/resources/app/package.json",
+	"dist/Beam-Agent/resources/app/package.json",
 	"runtime/app/package.json",
 	path.join(process.env.USERPROFILE || "", "BeamAgent/resources/app/package.json"),
-	"dist/Beam Agent/bridge/server.js",
+	"dist/Beam-Agent/bridge/server.js",
 	"runtime/../desktop/bridge/server.js",
 ].map((p) => (path.isAbsolute(p) ? p : path.join(ROOT, p)));
 
 // Also sync installed + dist bridge copies under Beam Agent folders
 const extraBridges = [
-	path.join(ROOT, "dist/Beam Agent/bridge/server.js"),
+	path.join(ROOT, "dist/Beam-Agent/bridge/server.js"),
 	path.join(process.env.USERPROFILE || "", "BeamAgent/bridge/server.js"),
 ];
 
@@ -75,7 +75,7 @@ for (const file of all) {
 }
 
 const runtimes = [
-	path.join(ROOT, "dist/Beam Agent/resources/app/beam/desktop-runtime.json"),
+	path.join(ROOT, "dist/Beam-Agent/resources/app/beam/desktop-runtime.json"),
 	path.join(ROOT, "runtime/app/beam/desktop-runtime.json"),
 	path.join(process.env.USERPROFILE || "", "BeamAgent/resources/app/beam/desktop-runtime.json"),
 ].filter((p) => fs.existsSync(p));

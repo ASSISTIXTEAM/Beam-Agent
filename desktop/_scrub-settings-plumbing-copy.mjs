@@ -2,7 +2,7 @@ import fs from "node:fs";
 
 const files = [
   "runtime/app/beam/node_modules/@assistix/beam-client-ui-settings-models/lib/client.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-settings-models/lib/client.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-settings-models/lib/client.js",
 ];
 const pairs = [
   [
@@ -51,7 +51,7 @@ for (const f of files) {
 
 const gens = [
   "runtime/app/beam/node_modules/@assistix/beam-client-ui-settings-general/lib/client.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-settings-general/lib/client.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-settings-general/lib/client.js",
 ];
 const gPairs = [
   ['"openDocument": "Open configuration file"', '"openDocument": ""'],

@@ -12,10 +12,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
-const ROOT = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
+const ROOT = "C:/Beam-Agent";
 const TREES = [
   path.join(ROOT, "runtime/app/beam/node_modules/@assistix"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@assistix"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@assistix"),
 ];
 
 function disableSettingsSection(clientPath, sectionId) {

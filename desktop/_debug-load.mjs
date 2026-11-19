@@ -2,9 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 
 const dist =
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js";
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js";
 const clean =
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/_tmp_app/dsh/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js";
+  "C:/Beam-Agent/_tmp_app/dsh/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js";
 
 for (const [label, p] of [
   ["dist", dist],
@@ -23,8 +23,8 @@ for (const [label, p] of [
 
 // Restore brand-official clean too
 fs.copyFileSync(
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/_tmp_app/dsh/node_modules/@deepseek-ai/dsh-client-ui-brand-official/lib/client.js",
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-brand-official/lib/client.js"
+  "C:/Beam-Agent/_tmp_app/dsh/node_modules/@deepseek-ai/dsh-client-ui-brand-official/lib/client.js",
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-brand-official/lib/client.js"
 );
 console.log("brand-official restored clean");
 

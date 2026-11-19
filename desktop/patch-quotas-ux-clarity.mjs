@@ -27,7 +27,7 @@ function patchFile(file, fn) {
 function appRoots() {
   return [
     path.join(ROOT, "runtime", "app"),
-    path.join(ROOT, "dist", "Beam Agent", "resources", "app"),
+    path.join(ROOT, "dist", "Beam-Agent", "resources", "app"),
   ].filter((p) => fs.existsSync(p));
 }
 
@@ -125,8 +125,8 @@ const NEW_LIMITS_SECTION = `
 			const whenUtc = fmtWhen(nextMondayUtc, "UTC");
 			const whenLocal = fmtWhen(nextMondayUtc, Intl.DateTimeFormat().resolvedOptions().timeZone || undefined);
 			const intro = ru
-				? "Недельные лимиты Tide, Flare и Pine. У каждой модели свой счётчик: использовано / лимит."
-				: "Weekly limits for Tide, Flare, and Pine. Each model has its own used / limit counter.";
+				? "Недельные лимиты Tide, Flare и Pine. Полоска показывает остаток токенов (полная = есть запас, пустая = исчерпано, ∞ = безлимит)."
+				: "Weekly limits for Tide, Flare, and Pine. The bar shows remaining tokens (full = headroom, empty = exhausted, ∞ = unlimited).";
 			const resetNote = ru
 				? ("Обновление: каждый понедельник 00:00 UTC (" + whenUtc + "). У вас это: " + whenLocal + ".")
 				: ("Resets every Monday 00:00 UTC (" + whenUtc + "). Your local time: " + whenLocal + ".");
@@ -159,9 +159,14 @@ const NEW_LIMITS_SECTION = `
 						className: "beam-settings-limits-list",
 						children: models.map((m) => {
 							const used = Number(m.used) || 0;
-							const limit = Math.max(1, Number(m.limit) || 1);
-							const pct = Math.min(100, Math.round((used / limit) * 100));
-							const exhausted = used >= limit;
+							const rawLim = m.limit == null || m.limit === "" ? NaN : Number(m.limit);
+							const unlimited = !!(m.unlimited || !Number.isFinite(rawLim) || rawLim <= 1 || rawLim >= 1e9 || rawLim >= 2147483640);
+							const limit = unlimited ? null : Math.max(1, rawLim);
+							const remaining = unlimited ? null : Math.max(0, limit - used);
+							const pct = unlimited ? 100 : Math.min(100, Math.round((remaining / limit) * 100));
+							const exhausted = !unlimited && used >= limit;
+							const limLabel = unlimited ? (ru ? "Безлимит" : "∞") : fmt(limit);
+							const pctLabel = unlimited ? "∞" : (pct + "%");
 							return (0, react_jsx_runtime.jsxs)("div", {
 								className: "beam-settings-limits-row" + (exhausted ? " is-exhausted" : ""),
 								children: [
@@ -184,8 +189,8 @@ const NEW_LIMITS_SECTION = `
 											(0, react_jsx_runtime.jsxs)("div", {
 												className: "beam-settings-limits-meta",
 												children: [
-													(0, react_jsx_runtime.jsx)("span", { children: usedLabel + ": " + fmt(used) + " / " + fmt(limit) }),
-													(0, react_jsx_runtime.jsx)("span", { children: pct + "%" })
+													(0, react_jsx_runtime.jsx)("span", { children: usedLabel + ": " + fmt(used) + " / " + (typeof limLabel !== "undefined" ? limLabel : fmt(limit)) }),
+													(0, react_jsx_runtime.jsx)("span", { children: (typeof pctLabel !== "undefined" ? pctLabel : (pct + "%")) })
 												]
 											}),
 											(0, react_jsx_runtime.jsx)("div", {
@@ -256,7 +261,7 @@ function patchHtml(file) {
       tideDesc: "Everyday thinking — quick tasks and coding.",
       flareDesc: "Style & creative — writing, polish, ideation.",
       pineDesc: "Precision — harder problems, longer context.",`;
-    const enNew = `      limitsTitle: "Limits", limitsHint: "Weekly limits for Tide, Flare, and Pine. Each ring shows % used; under the name — used / limit.",
+    const enNew = `      limitsTitle: "Limits", limitsHint: "Weekly limits for Tide, Flare, and Pine. Each ring shows % remaining (full = headroom, empty = exhausted, ∞ = unlimited); under the name — used / limit.",
       usedOf: "Used", ofLimit: "of", resetMonday: "Resets Monday 00:00 UTC",
       exhaustHint: "When exhausted, that model stops until Monday. Switch to another model with remaining quota.",
       tideTag: "Fast", flareTag: "Style", pineTag: "Precise",
@@ -280,7 +285,7 @@ function patchHtml(file) {
     else if (!out.includes('usedOf: "Used"')) {
       out = out.replace(
         /limitsHint: "Weekly usage for Tide, Flare, and Pine\."/,
-        'limitsHint: "Weekly limits for Tide, Flare, and Pine. Each ring shows % used; under the name — used / limit.",\n      usedOf: "Used", ofLimit: "of", resetMonday: "Resets Monday 00:00 UTC",\n      exhaustHint: "When exhausted, that model stops until Monday. Switch to another model with remaining quota."',
+        'limitsHint: "Weekly limits for Tide, Flare, and Pine. Each ring shows % remaining (full = headroom, empty = exhausted, ∞ = unlimited); under the name — used / limit.",\n      usedOf: "Used", ofLimit: "of", resetMonday: "Resets Monday 00:00 UTC",\n      exhaustHint: "When exhausted, that model stops until Monday. Switch to another model with remaining quota."',
       );
     }
     if (out.includes(ruOld)) out = out.replace(ruOld, ruNew);
@@ -293,7 +298,7 @@ function patchHtml(file) {
 
     // Rings: show used/limit under label
     const ringOld = `    const rings = models.map((m) => {
-      const pct = Math.min(100, Math.round((m.used / Math.max(1, m.limit)) * 100));
+      const remaining = Math.max(0, Math.max(1, m.limit) - (Number(m.used) || 0)); const pct = (m.unlimited || m.limit == null) ? 100 : Math.min(100, Math.round((remaining / Math.max(1, m.limit)) * 100)); const pctLabel = (m.unlimited || m.limit == null) ? "∞" : (pct + "%");
       const label = String(m.name || ({ tide: "Tide", flare: "Flare", pine: "Pine" }[m.id] || m.id)).replace(/</g,"");
       const title = label + ": " + fmt(m.used) + " / " + fmt(m.limit);
       return '<div class="bsl-ring" data-id="'+m.id+'" title="'+title.replace(/"/g,"&quot;")+'" style="--ring-color:'+m.color+'">'
@@ -304,7 +309,7 @@ function patchHtml(file) {
 
     const ringNew = `    const rings = models.map((m) => {
       ${MARK}
-      const pct = Math.min(100, Math.round((m.used / Math.max(1, m.limit)) * 100));
+      const remaining = Math.max(0, Math.max(1, m.limit) - (Number(m.used) || 0)); const pct = (m.unlimited || m.limit == null) ? 100 : Math.min(100, Math.round((remaining / Math.max(1, m.limit)) * 100)); const pctLabel = (m.unlimited || m.limit == null) ? "∞" : (pct + "%");
       const exhausted = (Number(m.used) || 0) >= Math.max(1, Number(m.limit) || 1);
       const label = String(m.name || ({ tide: "Tide", flare: "Flare", pine: "Pine" }[m.id] || m.id)).replace(/</g,"");
       const usedTxt = fmt(m.used) + " / " + fmt(m.limit);
@@ -334,7 +339,7 @@ function patchHtml(file) {
 
     // enhanceLimitsPage cards: clearer used label + status + notes
     const enhanceOld = `    panel.innerHTML = modelsFrom(data).map((m) => {
-      const pct = Math.min(100, Math.round((m.used / Math.max(1, m.limit)) * 100));
+      const remaining = Math.max(0, Math.max(1, m.limit) - (Number(m.used) || 0)); const pct = (m.unlimited || m.limit == null) ? 100 : Math.min(100, Math.round((remaining / Math.max(1, m.limit)) * 100)); const pctLabel = (m.unlimited || m.limit == null) ? "∞" : (pct + "%");
       const info = meta[m.id];
       return '<div class="blp-card"><div class="blp-top"><div class="blp-name"><span class="blp-dot" style="background:'+m.color+'"></span>'+m.name+'</div><div class="blp-tag">'+info.tag+'</div></div><div class="blp-desc">'+info.desc+'</div><div class="blp-row"><span>'+tr.limits+'</span><span>'+fmt(m.used)+' / '+fmt(m.limit)+'</span></div><div class="blp-bar"><span style="width:'+pct+'%;background:linear-gradient(90deg,'+m.color+',#00B3BC)"></span></div></div>';
     }).join("");`;
@@ -343,7 +348,7 @@ function patchHtml(file) {
     panel.innerHTML = '<p class="blp-intro">'+(tr.limitsHint || "")+'</p>'
       + (resetLine ? '<p class="blp-note">'+resetLine+'</p>' : '')
       + modelsFrom(data).map((m) => {
-      const pct = Math.min(100, Math.round((m.used / Math.max(1, m.limit)) * 100));
+      const remaining = Math.max(0, Math.max(1, m.limit) - (Number(m.used) || 0)); const pct = (m.unlimited || m.limit == null) ? 100 : Math.min(100, Math.round((remaining / Math.max(1, m.limit)) * 100)); const pctLabel = (m.unlimited || m.limit == null) ? "∞" : (pct + "%");
       const exhausted = (Number(m.used) || 0) >= Math.max(1, Number(m.limit) || 1);
       const info = meta[m.id];
       const usedLbl = (tr.usedOf || (isRu() ? "Использовано" : "Used"));
@@ -548,7 +553,7 @@ function syncSettingsPatchTemplate() {
     if (s.includes("Недельные лимиты Tide, Flare и Pine.")) {
       return s.replace(
         'const intro = ru ? "Недельные лимиты Tide, Flare и Pine." : "Weekly limits for Tide, Flare, and Pine.";',
-        'const intro = ru ? "Недельные лимиты Tide, Flare и Pine. У каждой модели свой счётчик: использовано / лимит." : "Weekly limits for Tide, Flare, and Pine. Each model has its own used / limit counter."; /* beam-quotas-ux-clarity: re-run patch-quotas-ux-clarity.mjs after this */',
+        'const intro = ru ? "Недельные лимиты Tide, Flare и Pine. Полоска показывает остаток токенов (полная = есть запас, пустая = исчерпано, ∞ = безлимит)." : "Weekly limits for Tide, Flare, and Pine. The bar shows remaining tokens (full = headroom, empty = exhausted, ∞ = unlimited)."; /* beam-quotas-ux-clarity: re-run patch-quotas-ux-clarity.mjs after this */',
       );
     }
     return s;
@@ -561,7 +566,7 @@ for (const f of webCssFiles()) patchCss(f);
 for (const f of generalClientFiles()) patchGeneral(f);
 for (const f of chatClientFiles()) patchChat(f);
 patchBridge(path.join(ROOT, "desktop", "bridge", "server.js"));
-patchBridge(path.join(ROOT, "dist", "Beam Agent", "bridge", "server.js"));
+patchBridge(path.join(ROOT, "dist", "Beam-Agent", "bridge", "server.js"));
 syncSettingsPatchTemplate();
 
 console.log("patch-quotas-ux-clarity:");

@@ -11,14 +11,14 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const WEB_ROOTS = [
   "runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist",
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist",
   "runtime/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist",
-  "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist",
 ].map((p) => path.join(ROOT, p));
 
 const MAIN_FILES = [
   path.join(ROOT, "runtime/app/lib/main.js"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/lib/main.js"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/lib/main.js"),
 ];
 
 const BOOT_CSS = `/* ===== BEAM boot splash ===== */

@@ -2,16 +2,16 @@ import fs from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
 
-const ROOT = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
+const ROOT = "C:/Beam-Agent";
 const logo = fs.readFileSync(path.join(ROOT, "logo.svg"));
-const outDir = path.join(ROOT, "dist/Beam Agent/resources");
+const outDir = path.join(ROOT, "dist/Beam-Agent/resources");
 
 const png256 = await sharp(logo).resize(256, 256, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
 const png64 = await sharp(logo).resize(64, 64, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
 const png32 = await sharp(logo).resize(32, 32, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
 
 fs.writeFileSync(path.join(outDir, "icon.png"), png256);
-fs.writeFileSync(path.join(ROOT, "dist/Beam Agent/resources/icon.svg"), fs.readFileSync(path.join(ROOT, "logo.svg")));
+fs.writeFileSync(path.join(ROOT, "dist/Beam-Agent/resources/icon.svg"), fs.readFileSync(path.join(ROOT, "logo.svg")));
 
 // Simple ICO: embed 32px PNG (modern Windows accepts PNG-in-ICO)
 function pngToIco(pngBuf) {

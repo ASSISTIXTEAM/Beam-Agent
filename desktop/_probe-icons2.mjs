@@ -1,7 +1,7 @@
 import fs from "node:fs";
 
 const idxPath =
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/index-BXV-oxvX.js";
+  "C:/Beam-Agent/runtime/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/index-BXV-oxvX.js";
 const s = fs.readFileSync(idxPath, "utf8");
 
 for (const needle of [

@@ -19,7 +19,7 @@ const OLD_WS_ALT = "C:\\Users\\Alexa\\OneDrive\\Documents\\deepseek-harness\\def
 
 const MAIN_FILES = [
   path.join(ROOT, "runtime", "app", "lib", "main.js"),
-  path.join(ROOT, "dist", "Beam Agent", "resources", "app", "lib", "main.js"),
+  path.join(ROOT, "dist", "Beam-Agent", "resources", "app", "lib", "main.js"),
 ];
 
 const report = [];
@@ -214,9 +214,9 @@ if (fs.existsSync(workspaceJson)) {
 // Patch workspace controller so new defaults never land under Documents/deepseek-harness
 for (const ctrl of [
   path.join(ROOT, "runtime", "app", "beam", "node_modules", "@assistix", "beam-api-workspace-controller", "lib", "types", "default-directory.js"),
-  path.join(ROOT, "dist", "Beam Agent", "resources", "app", "beam", "node_modules", "@assistix", "beam-api-workspace-controller", "lib", "types", "default-directory.js"),
+  path.join(ROOT, "dist", "Beam-Agent", "resources", "app", "beam", "node_modules", "@assistix", "beam-api-workspace-controller", "lib", "types", "default-directory.js"),
   path.join(ROOT, "runtime", "app", "beam", "node_modules", "@assistix", "beam-api-workspace-controller", "lib", "index.js"),
-  path.join(ROOT, "dist", "Beam Agent", "resources", "app", "beam", "node_modules", "@assistix", "beam-api-workspace-controller", "lib", "index.js"),
+  path.join(ROOT, "dist", "Beam-Agent", "resources", "app", "beam", "node_modules", "@assistix", "beam-api-workspace-controller", "lib", "index.js"),
 ]) {
   patch(ctrl, (s) => {
     if (!s.includes("deepseek-harness") && s.includes('paths.join(beamHome, DEFAULT_WORKSPACE_DIRECTORY)')) return s;
@@ -310,7 +310,7 @@ if (fs.existsSync(dshRt) && !fs.existsSync(beamRt)) {
 
 // --- 6) Start script: never set DSH_HOME to harness; force Beam paths ---
 for (const cmd of [
-  path.join(ROOT, "dist", "Beam Agent", "Start Beam Agent.cmd"),
+  path.join(ROOT, "dist", "Beam-Agent", "Start Beam Agent.cmd"),
   path.join(ROOT, "Start Beam Agent.cmd"),
 ]) {
   patch(cmd, (s) => {
@@ -357,13 +357,13 @@ foreach ($dir in $starts) {
   Get-ChildItem $dir -Filter '*DeepSeek*' -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force
   Get-ChildItem $dir -Filter '*Harness*' -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force
 }
-$beamExe = 'C:\\Users\\Alexa\\OneDrive\\Documents\\Beam Agent\\dist\\Beam Agent\\Beam Agent.exe'
-$lnk = Join-Path $env:APPDATA 'Microsoft\\Windows\\Start Menu\\Programs\\Beam Agent.lnk'
+$beamExe = 'C:\\Beam-Agent\\dist\\Beam-Agent\\Beam Agent.exe'
+$lnk = Join-Path $env:APPDATA 'Microsoft\\Windows\\Start Menu\\Programs\\Beam-Agent.lnk'
 if (Test-Path $beamExe) {
   $w = New-Object -ComObject WScript.Shell
   $s = $w.CreateShortcut($lnk)
   $s.TargetPath = Join-Path $env:SystemRoot 'System32\\wscript.exe'
-  $s.Arguments = '//nologo "C:\\Users\\Alexa\\OneDrive\\Documents\\Beam Agent\\dist\\Beam Agent\\Start Beam Agent.vbs"'
+  $s.Arguments = '//nologo "C:\\Beam-Agent\\dist\\Beam-Agent\\Start Beam Agent.vbs"'
   $s.WorkingDirectory = Split-Path $beamExe
   $s.WindowStyle = 7
   $s.IconLocation = $beamExe

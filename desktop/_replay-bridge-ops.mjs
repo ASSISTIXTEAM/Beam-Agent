@@ -29,7 +29,7 @@ function normPath(p) {
 
 function isBridgeServer(p) {
   const n = normPath(p);
-  return n.endsWith("desktop/bridge/server.js") || n.endsWith("dist/Beam Agent/bridge/server.js");
+  return n.endsWith("desktop/bridge/server.js") || n.endsWith("dist/Beam-Agent/bridge/server.js");
 }
 
 const ops = [];

@@ -19,7 +19,7 @@ const report = [];
 
 const TREES = [
   path.join(ROOT, "runtime", "app", "beam", "node_modules", "@assistix"),
-  path.join(ROOT, "dist", "Beam Agent", "resources", "app", "beam", "node_modules", "@assistix"),
+  path.join(ROOT, "dist", "Beam-Agent", "resources", "app", "beam", "node_modules", "@assistix"),
 ];
 
 const HARNESS_PATH_RE =
@@ -692,7 +692,7 @@ patchFile(detach, (s) => {
 
 // --- 6) Start scripts: ensure projects dir; never point at harness ---
 for (const vbs of [
-  path.join(ROOT, "dist", "Beam Agent", "Start Beam Agent.vbs"),
+  path.join(ROOT, "dist", "Beam-Agent", "Start Beam Agent.vbs"),
 ]) {
   patchFile(vbs, (s) => {
     if (!s.includes('EnsureDir beamHome & "\\projects"')) {

@@ -1,9 +1,9 @@
 import fs from "fs";
 import path from "path";
 
-const ROOT = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
+const ROOT = "C:/Beam-Agent";
 const trees = [
-  path.join(ROOT, "dist/Beam Agent/resources/app"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app"),
   path.join(ROOT, "runtime/app"),
 ];
 

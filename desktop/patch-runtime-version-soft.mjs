@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const mains = [
 	path.join(ROOT, "runtime/app/lib/main.js"),
-	path.join(ROOT, "dist/Beam Agent/resources/app/lib/main.js"),
+	path.join(ROOT, "dist/Beam-Agent/resources/app/lib/main.js"),
 	path.join(process.env.USERPROFILE || "", "BeamAgent/resources/app/lib/main.js"),
 ].filter((p) => fs.existsSync(p));
 
@@ -45,7 +45,7 @@ for (const file of mains) {
 
 const runtimes = [
 	path.join(ROOT, "runtime/app/beam/desktop-runtime.json"),
-	path.join(ROOT, "dist/Beam Agent/resources/app/beam/desktop-runtime.json"),
+	path.join(ROOT, "dist/Beam-Agent/resources/app/beam/desktop-runtime.json"),
 	path.join(process.env.USERPROFILE || "", "BeamAgent/resources/app/beam/desktop-runtime.json"),
 ].filter((p) => fs.existsSync(p));
 

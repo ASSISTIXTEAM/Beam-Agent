@@ -251,8 +251,8 @@ function htmlTargets() {
   const rels = [
     "runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
     "runtime/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html",
-    "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
-    "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html",
+    "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
+    "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html",
     path.join(BEAM_HOME, "BeamAgent", "resources", "app", "beam", "node_modules", "@assistix", "beam-web-frontend", "dist", "index.html"),
     path.join(BEAM_HOME, "BeamAgent", "resources", "app", "beam", "node_modules", "@deepseek-ai", "dsh-web-frontend", "dist", "index.html"),
   ];
@@ -267,7 +267,7 @@ function htmlTargets() {
 function llmRetryTargets() {
   const bases = [
     path.join(ROOT, "runtime", "app"),
-    path.join(ROOT, "dist", "Beam Agent", "resources", "app"),
+    path.join(ROOT, "dist", "Beam-Agent", "resources", "app"),
     path.join(BEAM_HOME, "BeamAgent", "resources", "app"),
   ];
   const out = [];
@@ -285,7 +285,7 @@ function llmRetryTargets() {
 function mainJsTargets() {
   return [
     path.join(ROOT, "runtime", "app", "lib", "main.js"),
-    path.join(ROOT, "dist", "Beam Agent", "resources", "app", "lib", "main.js"),
+    path.join(ROOT, "dist", "Beam-Agent", "resources", "app", "lib", "main.js"),
     path.join(BEAM_HOME, "BeamAgent", "resources", "app", "lib", "main.js"),
   ].filter((p) => fs.existsSync(p));
 }

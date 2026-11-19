@@ -19,7 +19,7 @@ const MODELS = {
 // #endregion beam-persona-bridge
 
 // #region beam-dsml-tool-leak
-/** DeepSeek V4/V4.1 DSML (fullwidth ｜ or ASCII |) → structured tool_calls + clean chat text. */
+/** Beam V4/V4.1 DSML (fullwidth ｜ or ASCII |) → structured tool_calls + clean chat text. */
 const __DSML_PIPE = '[|｜]'
 const __DSML_OPEN = `<\\s*${__DSML_PIPE}\\s*DSML\\s*${__DSML_PIPE}`
 const __DSML_CLOSE = `<\\/\\s*${__DSML_PIPE}\\s*DSML\\s*${__DSML_PIPE}`

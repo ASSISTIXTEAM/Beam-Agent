@@ -1,7 +1,7 @@
 import fs from "node:fs";
 
 const side =
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-sidebar/lib/client.js";
+  "C:/Beam-Agent/runtime/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-sidebar/lib/client.js";
 const s = fs.readFileSync(side, "utf8");
 
 // Dump Icon* usages with surrounding context
@@ -22,7 +22,7 @@ console.log("\nIconPlugin:\n", s.slice(Math.max(0, i2 - 100), i2 + 200));
 
 // Conversation composer icons
 const conv =
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js";
+  "C:/Beam-Agent/runtime/app/dsh/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js";
 const c = fs.readFileSync(conv, "utf8");
 const seen2 = new Map();
 let m2;
@@ -40,7 +40,7 @@ for (const needle of ["IconSend", "IconPaperPlane", "IconPaperclip", "IconPlus"]
 
 // Check SVG structure of an icon in index bundle via minified LT function
 const idx = fs.readFileSync(
-  "C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/index-BXV-oxvX.js",
+  "C:/Beam-Agent/runtime/app/dsh/node_modules/@deepseek-ai/dsh-web-frontend/dist/assets/index-BXV-oxvX.js",
   "utf8"
 );
 // Find definition of LT= (IconNewChatOutlineRegular)

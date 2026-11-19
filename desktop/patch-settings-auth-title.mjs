@@ -8,14 +8,14 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const ROOT = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
+const ROOT = "C:/Beam-Agent";
 const TREES = [
   path.join(ROOT, "runtime/app/beam/node_modules/@assistix"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@assistix"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@assistix"),
 ];
 const WEBS = [
   path.join(ROOT, "runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
 ];
 
 const ACCOUNT_MARKER = "/* beam-assistix-account-panel */";

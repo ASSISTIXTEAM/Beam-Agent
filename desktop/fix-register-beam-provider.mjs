@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Ensure @assistix/beam-llm-assistix exports registerBeamProvider
  * (alias of registerDeepSeekProvider) so api-key/account plugins load.
  */
@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const targets = [
-  path.join(root, "dist", "Beam Agent", "resources", "app", "beam", "node_modules", "@assistix", "beam-llm-deepseek", "lib", "index.js"),
+  path.join(root, "dist", "Beam-Agent", "resources", "app", "beam", "node_modules", "@assistix", "beam-llm-deepseek", "lib", "index.js"),
   path.join(root, "runtime", "app", "beam", "node_modules", "@assistix", "beam-llm-deepseek", "lib", "index.js"),
 ];
 

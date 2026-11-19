@@ -2,11 +2,11 @@ import fs from "fs";
 import path from "path";
 
 const files = [
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-workspace/lib/client.js",
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-conversation/lib/client.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-workspace/lib/client.js",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-conversation/lib/client.js",
   "runtime/app/beam/node_modules/@assistix/beam-client-ui-workspace/lib/client.js",
 ];
-const root = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
+const root = "C:/Beam-Agent";
 const keys = [
   "picker.loading",
   "menu.addWorkspace",
@@ -50,14 +50,14 @@ for (const rel of files) {
 }
 
 const css = fs.readFileSync(
-  path.join(root, "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/beam-override.css"),
+  path.join(root, "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/assets/beam-override.css"),
   "utf8",
 );
 console.log("\nCSS has P0 new session:", css.includes("BEAM P0: restore New session"));
 console.log("CSS has P0 provider hide:", css.includes("BEAM P0: hide third-party"));
 
 const html = fs.readFileSync(
-  path.join(root, "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html"),
+  path.join(root, "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html"),
   "utf8",
 );
 console.log("HTML strip strengthened:", html.includes('setProperty("-webkit-mask", "none"'));

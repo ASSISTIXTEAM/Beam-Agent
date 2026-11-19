@@ -10,7 +10,7 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
-const APP = path.join(ROOT, "dist", "Beam Agent", "resources", "app");
+const APP = path.join(ROOT, "dist", "Beam-Agent", "resources", "app");
 const DSH = path.join(APP, "dsh", "node_modules", "@deepseek-ai");
 const WEB = path.join(DSH, "dsh-web-frontend", "dist");
 const ASSETS = path.join(WEB, "assets");
@@ -524,7 +524,7 @@ console.log("6) Injector: text rewrite + Assistix profile dock");
 
 console.log("7) Icons (png/ico/svg)");
 {
-  const resDir = path.join(ROOT, "dist", "Beam Agent", "resources");
+  const resDir = path.join(ROOT, "dist", "Beam-Agent", "resources");
   fs.writeFileSync(path.join(resDir, "icon.svg"), logoSvg);
   try {
     const sharp = require("sharp");

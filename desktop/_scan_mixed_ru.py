@@ -1,7 +1,7 @@
 import re
 from pathlib import Path
 
-root = Path(r"C:\Users\Alexa\OneDrive\Documents\Beam Agent\dist\Beam Agent\resources\app\beam\node_modules\@assistix")
+root = Path(r"C:\Beam-Agent\dist\Beam-Agent\resources\app\beam\node_modules\@assistix")
 keep = re.compile(r"ASSISTIX|Beam Agent|Tide|Flare|Pine|\bAPI\b|\bURL\b|\bID\b|\bHTTP\b|\bJSON\b|\bOK\b|Email|macOS|Windows|Linux|GitHub")
 mixed = []
 for f in root.rglob("client.js"):

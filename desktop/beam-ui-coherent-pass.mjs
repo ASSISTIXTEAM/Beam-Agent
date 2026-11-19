@@ -6,10 +6,10 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const ROOT = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
+const ROOT = "C:/Beam-Agent";
 const TREES = [
   path.join(ROOT, "runtime/app/dsh/node_modules/@deepseek-ai"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/dsh/node_modules/@deepseek-ai"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/dsh/node_modules/@deepseek-ai"),
 ];
 
 const LOGO_SVG = fs.readFileSync(path.join(ROOT, "logo.svg"), "utf8");

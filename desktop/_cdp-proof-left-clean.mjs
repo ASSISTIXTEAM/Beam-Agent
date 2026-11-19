@@ -75,7 +75,7 @@ const shot = await send("Page.captureScreenshot", {
   fromSurface: true,
   clip: val.clip,
 });
-const out = "c:/Users/Alexa/OneDrive/Documents/Beam Agent/desktop/_proof-left-sidebar-clean.png";
+const out = "c:/Users/Alexa/Beam-Agent/desktop/_proof-left-sidebar-clean.png";
 fs.writeFileSync(out, Buffer.from(shot.result.data, "base64"));
 console.log("wrote", out, fs.statSync(out).size);
 

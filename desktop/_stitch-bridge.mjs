@@ -10,7 +10,7 @@ import { spawnSync } from "node:child_process";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BRIDGE = path.join(ROOT, "desktop/bridge/server.js");
-const DIST_BRIDGE = path.join(ROOT, "dist/Beam Agent/bridge/server.js");
+const DIST_BRIDGE = path.join(ROOT, "dist/Beam-Agent/bridge/server.js");
 const PIECES = path.join(ROOT, "desktop/bridge/_pieces");
 const TRUNC = path.join(ROOT, "desktop/bridge/server.js"); // currently truncated
 const BASE = path.join(ROOT, "desktop/bridge/_pieces/write_004_server.js.txt");

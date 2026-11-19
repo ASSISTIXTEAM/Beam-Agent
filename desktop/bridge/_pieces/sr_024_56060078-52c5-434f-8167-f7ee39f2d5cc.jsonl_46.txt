@@ -3,17 +3,17 @@ OLD_LEN: 152
 NEW_LEN: 1755
 FILE: 56060078-52c5-434f-8167-f7ee39f2d5cc.jsonl L46
 ---OLD---
-  t = t.replace(/\bя\s+(?:модель\s+)?(?:DeepSeek|ChatGPT|Claude|GPT|Grok|Gemini|Qwen)\b/gi, 'я Assistix')
+  t = t.replace(/\bя\s+(?:модель\s+)?(?:Beam|ChatGPT|Claude|GPT|Grok|Gemini|Qwen)\b/gi, 'я Assistix')
   return t
 }
 // #endregion beam-persona-bridge
 ---NEW---
-  t = t.replace(/\bя\s+(?:модель\s+)?(?:DeepSeek|ChatGPT|Claude|GPT|Grok|Gemini|Qwen)\b/gi, 'я Assistix')
+  t = t.replace(/\bя\s+(?:модель\s+)?(?:Beam|ChatGPT|Claude|GPT|Grok|Gemini|Qwen)\b/gi, 'я Assistix')
   return stripDsmlMarkup(t)
 }
 
 /**
- * Strip DeepSeek DSML / tool-XML soup from chat-visible text.
+ * Strip Beam DSML / tool-XML soup from chat-visible text.
  * Coordinates with dump-hiding: tool markup must not land in the transcript.
  */
 function stripDsmlMarkup(text) {

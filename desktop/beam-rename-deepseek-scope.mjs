@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const APP_TREES = [
   path.join(ROOT, "runtime", "app"),
-  path.join(ROOT, "dist", "Beam Agent", "resources", "app"),
+  path.join(ROOT, "dist", "Beam-Agent", "resources", "app"),
 ].filter((p) => fs.existsSync(p));
 
 const TEXT_EXT = new Set([
@@ -264,7 +264,7 @@ function patchCredentialDualRead(appRoot) {
 }
 
 function patchStartScripts() {
-  for (const rel of ["dist/Beam Agent/Start Beam Agent.cmd", "Start Beam Agent.cmd"]) {
+  for (const rel of ["dist/Beam-Agent/Start Beam Agent.cmd", "Start Beam Agent.cmd"]) {
     const f = path.join(ROOT, rel);
     if (!fs.existsSync(f)) continue;
     let s = fs.readFileSync(f, "utf8");
@@ -339,7 +339,7 @@ for (const appRoot of APP_TREES) {
 for (const extra of [
   path.join(ROOT, "desktop", "bridge"),
   path.join(ROOT, "desktop"),
-  path.join(ROOT, "dist", "Beam Agent", "bridge"),
+  path.join(ROOT, "dist", "Beam-Agent", "bridge"),
 ]) {
   if (fs.existsSync(extra)) patchAllText(extra);
 }
@@ -383,7 +383,7 @@ if (fs.existsSync(envf)) {
 }
 
 scanLeftovers([
-  path.join(ROOT, "dist", "Beam Agent"),
+  path.join(ROOT, "dist", "Beam-Agent"),
   path.join(ROOT, "runtime", "app"),
   path.join(ROOT, "desktop", "bridge"),
 ]);

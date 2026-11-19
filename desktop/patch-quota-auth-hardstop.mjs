@@ -31,7 +31,7 @@ function patchFile(file, fn) {
 function appRoots() {
   return [
     path.join(ROOT, "runtime", "app"),
-    path.join(ROOT, "dist", "Beam Agent", "resources", "app"),
+    path.join(ROOT, "dist", "Beam-Agent", "resources", "app"),
   ].filter((p) => fs.existsSync(p));
 }
 
@@ -287,7 +287,7 @@ function patchBridge(file) {
 }
 
 patchBridge(path.join(ROOT, "desktop", "bridge", "server.js"));
-patchBridge(path.join(ROOT, "dist", "Beam Agent", "bridge", "server.js"));
+patchBridge(path.join(ROOT, "dist", "Beam-Agent", "bridge", "server.js"));
 
 console.log("patch-quota-auth-hardstop:");
 for (const f of report) console.log(" -", f);

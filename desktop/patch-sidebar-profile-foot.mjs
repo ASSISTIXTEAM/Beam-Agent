@@ -13,11 +13,11 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const ROOT = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
+const ROOT = "C:/Beam-Agent";
 const ICONS_SRC = "C:/Users/Alexa/Downloads/icons";
 const WEBS = [
   path.join(ROOT, "runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
 ];
 
 function recolorSvg(svg) {
@@ -943,6 +943,17 @@ function patchHtml(file) {
 
   const NEW_RENDER = `  const gearSvg = ${JSON.stringify(GEAR_SVG)};
 
+  /* Gauge fill = remaining tokens. Full = headroom; empty = exhausted; unlimited = 100% + ∞. */
+  const beamGaugePct = (used, limit, unlimited) => {
+    if (unlimited || limit == null) return { exact: 100, ring: 100, label: "∞", remaining: null };
+    const u = Math.max(0, Number(used) || 0);
+    const lim = Math.max(1, Number(limit) || 1);
+    const rem = Math.max(0, lim - u);
+    const exact = Math.min(100, (rem / lim) * 100);
+    const label = Math.min(100, Math.max(0, Math.round(exact))) + "%";
+    return { exact, ring: exact, label, remaining: rem };
+  };
+
   const findAccountMenuTrigger = () => {
     const area = document.querySelector('[class*="settingsArea"]');
     if (!area) return null;
@@ -1234,10 +1245,10 @@ function patchHtml(file) {
       pine: { tag: tr.pineTag || "Deep", desc: tr.pineDesc || "" },
     };
     const cards = modelsFrom(data).map((m) => {
-      const pct = Math.min(100, Math.round((m.used / Math.max(1, m.limit)) * 100));
+      const _up = beamGaugePct(m.used, m.limit, m.unlimited); const pct = _up.ring; const pctLabel = _up.label;
       const info = meta[m.id] || { tag: "", desc: "" };
       return '<div class="blm-card">'
-        + '<div class="blm-ring-wrap"><div class="bsl-chart">'+ringSvg(pct, m.color)+'<div class="bsl-pct">'+pct+'%</div></div></div>'
+        + '<div class="blm-ring-wrap"><div class="bsl-chart">'+ringSvg(pct, m.color)+'<div class="bsl-pct">'+pctLabel+'</div></div></div>'
         + '<div class="blm-meta"><p class="blm-name"><span class="blm-dot" style="background:'+m.color+'"></span>'+m.name
         + (info.tag ? '<span class="blm-tag">'+info.tag+'</span>' : '') + '</p>'
         + (info.desc ? '<p class="blm-desc">'+info.desc+'</p>' : '')
@@ -1328,11 +1339,11 @@ function patchHtml(file) {
       } catch {}
     } catch {}
     const rings = models.map((m) => {
-      const pct = Math.min(100, Math.round((m.used / Math.max(1, m.limit)) * 100));
+      const _up = beamGaugePct(m.used, m.limit, m.unlimited); const pct = _up.ring; const pctLabel = _up.label;
       const label = String(m.name || ({ tide: "Tide", flare: "Flare", pine: "Pine" }[m.id] || m.id)).replace(/</g,"");
       const title = label + ": " + fmt(m.used) + " / " + fmt(m.limit);
       return '<div class="bsl-ring" data-id="'+m.id+'" title="'+title.replace(/"/g,"&quot;")+'" style="--ring-color:'+m.color+'">'
-        + '<div class="bsl-chart">'+ringSvg(pct, m.color)+'<div class="bsl-pct">'+pct+'%</div></div>'
+        + '<div class="bsl-chart">'+ringSvg(pct, m.color)+'<div class="bsl-pct">'+pctLabel+'</div></div>'
         + '<span class="bsl-label" data-model="'+m.id+'">'+label+'</span>'
         + '</div>';
     }).join("");

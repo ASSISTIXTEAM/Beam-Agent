@@ -1,9 +1,9 @@
 import fs from "node:fs";
 
 const files = [
-	"C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/beam/desktop-runtime.json",
-	"C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/beam/desktop-runtime.json",
-	"C:/Users/Alexa/BeamAgent/resources/app/beam/desktop-runtime.json",
+	"C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/desktop-runtime.json",
+	"C:/Beam-Agent/runtime/app/beam/desktop-runtime.json",
+	"C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/desktop-runtime.json",
 ];
 for (const f of files) {
 	const j = JSON.parse(fs.readFileSync(f, "utf8"));
@@ -13,9 +13,9 @@ for (const f of files) {
 	console.log(f, before, "->", j.release.version);
 }
 const mains = [
-	"C:/Users/Alexa/OneDrive/Documents/Beam Agent/dist/Beam Agent/resources/app/lib/main.js",
-	"C:/Users/Alexa/OneDrive/Documents/Beam Agent/runtime/app/lib/main.js",
-	"C:/Users/Alexa/BeamAgent/resources/app/lib/main.js",
+	"C:/Beam-Agent/dist/Beam-Agent/resources/app/lib/main.js",
+	"C:/Beam-Agent/runtime/app/lib/main.js",
+	"C:/Beam-Agent/dist/Beam-Agent/resources/app/lib/main.js",
 ];
 for (const f of mains) {
 	const s = fs.readFileSync(f, "utf8");

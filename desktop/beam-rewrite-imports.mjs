@@ -4,11 +4,11 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const roots = [
-  path.join(ROOT, "dist", "Beam Agent", "resources", "app"),
+  path.join(ROOT, "dist", "Beam-Agent", "resources", "app"),
   path.join(ROOT, "runtime", "app"),
-  path.join(ROOT, "dist", "Beam Agent", "bridge"),
+  path.join(ROOT, "dist", "Beam-Agent", "bridge"),
   path.join(ROOT, "desktop", "bridge"),
-  path.join(ROOT, "dist", "Beam Agent"),
+  path.join(ROOT, "dist", "Beam-Agent"),
 ].filter((p) => fs.existsSync(p));
 
 const EXT = new Set([

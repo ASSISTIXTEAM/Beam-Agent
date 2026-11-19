@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const require = createRequire(import.meta.url);
 const sharp = require(
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/sharp")
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/sharp")
 );
 
 const CACHE_BUST = "icons-newchat-v3";
@@ -24,12 +24,12 @@ const COOL = path.join(ROOT, "desktop/_coolicons_svg/package/duocolor/round");
 const FRONTENDS = [
   path.join(ROOT, "runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
   path.join(ROOT, "runtime/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
-  path.join(ROOT, "dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
+  path.join(ROOT, "dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist"),
   path.join(ROOT, "../BeamAgent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist"),
   path.join(ROOT, "../BeamAgent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist"),
-  "C:/Users/Alexa/BeamAgent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist",
-  "C:/Users/Alexa/BeamAgent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist",
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist",
+  "C:/Beam-Agent/dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-web-frontend/dist",
 ];
 
 const ICON_DIRS = FRONTENDS.map((d) => path.join(d, "assets/beam-icons")).filter(

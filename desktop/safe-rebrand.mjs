@@ -7,9 +7,9 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
-const WEB = path.join(ROOT, 'dist', 'Beam Agent', 'resources', 'app', 'dsh', 'node_modules', '@deepseek-ai', 'dsh-web-frontend', 'dist')
+const WEB = path.join(ROOT, 'dist', 'Beam-Agent', 'resources', 'app', 'dsh', 'node_modules', '@deepseek-ai', 'dsh-web-frontend', 'dist')
 const ASSETS = path.join(WEB, 'assets')
-const APP = path.join(ROOT, 'dist', 'Beam Agent', 'resources', 'app')
+const APP = path.join(ROOT, 'dist', 'Beam-Agent', 'resources', 'app')
 
 const logoSvg = fs.readFileSync(path.join(ROOT, 'logo.svg'), 'utf8')
 const wordmarkSvg = fs.readFileSync(path.join(ROOT, 'logo-beam-agent.svg'), 'utf8')
@@ -310,6 +310,6 @@ if (fs.existsSync(mainJs)) {
   fs.writeFileSync(mainJs, main)
 }
 
-fs.writeFileSync(path.join(ROOT, 'dist', 'Beam Agent', 'resources', 'icon.svg'), logoSvg)
+fs.writeFileSync(path.join(ROOT, 'dist', 'Beam-Agent', 'resources', 'icon.svg'), logoSvg)
 
 console.log('✓ Safe rebrand done')

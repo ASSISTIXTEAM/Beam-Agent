@@ -2,11 +2,11 @@ import fs from "node:fs";
 
 const mains = [
   "runtime/app/lib/main.js",
-  "dist/Beam Agent/resources/app/lib/main.js",
+  "dist/Beam-Agent/resources/app/lib/main.js",
 ];
 const htmls = [
   "runtime/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
-  "dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
+  "dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-web-frontend/dist/index.html",
 ];
 
 for (const p of mains) {

@@ -35,7 +35,7 @@ for (const file of walk(TRANS)) {
       for (const c of parts) {
         if (c?.type === "tool_use" && c.name === "Read") {
           const p = String(c.input?.path || "").replace(/\\/g, "/");
-          if (!p.endsWith("desktop/bridge/server.js") && !p.endsWith("dist/Beam Agent/bridge/server.js")) continue;
+          if (!p.endsWith("desktop/bridge/server.js") && !p.endsWith("dist/Beam-Agent/bridge/server.js")) continue;
           // stash request; result comes in next tool message as role tool — not always present in these jsonl
         }
       }

@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
-const APP = path.join(ROOT, 'dist', 'Beam Agent', 'resources', 'app')
+const APP = path.join(ROOT, 'dist', 'Beam-Agent', 'resources', 'app')
 const WEB = path.join(APP, 'dsh', 'node_modules', '@deepseek-ai', 'dsh-web-frontend', 'dist')
 const ASSETS = path.join(WEB, 'assets')
 
@@ -354,10 +354,10 @@ for (const file of themeCssCandidates) {
 }
 
 // Resources icons at electron level
-const resDir = path.join(ROOT, 'dist', 'Beam Agent', 'resources')
+const resDir = path.join(ROOT, 'dist', 'Beam-Agent', 'resources')
 fs.writeFileSync(path.join(resDir, 'icon.svg'), logoSvg)
-fs.copyFileSync(path.join(ROOT, 'logo.svg'), path.join(ROOT, 'dist', 'Beam Agent', 'logo.svg'))
-fs.copyFileSync(path.join(ROOT, 'logo-beam-agent.svg'), path.join(ROOT, 'dist', 'Beam Agent', 'logo-beam-agent.svg'))
+fs.copyFileSync(path.join(ROOT, 'logo.svg'), path.join(ROOT, 'dist', 'Beam-Agent', 'logo.svg'))
+fs.copyFileSync(path.join(ROOT, 'logo-beam-agent.svg'), path.join(ROOT, 'dist', 'Beam-Agent', 'logo-beam-agent.svg'))
 
 console.log('✓ TOTAL rebrand complete')
 console.log('  logo mark URI bytes', LOGO_URI.length)

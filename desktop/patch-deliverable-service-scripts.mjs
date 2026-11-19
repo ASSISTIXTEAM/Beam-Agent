@@ -17,8 +17,8 @@ const MARK = 'BEAM_DELIVERABLE_SERVICE_FILTER'
 const TARGETS = [
   path.join(ROOT, 'runtime/app/beam/node_modules/@assistix/beam-client-ui-deliverables/lib/client.js'),
   path.join(ROOT, 'runtime/app/beam/node_modules/@deepseek-ai/dsh-client-ui-deliverables/lib/client.js'),
-  path.join(ROOT, 'dist/Beam Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-deliverables/lib/client.js'),
-  path.join(ROOT, 'dist/Beam Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-client-ui-deliverables/lib/client.js'),
+  path.join(ROOT, 'dist/Beam-Agent/resources/app/beam/node_modules/@assistix/beam-client-ui-deliverables/lib/client.js'),
+  path.join(ROOT, 'dist/Beam-Agent/resources/app/beam/node_modules/@deepseek-ai/dsh-client-ui-deliverables/lib/client.js'),
 ]
 
 const HELPER_REGION = `
