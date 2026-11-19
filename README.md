@@ -17,15 +17,15 @@
 Логин: http://127.0.0.1:17865/assistix/login  
 (или `ASSISTIX ID Login.cmd`)
 
-## Модели (Kumorouter)
+## Модели (Assistix LLM Gateway)
 
-| Модель | Backend | Лимит токенов |
-|--------|---------|---------------|
-| Tide | deepseek-v4-flash | 1 000 000 |
-| Flare | gemini-3.8-flash | 500 000 |
-| Pine | grok-4.7 | 10 000 |
+| Модель | Публичный id | Лимит токенов |
+|--------|--------------|---------------|
+| Tide | `tide` | 100 000 |
+| Flare | `flare` | 50 000 |
+| Pine | `pine` | 10 000 |
 
-API настраивать вручную не нужно — bridge поднимается локально и ходит в Kumorouter.
+Локальный bridge ходит в Assistix API (`https://agent.assistix.org/llm` / `api.assistix.org`) с Assistix ID. Маппинг на upstream и ключ провайдера — только на сервере.
 
 ## Пересборка
 
@@ -63,7 +63,7 @@ Live passwords/tokens are **not** in this repo. Copy `secrets.example.env` → `
 
 - `BP` / `ASSISTIX_SSH_PASS` — hosting SSH
 - `BEAM_UPDATE_TOKEN` — update publish API
-- `KUMO_API_KEY` — bridge → Kumorouter
+- `KUMO_API_KEY` — только на сервере Assistix LLM Gateway (не в desktop)
 - `ASSISTIX_OAUTH_CLIENT_SECRET` — ASSISTIX ID OAuth
 
 ## Repo layout

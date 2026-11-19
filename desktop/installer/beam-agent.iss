@@ -1,7 +1,9 @@
 ; Beam Agent — Windows installer
 ; SourceDir / OutDir / IconFile can be overridden via ISCC /D flags (packager uses short SUBST paths).
 #define MyAppName "Beam Agent"
-#define MyAppVersion "0.1.6"
+#ifndef MyAppVersion
+  #define MyAppVersion "0.1.8"
+#endif
 #define MyAppPublisher "ASSISTIX"
 #define MyAppURL "https://agent.assistix.org/download/"
 #define MyAppExeName "Start Beam Agent.vbs"
@@ -29,7 +31,7 @@ DefaultGroupName=Beam Agent
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 OutputDir={#OutDir}
-OutputBaseFilename=Beam-Agent-0.1.6-Setup
+OutputBaseFilename=Beam-Agent-{#MyAppVersion}-Setup
 SetupIconFile={#IconFile}
 UninstallDisplayIcon={app}\resources\app.ico
 Compression=lzma2/normal
@@ -39,33 +41,29 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 CloseApplications=yes
 RestartApplications=no
-VersionInfoVersion=0.1.6.0
+VersionInfoVersion={#MyAppVersion}.0
 VersionInfoCompany=ASSISTIX
 VersionInfoDescription=Beam Agent Setup
 VersionInfoProductName=Beam Agent
-VersionInfoProductVersion=0.1.6.0
+VersionInfoProductVersion={#MyAppVersion}.0
 InfoBeforeFile=info-before.txt
 
 [Languages]
 Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
-[Tasks]
-Name: "desktopicon"; Description: "Ярлык на рабочем столе / Desktop shortcut"; GroupDescription: "Дополнительно / Additional:"; Flags: unchecked
-
 [Files]
-; Full Electron app + bridge + bundled Node runtime. Exclude secrets / local env / logs / huge unused inspector docs.
-Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "*.env,.env,.env.*,*.log,beam-stderr.log,beam-stdout.log,_beam-stderr.log,_beam-stdout.log"
+Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "*.log,.env,.env.*,*.map"
 
 [Icons]
-Name: "{group}\Beam Agent (Early Alpha)"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\resources\app.ico"; Comment: "Beam Agent — Early Alpha (ASSISTIX)"
+Name: "{group}\Beam Agent (Early Alpha)"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\resources\app.ico"
 Name: "{group}\Удалить Beam Agent"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\Beam Agent"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\resources\app.ico"; Tasks: desktopicon
 
+[Tasks]
+Name: "desktopicon"; Description: "Create a desktop icon"; GroupDescription: "Additional icons:"; Flags: unchecked
+
 [Run]
-; Interactive installs: optional checkbox. Silent/auto-update installs: always relaunch.
 Filename: "{app}\{#MyAppExeName}"; Description: "Запустить Beam Agent / Launch Beam Agent"; Flags: nowait postinstall skipifsilent shellexec
 Filename: "{app}\{#MyAppExeName}"; Flags: nowait postinstall skipifnotsilent shellexec
 
-[UninstallDelete]
-Type: filesandordirs; Name: "{app}"

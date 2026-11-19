@@ -248,7 +248,7 @@ function walkDirs(root, pred, out = []) {
 
 const BOOTSTRAP_NEW = `<script id="beam-locale-bootstrap">
 (() => {
-  /* EN is default/source of truth until Host preference or explicit storage says otherwise. */
+  /* Preference from storage/Host wins; otherwise follow device language (ru/en). */
   try {
     let pref = null;
     for (let i = 0; i < localStorage.length; i++) {
@@ -263,13 +263,27 @@ const BOOTSTRAP_NEW = `<script id="beam-locale-bootstrap">
         if (ds === "en" || ds === "ru") pref = ds;
       } catch {}
     }
-    /* No stored pref yet → EN until Host locale.preference / Settings applies (never guess RU from OS). */
-    if (!pref || pref === "zh") pref = "en";
+    if (!pref || pref === "zh") {
+      const langs = [];
+      try {
+        if (navigator.language) langs.push(String(navigator.language));
+        if (navigator.userLanguage) langs.push(String(navigator.userLanguage));
+        for (const l of (navigator.languages || [])) langs.push(String(l));
+      } catch {}
+      pref = langs.some((l) => String(l || "").toLowerCase().startsWith("ru")) ? "ru" : "en";
+    }
     document.documentElement.lang = pref === "ru" ? "ru-RU" : "en";
     document.documentElement.dataset.beamLang = pref === "ru" ? "ru" : "en";
   } catch {
-    document.documentElement.lang = "en";
-    document.documentElement.dataset.beamLang = "en";
+    try {
+      const nav = String(navigator.language || "").toLowerCase();
+      const ru = nav.startsWith("ru");
+      document.documentElement.lang = ru ? "ru-RU" : "en";
+      document.documentElement.dataset.beamLang = ru ? "ru" : "en";
+    } catch {
+      document.documentElement.lang = "en";
+      document.documentElement.dataset.beamLang = "en";
+    }
   }
 })();
 </script>`;
@@ -283,9 +297,9 @@ function patchIndexHtml(htmlPath) {
   // Also fix bare <html lang=...>
   html = html.replace(/<html lang="[^"]*">/, '<html lang="en">');
 
-  // 2) beamLang defaults → en; ignore zh; never fall back to ru blindly
+  // 2) beamLang: preference → document lang → OS language → en
   html = html.replace(
-    /const beamLang = \(\) => \{[\s\S]*?return "ru";\n  \};/,
+    /const beamLang = \(\) => \{[\s\S]*?return "(?:ru|en)";\n  \};/,
     `const beamLang = () => {
     try {
       const ds = document.documentElement.dataset.beamLang;
@@ -298,6 +312,10 @@ function patchIndexHtml(htmlPath) {
         const m = v.match(/preference["']?\\s*:\\s*["'](ru|en)["']/);
         if (m) return m[1] === "ru" ? "ru" : "en";
       }
+      const langs = [];
+      if (navigator.language) langs.push(String(navigator.language));
+      for (const l of (navigator.languages || [])) langs.push(String(l));
+      if (langs.some((l) => String(l || "").toLowerCase().startsWith("ru"))) return "ru";
     } catch {}
     return "en";
   };`,
@@ -418,7 +436,8 @@ function patchIndexHtml(htmlPath) {
     const s = String(raw || "").trim();
     if (!s) return tr.errGeneric;
     if (isRu() && /[А-Яа-яЁё]/.test(s)) return s;
-    if (isEn() && !/[А-Яа-яЁё]/.test(s) && /could not|wrong|no connection|invalid|failed/i.test(s)) return s;
+    // Never surface raw API codes like invalid_credentials in EN UI.
+    if (isEn() && !/[А-Яа-яЁё]/.test(s) && /could not|wrong|no connection|failed/i.test(s) && !/invalid_credentials|invalid_grant|unauthorized/i.test(s)) return s;
     const map = {
       email_password_required: tr.errCreds,
       no_real_user: tr.errProfile,
@@ -429,6 +448,8 @@ function patchIndexHtml(htmlPath) {
       Failed_to_fetch: tr.errBridge,
       "Failed to fetch": tr.errBridge,
       redirect_not_allowed: tr.errRedirect,
+      invalid_credentials: tr.errBadCreds,
+      invalid_grant: tr.errBadCreds,
     };
     if (map[s]) return map[s];
     if (/^http_\\d+$/i.test(s) || /^login_http_/i.test(s)) return tr.errServer;

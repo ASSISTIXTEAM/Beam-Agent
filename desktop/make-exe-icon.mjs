@@ -15,12 +15,12 @@ fs.writeFileSync('dist/Beam Agent/resources/tray.ico', ico)
 fs.writeFileSync('dist/Beam Agent/resources/icon.png', bufs[bufs.length-1])
 await rcedit('dist/Beam Agent/Beam Agent.exe', {
   icon: 'dist/Beam Agent/resources/app.ico',
-  'product-version': '0.1.6',
+  'product-version': '0.1.8',
   'file-version': '0.1.6.0',
   'version-string': {
     ProductName: 'Beam Agent',
     FileDescription: 'Beam Agent',
-    ProductVersion: '0.1.6',
+    ProductVersion: '0.1.8',
     FileVersion: '0.1.6.0',
     InternalName: 'Beam Agent',
     OriginalFilename: 'Beam Agent.exe',

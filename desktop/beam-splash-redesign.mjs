@@ -219,7 +219,7 @@ const EARLY_SPLASH_HTML = `<!-- ${EARLY_SPLASH_MARK} -->
   if (window.__beamSplashWatchdog) return;
   window.__beamSplashWatchdog = true;
   window.__beamBootStartedAt = window.__beamBootStartedAt || Date.now();
-  const CAP_MS = 12000;
+  const CAP_MS = 8000;
   const early = () => document.getElementById("beam-early-splash");
   const hideEarly = () => {
     const el = early();
@@ -229,6 +229,19 @@ const EARLY_SPLASH_HTML = `<!-- ${EARLY_SPLASH_MARK} -->
     el.removeAttribute("data-beam-boot");
     el.removeAttribute("aria-busy");
     try { el.remove(); } catch {}
+  };
+  const stripBootShells = () => {
+    hideEarly();
+    for (const el of document.querySelectorAll("[data-dsh-boot], [data-beam-boot], [class*='_boot_u7vgf']")) {
+      try {
+        el.hidden = true;
+        el.setAttribute("hidden", "");
+        el.removeAttribute("data-dsh-boot");
+        el.removeAttribute("data-beam-boot");
+        el.removeAttribute("aria-busy");
+        if (el.id === "beam-early-splash" || el.parentElement === document.getElementById("root")) el.remove();
+      } catch {}
+    }
   };
   const hasAppUi = () => {
     const root = document.getElementById("root");
@@ -240,36 +253,31 @@ const EARLY_SPLASH_HTML = `<!-- ${EARLY_SPLASH_MARK} -->
     if (kids.some((el) => !el.hasAttribute("data-dsh-boot") && !el.hasAttribute("data-beam-boot"))) return true;
     return false;
   };
-  const bootOnly = () => {
-    const root = document.getElementById("root");
-    const boot = document.querySelector("[data-dsh-boot], [data-beam-boot]");
-    const text = ((root && root.innerText) || (document.body && document.body.innerText) || "").trim();
-    return !!(boot && !hasAppUi() && text.length < 80);
-  };
   const tick = () => {
     try {
       if (hasAppUi()) {
-        hideEarly();
-        // If a hydrated boot shell lingered over UI, drop it once
-        for (const el of document.querySelectorAll("#root > [data-dsh-boot]")) {
-          if (hasAppUi()) el.remove();
-        }
+        stripBootShells();
         return;
       }
       // Hand off early paint to framework boot page once it mounts
       if (document.querySelector("#root > [data-dsh-boot]")) hideEarly();
       const age = Date.now() - Number(window.__beamBootStartedAt || Date.now());
-      if (age >= CAP_MS && bootOnly()) {
-        // Cap eternal splash: ask desktop once, then stop feeling infinite
+      // Hard cap: always tear down splash — never leave an infinite boot screen
+      if (age >= CAP_MS) {
         if (!window.__beamBootCapFired) {
           window.__beamBootCapFired = true;
           console.warn("beam-splash: boot cap", age);
+          stripBootShells();
           try {
             const desk = globalThis.dshDesktopBoot;
-            if (desk && typeof desk.failed === "function") {
+            if (desk && typeof desk.ready === "function") {
+              desk.ready().catch(() => {});
+            } else if (desk && typeof desk.failed === "function") {
               desk.failed("web boot: splash timeout").catch(() => {});
             }
           } catch {}
+        } else {
+          stripBootShells();
         }
       }
     } catch {}
@@ -366,20 +374,37 @@ function patchIndexHtml(webDist) {
   const htmlPath = path.join(webDist, "index.html");
   if (!fs.existsSync(htmlPath)) return { ok: false, reason: "missing html" };
   let html = fs.readFileSync(htmlPath, "utf8");
-  // Refresh early splash block
-  if (html.includes(EARLY_SPLASH_MARK)) {
+  // Remove prior early-splash + watchdog block(s) only — never splice into the main injector.
+  if (html.includes(EARLY_SPLASH_MARK) || html.includes('id="beam-splash-watchdog"')) {
     html = html.replace(
-      /<!-- beam-early-splash -->[\s\S]*?<script id="beam-splash-watchdog">[\s\S]*?<\/script>\s*/m,
+      /<!-- beam-early-splash -->[\s\S]*?<script id="beam-splash-watchdog">[\s\S]*?<\/script>\s*/gm,
+      "",
+    );
+    html = html.replace(
+      /<script id="beam-splash-watchdog">[\s\S]*?<\/script>\s*/gm,
       "",
     );
   }
-  if (!html.includes('<div id="root"></div>')) return { ok: false, reason: "no #root" };
+  // Strip orphaned old watchdog body that used to truncate beamTagIcons / run() (footer death).
   html = html.replace(
-    '<div id="root"></div>',
-    EARLY_SPLASH_HTML + '\n    <div id="root"></div>',
+    /\n\s*\};\s*\n\s*const hasAppUi = \(\) => \{[\s\S]*?if \(document\.readyState === "loading"\) document\.addEventListener\("DOMContentLoaded", arm\);\s*\n\s*else arm\(\);\s*\n\}\)\(\);\s*\n<\/script>/m,
+    "\n  };\n",
   );
+  if (!html.includes('<div id="root"></div>')) return { ok: false, reason: "no #root" };
+  // Inject immediately before #root, outside any <script>
+  if (!html.includes('id="beam-early-splash"')) {
+    html = html.replace(
+      '<div id="root"></div>',
+      EARLY_SPLASH_HTML + "\n    <div id=\"root\"></div>",
+    );
+  }
   fs.writeFileSync(htmlPath, html);
-  return { ok: true, hasEarly: html.includes("beam-early-splash"), hasWatchdog: html.includes("beam-splash-watchdog") };
+  return {
+    ok: true,
+    hasEarly: html.includes("beam-early-splash"),
+    hasWatchdog: html.includes("beam-splash-watchdog"),
+    hasRenderLoop: html.includes("renderSide(lastData || { quotas: {} })"),
+  };
 }
 
 function patchMain(mainPath) {

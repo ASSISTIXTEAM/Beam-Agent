@@ -25,20 +25,65 @@ function readCredentialRef(name) {
     return m ? String(m[1]).trim().replace(/^['"]|['"]$/g, '') : ''
   } catch { return '' }
 }
-function readDotEnvKey(name) {
+function readDotEnvKey(name, filePath = path.join(BEAM_HOME_DIR, '.env')) {
   try {
-    const raw = fs.readFileSync(path.join(BEAM_HOME_DIR, '.env'), 'utf8')
+    const raw = fs.readFileSync(filePath, 'utf8')
     const re = new RegExp(`^\\s*${name}\\s*=\\s*(.+)\\s*$`, 'mi')
     const m = raw.match(re)
     return m ? String(m[1]).trim().replace(/^['"]|['"]$/g, '') : ''
   } catch { return '' }
 }
-const KUMO_URL = process.env.KUMO_API_URL || 'https://api.kumorouter.com/v1/chat/completions'
-const KUMO_KEY = process.env.KUMO_API_KEY
-  || readCredentialRef('KUMO_API_KEY')
-  || readDotEnvKey('KUMO_API_KEY')
-  || 'YOUR_KUMO_API_KEY_HERE'
+function isUsableSecret(value) {
+  const v = String(value || '').trim()
+  if (!v) return false
+  if (/^YOUR_|^PLACEHOLDER|changeme|TODO|xxx$/i.test(v)) return false
+  if (/^beam-assistix-local$/i.test(v)) return false
+  // Never treat Assistix session JWTs / browser grants as the Kumorouter server key.
+  if (/^eyJ[A-Za-z0-9_-]+\./.test(v)) return false
+  if (/^user@assistix\.org$/i.test(v)) return false
+  return true
+}
+/**
+ * Assistix LLM Gateway (OpenAI-compatible).
+ * Public models: tide | flare | pine — server maps to KumoRouter; provider key stays on Assistix.
+ * Prefer HTTPS mirror under agent until api.assistix.org LE is fully trusted.
+ */
+const ASSISTIX_LLM_BASE = String(
+  process.env.ASSISTIX_LLM_BASE
+  || process.env.ASSISTIX_LLM_URL
+  || 'https://agent.assistix.org/llm'
+).replace(/\/$/, '')
+const KUMO_URL = process.env.KUMO_API_URL
+  || `${ASSISTIX_LLM_BASE}/v1/chat/completions`
+const ASSISTIX_LLM_MODELS_URL = process.env.ASSISTIX_LLM_MODELS_URL
+  || `${ASSISTIX_LLM_BASE}/v1/models`
+const ASSISTIX_LLM_HEALTH_URL = process.env.ASSISTIX_LLM_HEALTH_URL
+  || `${ASSISTIX_LLM_BASE}/health`
+
+/** @deprecated Provider key must not live on desktop — Assistix ID token is used upstream. */
+function resolveKumoKey() {
+  return ''
+}
+function getKumoKey() {
+  return ''
+}
+
+/** Assistix ID access token for gateway Authorization (not a provider key). */
+function getAssistixUpstreamToken(state) {
+  try {
+    const session = state?.session || loadState()?.session || null
+    const store = readTokenStore()
+    const tok = session?.token || session?.access_token || store?.access_token || ''
+    if (typeof tok === 'string' && tok.trim() && !/^beam-assistix-local$/i.test(tok.trim())) {
+      return tok.trim()
+    }
+  } catch {}
+  return ''
+}
 const ID_BASE = process.env.ASSISTIX_ID_URL || 'https://id.assistix.org'
+const OAUTH_CLIENT_ID = process.env.ASSISTIX_OAUTH_CLIENT_ID || 'assistix-agent'
+const OAUTH_CLIENT_SECRET = process.env.ASSISTIX_OAUTH_CLIENT_SECRET || 'beam-agent-oauth-local-20261104-teal'
+const OAUTH_REDIRECT = () => `http://127.0.0.1:${PORT}/assistix/callback`
 
 
 // #region beam-persona-bridge
@@ -472,12 +517,22 @@ function isTransientNetError(err) {
 
 async function pingKumoOnce(ms = 3500) {
   try {
-    const origin = new URL(KUMO_URL).origin
-    const r = await fetchWithTimeout(`${origin}/v1/models`, {
+    // Health needs no auth; proves Assistix LLM Gateway reachability.
+    const r = await fetchWithTimeout(ASSISTIX_LLM_HEALTH_URL, {
       method: 'GET',
-      headers: { Authorization: `Bearer ${KUMO_KEY}`, Accept: 'application/json' },
+      headers: { Accept: 'application/json' },
     }, ms)
-    // Auth/404 still proves TCP+TLS reachability; 5xx/throw means unhealthy.
+    if (r.status > 0 && r.status < 500) return true
+  } catch {}
+  try {
+    const tok = getAssistixUpstreamToken()
+    const r = await fetchWithTimeout(ASSISTIX_LLM_MODELS_URL, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        ...(tok ? { Authorization: `Bearer ${tok}` } : {}),
+      },
+    }, ms)
     return r.status > 0 && r.status < 500
   } catch {
     return false
@@ -868,15 +923,23 @@ function applyServerQuotasToState(state, payload, opts = {}) {
       bridgeLog(`quota_apply_guard tier=${id} keep=${prev} stale_get=${used}`)
       used = prev
     }
-    const unlimited = !!(q.unlimited || payload.unlimited)
+    let unlimited = !!(q.unlimited || payload.unlimited)
+    let lim = Math.max(0, Number(q.limit) || MODELS[id].limit)
+    // Admin unlimited is stored as INT_MAX + unlimited:true — never invent a fake weekly cap.
+    if (!unlimited && (lim >= 1_000_000_000 || lim >= 2147483640)) {
+      unlimited = true
+    }
+    if (unlimited && (lim <= 0 || lim >= 1_000_000_000 || lim >= 2147483640)) {
+      lim = 2147483647
+    }
     unlimitedByTier[id] = unlimited
     state.quotas[id] = {
       used,
-      limit: Math.max(0, Number(q.limit) || MODELS[id].limit),
+      limit: lim,
       unlimited,
-      remaining: q.remaining == null && unlimited
+      remaining: unlimited
         ? null
-        : Math.max(0, Number(q.remaining ?? ((Number(q.limit) || MODELS[id].limit) - used))),
+        : Math.max(0, Number(q.remaining ?? (lim - used))),
     }
   }
   if (payload.week_start) state.quotaWeek = String(payload.week_start)
@@ -928,7 +991,7 @@ async function callBeamQuota(action, extra = {}) {
     'Content-Type': 'application/json',
     'X-Beam-Ingest-Key': BEAM_INGEST_KEY,
     Authorization: `Bearer ${BEAM_INGEST_KEY}`,
-    'User-Agent': 'BeamAgent-Bridge/0.1.6',
+    'User-Agent': 'BeamAgent-Bridge/0.1.8',
   }
   let last = { ok: false, error: 'no quota url' }
   for (const url of BEAM_QUOTA_URLS) {
@@ -973,12 +1036,30 @@ async function syncQuotasFromServer() {
  */
 async function enforceServerQuotaOrReject(res, tier, req) {
   let state = loadState()
+  // Hard gate: only a real ASSISTIX ID session may generate (no guest/stub/placeholder).
+  if (!isRealAssistixSession(state.session)) {
+    if (isPlaceholderSession(state.session)) {
+      state.session = null
+      saveState(state)
+    }
+    // Do NOT use authentication_error — the chat UI maps AUTH → "API key is invalid".
+    // not_signed_in is classified as ACCOUNT_SIGN_IN_REQUIRED by the Assistix Messages client.
+    return sendJson(res, 401, {
+      type: 'error',
+      error: {
+        type: 'api_error',
+        code: 'not_signed_in',
+        message: beamT(req).needLogin || 'Sign in with ASSISTIX ID to use Beam Agent.',
+      },
+    })
+  }
   const { idUserId, email } = sessionIdentity(state)
   if (!idUserId && !email) {
     return sendJson(res, 401, {
       type: 'error',
       error: {
-        type: 'authentication_error',
+        type: 'api_error',
+        code: 'not_signed_in',
         message: beamT(req).needLogin || 'Sign in with ASSISTIX ID to use Beam Agent.',
       },
     })
@@ -1144,7 +1225,7 @@ async function reportToBeamAdmin(event) {
     user_id: event.user_id || idUserId || undefined,
     id_user_id: event.id_user_id || idUserId || undefined,
     source: event.source || 'beam-agent-desktop',
-    app_version: event.app_version || '0.1.6',
+    app_version: event.app_version || '0.1.8',
   }
   appendLocalTelemetry(payload)
   const body = JSON.stringify(payload)
@@ -1152,7 +1233,7 @@ async function reportToBeamAdmin(event) {
     'Content-Type': 'application/json',
     'X-Beam-Ingest-Key': BEAM_INGEST_KEY,
     Authorization: `Bearer ${BEAM_INGEST_KEY}`,
-    'User-Agent': 'BeamAgent-Bridge/0.1.6',
+    'User-Agent': 'BeamAgent-Bridge/0.1.8',
   }
   let last = { ok: false, error: 'no ingest url' }
   for (const url of BEAM_INGEST_URLS) {
@@ -1335,11 +1416,51 @@ function promotePendingSession(state) {
   return true
 }
 
+function hydrateSessionFromTokenStore(state) {
+  if (state && state.logoutEpoch) return false
+  if (isRealAssistixSession(state?.session)) return false
+  const store = readTokenStore()
+  const id = Number(store.id_user_id || 0) || 0
+  const email = String(store.email || '').trim().toLowerCase()
+  const access = store.access_token || null
+  if (!(id > 0 && email.includes('@') && email !== 'user@assistix.org' && access)) return false
+  state.session = {
+    ...(state.session && typeof state.session === 'object' ? state.session : {}),
+    id: state.session?.id || crypto.randomUUID(),
+    id_user_id: id,
+    email,
+    name: state.session?.name || email.split('@')[0],
+    display_name: state.session?.display_name || state.session?.name || email.split('@')[0],
+    provider: 'assistix-id',
+    token: access,
+    access_token: access,
+    refresh_token: store.refresh_token || null,
+    at: store.updatedAt || new Date().toISOString(),
+    from_token_store: true,
+  }
+  bridgeLog(`auth_hydrate_token_store id_user_id=${id} email=${email}`)
+  return true
+}
+
 function loadState() {
   ensureData()
   const state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'))
   let changed = normalizeQuotas(state)
+  // Never treat placeholder/stub as signed-in.
+  if (isPlaceholderSession(state.session)) {
+    if (state.session) {
+      bridgeLog('auth_drop_stub_session email=' + String(state.session?.email || ''))
+      state.session = null
+      changed = true
+    }
+  }
+  if (state.pendingSession && isPlaceholderSession(state.pendingSession) && !state.pendingSession.from_exchange) {
+    state.pendingSession = null
+    changed = true
+  }
   if (promotePendingSession(state)) changed = true
+  // Survive partial wipes: session null but tokens.json still has a real Assistix login.
+  if (hydrateSessionFromTokenStore(state)) changed = true
   if (changed) saveState(state)
   return state
 }
@@ -1414,6 +1535,7 @@ async function refreshAssistixAccessToken(refreshToken) {
     ID_BASE.replace(/\/$/, '') + '/api/oauth/token',
     ID_BASE.replace(/\/$/, '') + '/api/oauth/token.php',
     ID_BASE.replace(/\/$/, '') + '/api/auth/refresh',
+    ID_BASE.replace(/\/$/, '') + '/api/oauth/token.php',
   ]
   for (const url of endpoints) {
     try {
@@ -1424,7 +1546,7 @@ async function refreshAssistixAccessToken(refreshToken) {
           grant_type: 'refresh_token',
           refresh_token: refreshToken,
           client_id: process.env.ASSISTIX_OAUTH_CLIENT_ID || 'assistix-agent',
-          client_secret: process.env.ASSISTIX_OAUTH_CLIENT_SECRET || 'YOUR_OAUTH_CLIENT_SECRET_HERE',
+          client_secret: OAUTH_CLIENT_SECRET,
         }),
       })
       if (!r.ok) continue
@@ -1494,6 +1616,107 @@ async function ensureSessionFresh(state) {
 }
 /* /BEAM_SESSION_PERSIST */
 
+
+
+function publicUser(session) {
+  if (!session) return null
+  return {
+    id: session.id_user_id || session.id || null,
+    id_user_id: session.id_user_id || session.id || null,
+    email: session.email || '',
+    name: session.name || session.display_name || '',
+    display_name: session.display_name || session.name || '',
+    avatar_url: session.avatar_url || '',
+    email_verified: !!session.email_verified,
+    provider: session.provider || 'assistix-id',
+    at: session.at || null,
+  }
+}
+
+function buildAuthUrl(stateToken) {
+  const state = Buffer.from(JSON.stringify({ app: 'beam-agent', nonce: stateToken || '' }), 'utf8').toString('base64url')
+  const q = new URLSearchParams({
+    redirect_uri: OAUTH_REDIRECT(),
+    client_id: OAUTH_CLIENT_ID,
+    state,
+  })
+  return `${ID_BASE}/auth/?${q.toString()}`
+}
+
+async function exchangeCode(code) {
+  const payload = {
+    code,
+    client_id: OAUTH_CLIENT_ID,
+    client_secret: OAUTH_CLIENT_SECRET,
+    redirect_uri: OAUTH_REDIRECT(),
+  }
+  const res = await fetch(`${ID_BASE}/api/exchange.php`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  const text = await res.text()
+  let data
+  try { data = JSON.parse(text) } catch { data = { error: text.slice(0, 200) } }
+  if (!res.ok) {
+    const err = new Error(data?.error || `exchange_http_${res.status}`)
+    err.detail = data
+    throw err
+  }
+  if (!data?.user || typeof data.user !== 'object') throw new Error('no_user')
+  return data
+}
+
+function sessionFromIdUser(idUser, meta = {}) {
+  const display = String(idUser.display_name || idUser.name || '').trim()
+    || String(idUser.email || '').split('@')[0]
+    || 'ASSISTIX User'
+  return {
+    id_user_id: Number(idUser.id || idUser.id_user_id || 0) || null,
+    email: String(idUser.email || '').toLowerCase(),
+    name: display,
+    display_name: display,
+    avatar_url: String(idUser.avatar_url || idUser.avatar || ''),
+    email_verified: !!(idUser.email_verified ?? true),
+    provider: 'assistix-id',
+    from_exchange: true,
+    at: new Date().toISOString(),
+    ...meta,
+  }
+}
+
+async function passwordLoginAssistix(email, password) {
+  const endpoints = [
+    ID_BASE.replace(/\/$/, '') + '/api/auth/login',
+    ID_BASE.replace(/\/$/, '') + '/api/auth/login.php',
+  ]
+  let lastErr = 'login_failed'
+  for (const url of endpoints) {
+    try {
+      const r = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ email, password, client_id: OAUTH_CLIENT_ID }),
+      })
+      const text = await r.text()
+      let data
+      try { data = JSON.parse(text) } catch { data = null }
+      if (!r.ok) {
+        lastErr = (data && (data.error || data.message)) || (`login_http_${r.status}`)
+        continue
+      }
+      if (!data?.user) {
+        lastErr = 'no_real_user'
+        continue
+      }
+      return data
+    } catch (e) {
+      lastErr = String(e?.message || e || 'network_error')
+    }
+  }
+  const err = new Error(lastErr)
+  throw err
+}
 
 function resolveTier(modelId) {
   const id = String(modelId || 'tide').toLowerCase()
@@ -1654,13 +1877,15 @@ const BEAM_I18N = {
     noLink: 'No connection to model API',
     badUpstream: 'Models returned an invalid response. Try again.',
     loginTitle: 'Sign in to Beam Agent — ASSISTIX ID',
-    loginBody: 'Sign in to open Beam Agent with Tide, Flare, and Pine. No API setup needed.',
-    loginName: 'Name',
+    loginBody: 'Sign in with ASSISTIX ID in your browser. Beam Agent opens after you continue back here.',
     loginBtn: 'Sign in with ASSISTIX ID',
-    loginId: 'Open id.assistix.org',
-    loginHint: 'Assistix hosting may be paused — local sign-in still activates the built-in Kumorouter.',
+    loginHint: 'Only ASSISTIX ID browser sign-in is supported. No guest or local accounts.',
     doneTitle: 'Done',
     doneBody: 'You can return to Beam Agent.',
+    callbackOkTitle: 'Signed in',
+    callbackOkBody: 'ASSISTIX ID sign-in completed. Return to Beam Agent. You can close this window.',
+    callbackFailTitle: 'Sign-in failed',
+    callbackFailBody: 'Return to Beam Agent and try again.',
   },
   ru: {
     quotaExhausted: (name, used, limit, whenUtc, whenLocal, suggest) =>
@@ -1678,13 +1903,15 @@ const BEAM_I18N = {
     noLink: 'Нет связи с модельным API',
     badUpstream: 'Модели вернули некорректный ответ. Попробуйте ещё раз.',
     loginTitle: 'Войти в Beam Agent — ASSISTIX ID',
-    loginBody: 'Войдите, чтобы открыть Beam Agent с моделями Tide, Flare и Pine. Настройка API не нужна.',
-    loginName: 'Имя',
+    loginBody: 'Войдите через ASSISTIX ID в браузере. После подтверждения вернитесь в Beam Agent.',
     loginBtn: 'Войти через ASSISTIX ID',
-    loginId: 'Открыть id.assistix.org',
-    loginHint: 'Хостинг Assistix сейчас может быть на паузе — локальный вход всё равно активирует встроенный Kumorouter.',
+    loginHint: 'Доступен только вход через ASSISTIX ID в браузере. Гостевых и локальных аккаунтов нет.',
     doneTitle: 'Готово',
     doneBody: 'Можно вернуться в Beam Agent.',
+    callbackOkTitle: 'Готово',
+    callbackOkBody: 'Вход через ASSISTIX ID выполнен. Вернитесь в Beam Agent. Это окно можно закрыть.',
+    callbackFailTitle: 'Не удалось войти',
+    callbackFailBody: 'Вернитесь в Beam Agent и попробуйте снова.',
   },
 }
 
@@ -2004,7 +2231,8 @@ function buildOpenAIBody(body, tier, budget = KUMO_SAFE_BUDGET) {
   let messages = anthropicToOpenAIMessages(body.messages, system)
   messages = compactOpenAIMessages(messages, budget)
   const openaiBody = {
-    model: tier.backend,
+    // Public Assistix model id — gateway maps to Kumo backends server-side.
+    model: tier.id,
     messages,
     max_tokens: cappedMax,
   }
@@ -2058,9 +2286,10 @@ function isKumoSizeLimitError(status, bodyText) {
   return status === 400 && /Request limit exceeded|payload too large|request body too large|1048576/i.test(String(bodyText || ''))
 }
 
-async function callKumoSanitized(body, tier, { stream, backends }) {
+async function callKumoSanitized(body, tier, { stream, backends, accessToken }) {
   let openaiBody = buildOpenAIBody(body, tier, KUMO_SAFE_BUDGET)
-  const opts = { stream, backends: backends || tier.backends || [tier.backend] }
+  // Gateway owns Kumo failover — send Assistix model id only.
+  const opts = { stream, backends: [tier.id], accessToken }
   let upstream = await callKumo(openaiBody, opts)
   if (upstream.ok) return { upstream, openaiBody, errText: null }
 
@@ -2070,7 +2299,7 @@ async function callKumoSanitized(body, tier, { stream, backends }) {
   if (isKumoSizeLimitError(upstream.status, errText)) {
     openaiBody = buildOpenAIBody(body, tier, KUMO_HARD_BUDGET)
     bridgeLog(`kumo_size_retry hard_budget=${KUMO_HARD_BUDGET} bytes=${payloadBytes(openaiBody)}`)
-    upstream = await callKumo(openaiBody, opts)
+    upstream = await callKumo(openaiBody, { ...opts, backends: [tier.id] })
     if (upstream.ok) return { upstream, openaiBody, errText: null }
     const errText2 = await upstream.text()
     bridgeLog(`kumo_size_retry_fail status=${upstream.status} body=${errText2.slice(0, 240)}`)
@@ -2323,7 +2552,7 @@ async function completeWithOutputContinues(body, tier, kumoOpts) {
     bridgeLog(`output_continue sync round=${continues} chars=${fullText.length} reason=${stop === 'max_tokens' ? 'max_tokens' : 'heuristic'}`)
     let contUp
     try {
-      contUp = await callKumo(contBody, { stream: false, backends: kumoOpts.backends || tier.backends || [tier.backend] })
+      contUp = await callKumo(contBody, { stream: false, backends: [tier.id], accessToken: kumoOpts.accessToken })
     } catch (e) {
       bridgeLog(`output_continue sync_fail ${e?.message || e}`)
       continueFailed = true
@@ -2437,10 +2666,11 @@ function isKumoModelUnavailable(status, bodyText) {
  * Call Kumo with backend failover. Callers pass `backends` but historically
  * callKumo ignored them — primary model 502 then killed the whole turn.
  */
-async function callKumo(payload, { stream, backends } = {}) {
-  const list = [...new Set(
-    (Array.isArray(backends) && backends.length ? backends : [payload?.model]).filter(Boolean)
-  )]
+async function callKumo(payload, { stream, backends, accessToken } = {}) {
+  // Assistix gateway: one public model id; server performs Kumo failover.
+  const assistixModel = String(payload?.model || backends?.[0] || 'tide').toLowerCase()
+  const list = [assistixModel]
+  const token = accessToken || getAssistixUpstreamToken()
   let lastRes = null
   let lastBody = ''
   let netRetried = false
@@ -2451,12 +2681,20 @@ async function callKumo(payload, { stream, backends } = {}) {
     if (stream) body.stream_options = { include_usage: true }
     let res
     try {
+      if (!token) {
+        lastBody = 'Assistix ID access token required'
+        lastRes = new Response(JSON.stringify({
+          error: { type: 'authentication_error', code: 'not_signed_in', message: lastBody },
+        }), { status: 401, headers: { 'Content-Type': 'application/json' } })
+        break
+      }
       res = await fetch(KUMO_URL, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${KUMO_KEY}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
           Accept: stream ? 'text/event-stream' : 'application/json',
+          'X-Assistix-Product': 'beam-agent',
         },
         body: JSON.stringify(body),
       })
@@ -2660,6 +2898,8 @@ async function handleMessages(req, res) {
   // Fresh gauges before Auto fallthrough so remaining() matches sidebar (never soft-block Flare/Pine on stale Tide).
   try { await syncQuotasFromServer() } catch {}
   let state = loadState()
+  try { state = await ensureSessionFresh(state) } catch {}
+  const accessToken = getAssistixUpstreamToken(state)
   let tier = resolveTierWithAuto(body.model, body, state)
   // Soft-block ONLY the model that would be charged this request (post-Auto remap).
   let rejected = await enforceServerQuotaOrReject(res, tier, req)
@@ -2697,7 +2937,7 @@ async function handleMessages(req, res) {
   if (!wantStream) {
     let completed
     try {
-      completed = await completeWithOutputContinues(body, tier, { backends: tier.backends || [tier.backend] })
+      completed = await completeWithOutputContinues(body, tier, { backends: [tier.id], accessToken })
     } catch (e) {
       return sendJson(res, 502, {
         type: 'error',
@@ -2762,7 +3002,7 @@ async function handleMessages(req, res) {
 
   // Streaming Anthropic-compatible SSE (+ silent output continuation)
   /* BEAM_SILENT_AUTO_CONTINUE */
-  const kumoOpts = { backends: tier.backends || [tier.backend] }
+  const kumoOpts = { backends: [tier.id], accessToken }
   let upstream
   let openaiBody
   let errText = null
@@ -2898,7 +3138,7 @@ async function handleMessages(req, res) {
     bridgeLog(`output_continue stream round=${continues} chars=${accumulatedText.length} reason=${stopReason === 'max_tokens' ? 'max_tokens' : 'heuristic'}`)
     let contUp
     try {
-      contUp = await callKumo(contBody, { stream: true, backends: kumoOpts.backends || tier.backends || [tier.backend] })
+      contUp = await callKumo(contBody, { stream: true, backends: [tier.id], accessToken: kumoOpts.accessToken })
     } catch (e) {
       bridgeLog(`output_continue stream_fail ${e?.message || e}`)
       continueFailed = true
@@ -2966,10 +3206,16 @@ async function handleMessages(req, res) {
   res.end()
 }
 
-function serveLoginPage(res, req) { /* BEAM_STRICT_LOGIN_I18N */
+function serveLoginPage(res, req) { /* BEAM_STRICT_LOGIN_I18N — OAuth browser only */
   const logo = fs.readFileSync(path.join(ROOT, 'logo-beam-agent.svg'), 'utf8')
   const tr = beamT(req)
   const lang = beamRequestLocale(req)
+  const state = loadState()
+  if (!state.oauth_nonce) {
+    state.oauth_nonce = crypto.randomBytes(16).toString('hex')
+    saveState(state)
+  }
+  const authUrl = buildAuthUrl(state.oauth_nonce)
   const html = `<!doctype html>
 <html lang="${lang}"><head>
 <meta charset="utf-8"/>
@@ -2986,10 +3232,7 @@ function serveLoginPage(res, req) { /* BEAM_STRICT_LOGIN_I18N */
   .logo svg{width:min(280px,100%); height:auto}
   h1{margin:0 0 8px; font-size:22px; text-align:center}
   p{margin:0 0 18px; color:var(--muted); text-align:center; line-height:1.45; font-size:14px}
-  label{display:block;font-size:12px;color:var(--muted);margin:12px 0 6px}
-  input{width:100%;border:1px solid var(--line);background:#071412;color:var(--ink);border-radius:12px;padding:12px 14px;font-size:14px}
-  button{width:100%;margin-top:18px;border:0;border-radius:12px;padding:13px 16px;font-weight:700;font-size:14px;color:#042f2e;background:linear-gradient(135deg,#2dd4bf,#00B3BC 55%,#0f766e);cursor:pointer}
-  button.secondary{margin-top:10px;background:transparent;color:var(--ink);border:1px solid var(--line)}
+  button{width:100%;margin-top:8px;border:0;border-radius:12px;padding:13px 16px;font-weight:700;font-size:14px;color:#042f2e;background:linear-gradient(135deg,#2dd4bf,#00B3BC 55%,#0f766e);cursor:pointer}
   .hint{margin-top:14px;font-size:12px;color:var(--muted);text-align:center}
 </style></head>
 <body>
@@ -2997,26 +3240,25 @@ function serveLoginPage(res, req) { /* BEAM_STRICT_LOGIN_I18N */
     <div class="logo">${logo}</div>
     <h1>ASSISTIX ID</h1>
     <p>${tr.loginBody}</p>
-    <label>Email</label>
-    <input id="email" type="email" placeholder="you@assistix.org" value=""/>
-    <label>${tr.loginName}</label>
-    <input id="name" type="text" placeholder="Summer" value=""/>
-    <button id="login">${tr.loginBtn}</button>
-    <button class="secondary" id="id">${tr.loginId}</button>
+    <button id="login" type="button">${tr.loginBtn}</button>
     <div class="hint">${tr.loginHint}</div>
   </div>
   <script>
-    const post = async (email, name) => {
-      const r = await fetch('/assistix/login', { method:'POST', headers:{'Content-Type':'application/json','X-Beam-Locale':'${lang}'}, body: JSON.stringify({ email, name }) });
-      const j = await r.json();
-      if (!r.ok) throw new Error(j.error || 'login failed');
-      location.href = '/assistix/done';
+    const authUrl = ${JSON.stringify(authUrl)};
+    const start = async () => {
+      try {
+        const r = await fetch('/assistix/login', { method:'POST', headers:{'Content-Type':'application/json','X-Beam-Locale':'${lang}'}, body: '{}' });
+        const j = await r.json().catch(() => ({}));
+        const url = (j && (j.authUrl || j.loginUrl)) || authUrl;
+        location.href = url;
+      } catch (e) {
+        location.href = authUrl;
+      }
     };
-    document.getElementById('login').onclick = () => post(document.getElementById('email').value.trim() || 'user@assistix.org', document.getElementById('name').value.trim() || 'Assistix User').catch(e => alert(e.message));
-    document.getElementById('id').onclick = () => window.open('${ID_BASE}/auth?client_id=assistix-agent&redirect_uri=' + encodeURIComponent('http://127.0.0.1:${PORT}/assistix/callback'), '_blank');
+    document.getElementById('login').onclick = () => start();
   </script>
 </body></html>`
-  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' })
   res.end(html)
 }
 
@@ -3103,23 +3345,42 @@ const server = http.createServer(async (req, res) => {
       if (!raced) sync.catch(() => null) // continue in background if slow
       let state = loadState()
       try { state = await ensureSessionFresh(state) } catch {}
-      if (isRealAssistixSession(state.session)) persistSessionTokens(state.session)
+      if (isPlaceholderSession(state.session)) {
+        state.session = null
+        saveState(state)
+      }
+      const signed = isRealAssistixSession(state.session)
+      if (signed) persistSessionTokens(state.session)
+      if (!state.oauth_nonce) {
+        state.oauth_nonce = crypto.randomBytes(16).toString('hex')
+        saveState(state)
+      }
+      const pending = (!signed && state.pendingSession && state.pendingSession.from_exchange && Number(state.pendingSession.id_user_id) > 0)
+        ? publicUser(state.pendingSession)
+        : null
       return sendJson(res, 200, {
-        signedIn: !!state.session,
-        user: state.session,
+        signedIn: signed,
+        user: signed ? publicUser(state.session) : null,
+        pendingUser: pending,
+        authWaiting: !signed && !pending && !!state.authWaiting,
+        lastAuthError: state.lastAuthError || null,
+        authUrl: buildAuthUrl(state.oauth_nonce),
+        loginUrl: buildAuthUrl(state.oauth_nonce),
         quotas: state.quotas,
         quotaServer: state.quotaServer || null,
         week_start: state.quotaWeek || null,
         reset_at: state.quotaServer?.reset_at || null,
         models: Object.values(MODELS).map((m) => {
           const q = state.quotas?.[m.id] || {}
-          const unlimited = tierIsUnlimited(state, m.id)
-          const limit = Number(q.limit) || m.limit
+          let unlimited = tierIsUnlimited(state, m.id)
+          let limit = Number(q.limit)
+          if (!Number.isFinite(limit) || limit <= 0) limit = m.limit
+          if (!unlimited && (limit >= 1_000_000_000 || limit >= 2147483640)) unlimited = true
           const used = Number(q.used) || 0
           return {
             id: m.id,
             name: m.name,
-            limit,
+            limit: unlimited ? null : limit,
             used,
             remaining: unlimited ? null : Math.max(0, limit - used),
             unlimited,
@@ -3129,68 +3390,47 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (url.pathname === '/assistix/login' && req.method === 'POST') {
-      const raw = await readBody(req)
-      const body = JSON.parse(raw.toString('utf8') || '{}')
+      try { await readBody(req) } catch {}
       const state = loadState()
-      const nextEmail = String(body.email || '').trim().toLowerCase()
-      const nextId = Number(body.id_user_id || body.user_id || 0) || 0
-      const nextIsPlaceholder = !(nextId > 0) && (!nextEmail || nextEmail === 'user@assistix.org' || nextEmail === 'guest@assistix.org')
-      // Do not clobber a real Assistix session with stub login (anti-cheat / quota identity).
-      if (nextIsPlaceholder && !isPlaceholderSession(state.session)) {
-        await syncQuotasFromServer().catch(() => null)
-        return sendJson(res, 200, { ok: true, user: state.session, quotas: loadState().quotas, kept: true })
-      }
-      state.session = {
-        id: crypto.randomUUID(),
-        email: body.email || state.session?.email || 'user@assistix.org',
-        name: body.name || state.session?.name || 'Assistix User',
-        id_user_id: nextId || body.id_user_id || body.user_id || state.session?.id_user_id || undefined,
-        provider: 'assistix-id',
-        at: new Date().toISOString(),
-      }
-      // NEVER reset quotas on login — server is source of truth (anti-cheat)
+      // Browser OAuth only — never invent stub / password sessions.
+      if (!state.oauth_nonce) state.oauth_nonce = crypto.randomBytes(16).toString('hex')
+      state.authWaiting = true
+      state.lastAuthError = null
+      if (isPlaceholderSession(state.session)) state.session = null
       saveState(state)
-      /* session persist after login */
-      if (isRealAssistixSession(state.session)) persistSessionTokens(state.session)
-      await syncQuotasFromServer().catch(() => null)
-      return sendJson(res, 200, { ok: true, user: state.session, quotas: loadState().quotas })
+      const authUrl = buildAuthUrl(state.oauth_nonce)
+      return sendJson(res, 200, { ok: true, authUrl, loginUrl: authUrl })
     }
 
-    
     if (url.pathname === '/assistix/login-password' && req.method === 'POST') {
-      try {
-        const body = JSON.parse(await readBody(req))
-        // Delegate to same password/token path as /assistix/login when available
-        const email = String(body?.email || body?.username || '').trim()
-        const password = String(body?.password || '')
-        const r = await fetch(ID_BASE + '/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-          body: JSON.stringify({ email, password }),
-        }).catch(() => null)
-        if (!r || !r.ok) return sendJson(res, 401, { ok: false, error: 'invalid_credentials' })
-        const data = await r.json().catch(() => ({}))
-        const userObj = data.user || data
-        const session = {
-          ...data,
-          email: userObj.email || email,
-          name: userObj.display_name || userObj.name || data.name,
-          id_user_id: userObj.id || data.user_id || data.id_user_id || data.id,
-          provider: 'assistix-id',
-          at: new Date().toISOString(),
-        }
-        const st = { ...(loadState() || {}), session, updatedAt: Date.now() }
-        saveState(st)
-        await syncQuotasFromServer().catch(() => null)
-        return sendJson(res, 200, { ok: true, ...(data || {}), quotas: loadState().quotas })
-      } catch (e) {
-        return sendJson(res, 500, { ok: false, error: String(e?.message || e) })
-      }
+      try { await readBody(req) } catch {}
+      return sendJson(res, 410, {
+        ok: false,
+        error: 'password_login_removed',
+        message: beamT(req).loginHint || 'ASSISTIX ID browser sign-in only',
+      })
     }
     if (url.pathname === '/assistix/confirm' && req.method === 'POST') {
-      return sendJson(res, 200, { ok: true })
+      const state = loadState()
+      if (!state.pendingSession || !state.pendingSession.from_exchange || !(Number(state.pendingSession.id_user_id) > 0)) {
+        return sendJson(res, 400, { ok: false, error: 'no_pending' })
+      }
+      state.session = state.pendingSession
+      state.pendingSession = null
+      state.authWaiting = false
+      state.lastAuthError = null
+      state.logoutEpoch = null
+      saveState(state)
+      if (isRealAssistixSession(state.session)) persistSessionTokens(state.session)
+      await syncQuotasFromServer().catch(() => null)
+      return sendJson(res, 200, { ok: true, user: publicUser(state.session) })
     }
     if (url.pathname === '/assistix/cancel-pending' && req.method === 'POST') {
+      const state = loadState()
+      state.pendingSession = null
+      state.authWaiting = false
+      state.lastAuthError = null
+      saveState(state)
       return sendJson(res, 200, { ok: true })
     }
     if (url.pathname === '/assistix/model-prefs') {
@@ -3208,13 +3448,36 @@ const server = http.createServer(async (req, res) => {
       }
     }
 if (url.pathname === '/assistix/logout' && req.method === 'POST') {
-      const state = loadState()
+      // Always honor logout (Выйти). Never require confirm — missing body used to
+      // no-op with ok:true/ignored and leave the wrong user sticky after password tests.
+      try { await readBody(req) } catch {}
+      let prevEmail = ''
+      let prevId = ''
+      try {
+        const raw = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'))
+        prevEmail = String(raw?.session?.email || '')
+        prevId = String(raw?.session?.id_user_id || '')
+      } catch {}
+      bridgeLog(`auth_logout id_user_id=${prevId} email=${prevEmail}`)
+      clearTokenStore()
+      try {
+        for (const name of ['tokens.json', 'state.real.bak.json', 'session.json']) {
+          const p = path.join(DATA_DIR, name)
+          if (fs.existsSync(p)) fs.unlinkSync(p)
+        }
+      } catch {}
+      const state = (() => {
+        try { return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')) } catch { return {} }
+      })()
       state.session = null
       state.pendingSession = null
+      state.authWaiting = false
       state.lastAuthError = null
-      clearTokenStore()
+      state.logoutEpoch = Date.now()
+      if (!state.oauth_nonce) state.oauth_nonce = crypto.randomBytes(16).toString('hex')
       saveState(state)
-      return sendJson(res, 200, { ok: true })
+      clearTokenStore()
+      return sendJson(res, 200, { ok: true, signedIn: false, user: null, logoutEpoch: state.logoutEpoch })
     }
 
     if (url.pathname === '/assistix/login' && req.method === 'GET') return serveLoginPage(res, req)
@@ -3223,29 +3486,62 @@ if (url.pathname === '/assistix/logout' && req.method === 'POST') {
       return res.end('<html lang="'+beamRequestLocale(req)+'"><body style="font-family:Segoe UI;background:#05100f;color:#eaf5f3;display:grid;place-items:center;height:100vh"><div><h2>'+beamT(req).doneTitle+'</h2><p>'+beamT(req).doneBody+'</p></div></body></html>')
     }
     if (url.pathname === '/assistix/callback') {
-      // Soft OAuth return: never clobber a real Assistix session with stub data.
-      const state = loadState()
       const code = url.searchParams.get('code') || ''
-      const email = String(url.searchParams.get('email') || '').trim().toLowerCase()
-      const name = url.searchParams.get('name') || ''
-      if (isRealAssistixSession(state.session)) {
-        bridgeLog('oauth_callback_keep_existing id=' + state.session.id_user_id)
+      const oauthErr = url.searchParams.get('oauth_error') || url.searchParams.get('error') || ''
+      const tr = beamT(req)
+      const lang = beamRequestLocale(req)
+      const esc = (s) => String(s || '').replace(/[<>&]/g, '')
+      const page = (title, body, detail = '') =>
+        `<html lang="${lang}"><body style="font-family:Segoe UI;background:#05100f;color:#eaf5f3;display:grid;place-items:center;height:100vh;text-align:center;padding:24px"><div><h2>${esc(title)}</h2><p>${esc(body)}</p>${detail ? `<p style="color:#8fbab4">${esc(detail)}</p>` : ''}</div></body></html>`
+      if (oauthErr && !code) {
+        const st = loadState()
+        st.authWaiting = false
+        st.lastAuthError = String(oauthErr)
+        saveState(st)
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' })
+        return res.end(page(tr.callbackFailTitle, esc(oauthErr), tr.callbackFailBody))
+      }
+      if (!code) {
         res.writeHead(302, { Location: '/assistix/done' })
         return res.end()
       }
-      if (code || (email && email.includes('@') && email !== 'user@assistix.org')) {
-        state.pendingSession = {
-          id: crypto.randomUUID(),
-          email: email || 'user@assistix.org',
-          name: name || 'Assistix User',
-          provider: 'assistix-id-oauth',
-          code: code || null,
-          at: new Date().toISOString(),
+      try {
+        const data = await exchangeCode(code)
+        const state = loadState()
+        const next = sessionFromIdUser(data.user, {
+          token: data.access_token || data.token || null,
+          refresh_token: data.refresh_token || null,
+        })
+        if (!isRealAssistixSession(next)) {
+          throw new Error('no_real_user')
         }
-        saveState(state)
+        // Soft: never clobber a real Assistix session with weaker data.
+        if (!isRealAssistixSession(state.session)) {
+          state.session = next
+          state.pendingSession = null
+          state.authWaiting = false
+          state.lastAuthError = null
+          state.logoutEpoch = null
+          state.oauth_nonce = crypto.randomBytes(16).toString('hex')
+          saveState(state)
+          persistSessionTokens(state.session)
+          bridgeLog('oauth_exchange_ok id=' + state.session.id_user_id + ' email=' + state.session.email)
+        } else {
+          bridgeLog('oauth_callback_keep_existing id=' + state.session.id_user_id)
+          state.authWaiting = false
+          saveState(state)
+        }
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' })
+        return res.end(page(tr.callbackOkTitle, tr.callbackOkBody))
+      } catch (e) {
+        const st = loadState()
+        st.authWaiting = false
+        st.lastAuthError = String(e?.message || e)
+        saveState(st)
+        bridgeLog('oauth_exchange_fail: ' + String(e?.message || e))
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' })
+        return res.end(page(tr.callbackFailTitle, esc(e?.message || e), tr.callbackFailBody))
       }
-      res.writeHead(302, { Location: '/assistix/done' })
-      return res.end()
     }
 
     // Desktop update channel (Beam hosting check + local apply/rollback)
@@ -3337,13 +3633,19 @@ if (url.pathname === '/assistix/logout' && req.method === 'POST') {
       return await handleMessages(req, res)
     }
 
-    // Lightweight OpenAI passthrough for debugging
+    // Lightweight OpenAI passthrough for debugging (Assistix public model ids)
     if (url.pathname === '/v1/chat/completions' && req.method === 'POST') {
       const raw = await readBody(req)
       const body = JSON.parse(raw.toString('utf8') || '{}')
       const tier = resolveTier(body.model)
-      body.model = tier.backend
-      const upstream = await callKumo(body, { stream: !!body.stream })
+      body.model = tier.id
+      let st = loadState()
+      try { st = await ensureSessionFresh(st) } catch {}
+      const upstream = await callKumo(body, {
+        stream: !!body.stream,
+        backends: [tier.id],
+        accessToken: getAssistixUpstreamToken(st),
+      })
       const buf = Buffer.from(await upstream.arrayBuffer())
       res.writeHead(upstream.status, { 'Content-Type': upstream.headers.get('content-type') || 'application/json' })
       return res.end(buf)
@@ -3371,10 +3673,12 @@ if (!state.session) {
 }
 
 listen(PORT).then((port) => {
+  bridgeLog(`boot assistix_llm=${KUMO_URL}`)
   console.log(`[beam-bridge] http://127.0.0.1:${port}`)
   console.log(`[beam-bridge] anthropic base: http://127.0.0.1:${port}/anthropic`)
   console.log(`[beam-bridge] assistix login: http://127.0.0.1:${port}/assistix/login`)
-  // Background Host/Kumo reachability — drives reconnect UX + resume gates.
+  console.log(`[beam-bridge] llm gateway: ${KUMO_URL}`)
+  // Background Host/LLM gateway reachability — drives reconnect UX + resume gates.
   refreshNetHealth({ force: true }).catch(() => {})
   setInterval(() => { refreshNetHealth({ force: true }).catch(() => {}) }, 12_000)
   try {

@@ -8,7 +8,7 @@ const ROOT = "C:/Users/Alexa/OneDrive/Documents/Beam Agent";
 const APP = path.join(ROOT, "dist/Beam Agent/resources/app");
 const DIST = path.join(ROOT, "dist/Beam Agent");
 const DSH = path.join(APP, "dsh/node_modules/@deepseek-ai");
-const BEAM_VERSION = "0.1.6";
+const BEAM_VERSION = "0.1.8";
 
 const ruCommon = {
   ok: "OK",
@@ -93,7 +93,15 @@ console.log("2) Point updates at Assistix Beam feed (do NOT disable)");
 
 console.log("3) Locale client: en + ru only");
 {
-  const client = path.join(DSH, "dsh-client-locale/lib/client.js");
+  const clientCandidates = [
+    path.join(DSH, "dsh-client-locale/lib/client.js"),
+    path.join(APP, "beam/node_modules/@assistix/beam-client-locale/lib/client.js"),
+    path.join(APP, "beam/node_modules/@deepseek-ai/dsh-client-locale/lib/client.js"),
+  ];
+  const client = clientCandidates.find((p) => fs.existsSync(p));
+  if (!client) {
+    console.warn("  locale client missing — skip (already shipped in beam tree)");
+  } else {
   let s = fs.readFileSync(client, "utf8");
 
   s = s.replaceAll('const LOCALE_IDS = ["zh", "en"];', 'const LOCALE_IDS = ["en", "ru"];');
@@ -152,11 +160,13 @@ console.log("3) Locale client: en + ru only");
 
   fs.writeFileSync(client, s);
 
-  const index = path.join(DSH, "dsh-client-locale/lib/index.js");
+  const index = path.join(path.dirname(path.dirname(client)), "index.js");
   if (fs.existsSync(index)) {
     let idx = fs.readFileSync(index, "utf8");
     idx = idx.replaceAll('const LOCALE_IDS = ["zh", "en"];', 'const LOCALE_IDS = ["en", "ru"];');
     fs.writeFileSync(index, idx);
+  }
+  console.log("  locale patched", path.relative(ROOT, client));
   }
 }
 

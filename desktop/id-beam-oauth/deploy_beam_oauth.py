@@ -6,15 +6,25 @@ Requires live network path (VPN off or DIRECT to 31.31.196.221).
 from __future__ import annotations
 
 import io
+import os
 import re
 import sys
 import time
 from pathlib import Path
 
 HOST = "31.31.196.221"
-SSH_USER = "u3354161"
-SSH_PASS = "YOUR_SSH_PASSWORD_HERE"
-FTP_PASS = "7oQd4Hw2eF1aJ1Cj"
+SSH_USER = os.environ.get("ASSISTIX_SSH_USER", "u3354161")
+SSH_PASS = (
+    os.environ.get("ASSISTIX_SSH_PASS")
+    or os.environ.get("BP")
+    or "YOUR_SSH_PASSWORD_HERE"
+)
+FTP_PASS = (
+    os.environ.get("ASSISTIX_FTP_PASS")
+    or os.environ.get("ASSISTIX_SSH_PASS")
+    or os.environ.get("BP")
+    or ""
+)
 
 CANDIDATE_ROOTS = [
     "/var/www/u3354161/data/www/id.assistix.org",
@@ -73,10 +83,17 @@ if (!function_exists('aid_beam_oauth_product')) {
 
 def patch_bootstrap(src: str) -> str:
     if "aid_is_beam_desktop_oauth" not in src:
-        if "<?php" in src[:40]:
-            src = src.replace("<?php", "<?php\n" + is_beam_loopback_snippet(), 1)
+        # MUST keep declare(strict_types=1) as first statement after <?php
+        if "declare(strict_types=1);" in src:
+            src = src.replace(
+                "declare(strict_types=1);",
+                "declare(strict_types=1);\n" + is_beam_loopback_snippet(),
+                1,
+            )
+        elif "<?php" in src[:40]:
+            src = src.replace("<?php", "<?php\ndeclare(strict_types=1);\n" + is_beam_loopback_snippet(), 1)
         else:
-            src = "<?php\n" + is_beam_loopback_snippet() + "?>\n" + src
+            src = "<?php\ndeclare(strict_types=1);\n" + is_beam_loopback_snippet() + "?>\n" + src
 
     # Force Beam product labels for loopback Beam OAuth
     marker = "/* BEAM_AGENT_OAUTH_PRODUCT */"
@@ -133,10 +150,17 @@ if (
 
 def patch_oauth_finish(src: str) -> str:
     if "aid_is_beam_desktop_oauth" not in src:
-        if "<?php" in src[:40]:
-            src = src.replace("<?php", "<?php\n" + is_beam_loopback_snippet(), 1)
+        # Keep declare(strict_types=1) as the first statement after <?php
+        if "declare(strict_types=1);" in src:
+            src = src.replace(
+                "declare(strict_types=1);",
+                "declare(strict_types=1);\n" + is_beam_loopback_snippet(),
+                1,
+            )
+        elif "<?php" in src[:40]:
+            src = src.replace("<?php", "<?php\ndeclare(strict_types=1);\n" + is_beam_loopback_snippet(), 1)
         else:
-            src = "<?php\n" + is_beam_loopback_snippet() + "?>\n" + src
+            src = "<?php\ndeclare(strict_types=1);\n" + is_beam_loopback_snippet() + "?>\n" + src
 
     marker = "/* BEAM_AGENT_LOOPBACK_ALLOW */"
     if marker not in src:
@@ -366,6 +390,11 @@ def deploy_sftp():
 
 def deploy_ftp():
     from ftplib import FTP
+
+    if not FTP_PASS or FTP_PASS.startswith("YOUR_"):
+        raise RuntimeError(
+            "Set ASSISTIX_FTP_PASS (or ASSISTIX_SSH_PASS / BP) in the environment before FTP deploy"
+        )
 
     ftp = FTP()
     ftp.connect(HOST, 21, timeout=40)

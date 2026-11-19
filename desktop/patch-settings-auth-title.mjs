@@ -60,7 +60,7 @@ function buildAssistixHook() {
 				setBusy(true);
 				try {
 					if (typeof window.__beamRefreshAssistix === "function") {
-						await window.__beamRefreshAssistix({ force: true });
+						await window.__beamRefreshAssistix({ force: true, allowSignOut: true });
 					} else {
 						const r = await fetch("http://127.0.0.1:17865/assistix/status");
 						const data = await r.json();
@@ -80,7 +80,7 @@ function buildAssistixHook() {
 					window.__beamAssistixStatus = { signedIn: false, user: null, quotas: (assistixSnap && assistixSnap.quotas) || {} };
 					window.dispatchEvent(new CustomEvent("beam:assistix-updated"));
 					window.dispatchEvent(new CustomEvent("beam:refresh-limits"));
-					if (typeof window.__beamRefreshAssistix === "function") window.__beamRefreshAssistix({ force: true });
+					if (typeof window.__beamRefreshAssistix === "function") window.__beamRefreshAssistix({ force: true, allowSignOut: true });
 				} catch {}
 				setBusy(false);
 			};

@@ -1,7 +1,7 @@
 {
   "name": "@assistix/beam-desktop-runtime",
   "private": true,
-  "version": "0.1.6",
+  "version": "0.1.8",
   "type": "module",
   "dependencies": {
     "@assistix/cordis": "4.0.5",

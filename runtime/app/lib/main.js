@@ -117,6 +117,7 @@ function resolveDshHome(configured, env = process.env) {
 		if (!key) key = "beam-assistix-local";
 		if (!(typeof process.env.BEAM_API_KEY === "string" && process.env.BEAM_API_KEY.trim())) process.env.BEAM_API_KEY = key;
 		if (!(typeof process.env.DEEPSEEK_API_KEY === "string" && process.env.DEEPSEEK_API_KEY.trim())) process.env.DEEPSEEK_API_KEY = process.env.BEAM_API_KEY;
+		/* LLM provider key stays on Assistix API gateway — desktop uses Assistix ID only. */
 		try {
 			mkdirSync(home, { recursive: true });
 			const credPath = join(home, ".credentials.yaml");
@@ -132,15 +133,24 @@ function resolveDshHome(configured, env = process.env) {
 				if (!/^\s*DEEPSEEK_API_KEY:/m.test(text)) text += `  DEEPSEEK_API_KEY: ${process.env.BEAM_API_KEY}\n`;
 				writeFileSync(credPath, text);
 			}
+			// Strip any previously persisted provider key from local profile.
+			try {
+				let cred = readFileSync(credPath, "utf8");
+				if (/^\s*KUMO_API_KEY:/m.test(cred)) {
+					cred = cred.replace(/^\s*KUMO_API_KEY:.*$/mg, "");
+					writeFileSync(credPath, cred.replace(/\n{3,}/g, "\n\n"));
+				}
+			} catch {}
 			const envPath = join(home, ".env");
 			let envText = "";
 			try { envText = readFileSync(envPath, "utf8"); } catch { envText = ""; }
-			const lines = envText.split(/\r?\n/).filter((line) => line && !/^(BEAM_BASE_URL|BEAM_HOME|DEEPSEEK_BASE_URL|DSH_HOME|DEEPSEEK_SEARCH_BASE_URL)=/i.test(line));
+			const lines = envText.split(/\r?\n/).filter((line) => line && !/^(BEAM_BASE_URL|BEAM_HOME|DEEPSEEK_BASE_URL|DSH_HOME|DEEPSEEK_SEARCH_BASE_URL|KUMO_API_KEY)=/i.test(line));
 			const hasBeamKey = lines.some((line) => /^BEAM_API_KEY=/i.test(line));
 			const hasDeepKey = lines.some((line) => /^DEEPSEEK_API_KEY=/i.test(line));
 			if (!hasBeamKey) lines.unshift(`BEAM_API_KEY=${process.env.BEAM_API_KEY}`);
 			if (!hasDeepKey) lines.push(`DEEPSEEK_API_KEY=${process.env.BEAM_API_KEY}`);
 			writeFileSync(envPath, lines.filter(Boolean).join("\n") + "\n");
+			try { delete process.env.KUMO_API_KEY; } catch {}
 		} catch {}
 	} catch (error) {
 		console.warn("beam launch env:", error);
@@ -6855,7 +6865,7 @@ function platformClientHeaders(platform, client) {
 * @returns the region-tagged Platform locale for that language, `zh_CN` or `en_US`.
 */
 function platformWireLocale(locale) {
-	return locale.toLowerCase().split(/[-_]/)[0] === "zh" ? "zh_CN" : "en_US";
+	return locale.toLowerCase().split(/[-_]/)[0] === "ru" ? "ru_RU" : "en_US";
 }
 //#endregion
 //#region lib/types/client-metadata.js
@@ -6865,7 +6875,7 @@ function platformWireLocale(locale) {
 * @throws Error when the build carries no client version, instead of reporting a guessed one.
 */
 function desktopClientVersion() {
-	return "0.1.6";
+	return "0.1.8";
 }
 /**
 * Sample the Desktop client identity for one Platform request.
@@ -7786,9 +7796,10 @@ const ru = {
 /** Resolve Electron's locale to one shipped Desktop dictionary. */
 function resolveDesktopLocale(locale) {
 	const primary = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-	if (primary === "ru") return { id: "ru", messages: ru };
-	if (primary === "zh") return { id: "zh-CN", messages: zh };
-	return { id: "en", messages: en };
+	return {
+		id: primary === "ru" ? "ru" : "en",
+		messages: primary === "ru" ? ru : en
+	};
 }
 /**
 * Choose a built-in dictionary from the shared preference, then ordered OS languages.
@@ -7798,12 +7809,14 @@ function resolveDesktopLocale(locale) {
 */
 function resolveDesktopStartupLocale(preference, languages) {
 	const selected = preference?.toLowerCase();
-	if (selected === "zh" || selected === "en" || selected === "ru") return resolveDesktopLocale(selected);
+	if (selected === "ru" || selected === "en") return resolveDesktopLocale(selected);
+	if (selected === "zh") return resolveDesktopLocale("en");
 	for (const language of languages) {
-		const primary = language.toLowerCase().split(/[-_]/)[0];
-		if (primary === "zh" || primary === "en" || primary === "ru") return resolveDesktopLocale(primary);
+		const primary = language.toLowerCase().split("-")[0];
+		if (primary === "ru") return resolveDesktopLocale("ru");
+		if (primary === "en") return resolveDesktopLocale("en");
 	}
-	return resolveDesktopLocale("ru");
+	return resolveDesktopLocale("en");
 }
 /** Replace named placeholders in one locale-owned message. */
 function formatDesktopMessage(message, values) {
@@ -8013,6 +8026,19 @@ var DesktopUpdateCoordinator = class {
 		this.updater.on("download-progress", this.onProgress);
 		this.updater.on("update-downloaded", this.onDownloaded);
 		this.updater.on("error", this.onError);
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8433,7 +8459,7 @@ async function serveWebDocument(request, root) {
 		if (error.code === "ENOENT") return new Response(null, { status: 404 });
 		throw error;
 	}
-	const content = pathname === "/" || pathname === "/index.html" ? body.toString().replace("<head>", "<head><script>globalThis.__DSH_BOOT_READY__ = Promise.withResolvers()<\/script>") : new Uint8Array(body);
+		const content = pathname === "/" || pathname === "/index.html" ? body.toString().replace("<head>", "<head><script>globalThis.__DSH_BOOT_READY__ = Promise.withResolvers()<\/script>") : new Uint8Array(body);
 	return new Response(request.method === "HEAD" ? null : content, { headers: { "content-type": MIME[extname(target)] ?? "application/octet-stream" } });
 }
 /**

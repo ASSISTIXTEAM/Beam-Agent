@@ -24,8 +24,8 @@ PASS = os.environ.get("ASSISTIX_SSH_PASS") or os.environ.get("ASSISTIX_SFTP_PASS
 REMOTE_DIR = "/var/www/u3354161/data/www/agent.assistix.org/download"
 
 ROOT = Path(__file__).resolve().parents[2]
-VERSION = "0.1.5"
-EXE_NAME = "Beam-Agent-0.1.5-Setup.exe"
+VERSION = "0.1.8"
+EXE_NAME = "Beam-Agent-0.1.8-Setup.exe"
 LOCAL_EXE = ROOT / "dist" / "installers" / EXE_NAME
 LOCAL_HTML = Path(__file__).resolve().parent / "download-index.html"
 FEED_DIR = ROOT / "dist" / "installers"

@@ -6,8 +6,9 @@ import { fileURLToPath } from 'node:url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '../..')
 const OUT = path.join(ROOT, 'dist', 'installers')
-const VERSION = '0.1.6'
-const EXE = 'Beam-Agent-0.1.6-Setup.exe'
+const VERSION = '0.1.8'
+const EXE = 'Beam-Agent-0.1.8-Setup.exe'
+const GH_URL = `https://github.com/ASSISTIXTEAM/Beam-Agent/releases/download/v${VERSION}/${EXE}`
 const artifact = path.join(OUT, EXE)
 
 if (!fs.existsSync(artifact)) {
@@ -22,10 +23,10 @@ const releaseDate = new Date().toISOString()
 const body =
   `version: ${VERSION}\n` +
   `files:\n` +
-  `  - url: ${EXE}\n` +
+  `  - url: ${GH_URL}\n` +
   `    sha512: ${digest}\n` +
   `    size: ${size}\n` +
-  `path: ${EXE}\n` +
+  `path: ${GH_URL}\n` +
   `sha512: ${digest}\n` +
   `releaseDate: '${releaseDate}'\n`
 

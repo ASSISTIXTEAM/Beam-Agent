@@ -125,38 +125,38 @@
 </head>
 <body>
   <main class="wrap">
-    <div class="badge">EARLY ALPHA · Windows · 0.1.6</div>
+    <div class="badge">EARLY ALPHA · Windows · 0.1.8</div>
     <h1>Beam <span>Agent</span></h1>
     <p class="lead">Десктопный AI‑агент ASSISTIX. Скачайте установщик, войдите через ASSISTIX ID — дальше приложение обновляется само.</p>
 
     <section class="card">
       <div class="row">
         <div class="meta">
-          <div><strong id="fileName">Beam-Agent-0.1.6-Setup.exe</strong></div>
+          <div><strong id="fileName">Beam-Agent-0.1.8-Setup.exe</strong></div>
           <div>Windows 10/11 · x64 · без прав администратора</div>
-          <div>Версия <span id="verLine">0.1.6</span></div>
-          <div id="sizeLine">≈ 390 МБ</div>
+          <div>Версия <span id="verLine">0.1.8</span></div>
+          <div id="sizeLine">≈ 400 МБ</div>
         </div>
-        <a class="cta" id="downloadBtn" href="./Beam-Agent-0.1.6-Setup.exe" download>
+        <a class="cta" id="downloadBtn" href="https://github.com/ASSISTIXTEAM/Beam-Agent/releases/download/v0.1.8/Beam-Agent-0.1.8-Setup.exe">
           Скачать Beam Agent
         </a>
       </div>
       <ul class="notes">
-        <li>Вход через ASSISTIX ID (email и пароль).</li>
-        <li>Автообновления: канал <code>nightly</code> → <code>nightly.yml</code> / <code>latest.yml</code> рядом с установщиком.</li>
-        <li>После установки ярлык «Beam Agent (Early Alpha)» появится в меню Пуск.</li>
+        <li>Вход через ASSISTIX ID (email/пароль или браузер OAuth). Без stub-аккаунтов.</li>
+        <li>Установщик и обновления: публичный GitHub Release <code>v0.1.8</code>.</li>
+        <li>После установки ярлык «Beam Agent» появится в меню Пуск.</li>
       </ul>
     </section>
 
     <footer>
       ASSISTIX · <a href="https://agent.assistix.org">agent.assistix.org</a> ·
-      <a href="https://chat.assistix.org">chat.assistix.org</a> ·
+      <a href="https://github.com/ASSISTIXTEAM/Beam-Agent/releases/tag/v0.1.8">GitHub v0.1.8</a> ·
       <a href="https://id.assistix.org">ASSISTIX ID</a>
     </footer>
   </main>
   <script>
-    const EXE = "./Beam-Agent-0.1.6-Setup.exe";
-    fetch(EXE, { method: "HEAD" })
+    const EXE = "https://github.com/ASSISTIXTEAM/Beam-Agent/releases/download/v0.1.8/Beam-Agent-0.1.8-Setup.exe";
+    fetch(EXE, { method: "HEAD", redirect: "follow" })
       .then((r) => {
         const len = r.headers.get("content-length");
         if (!len) return;

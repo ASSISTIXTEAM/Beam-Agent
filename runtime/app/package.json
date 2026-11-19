@@ -1,7 +1,7 @@
 {
   "name": "@assistix/beam-agent-desktop",
   "description": "Beam Agent — Assistix desktop AI agent (Early Alpha)",
-  "version": "0.1.6",
+  "version": "0.1.8",
   "private": true,
   "license": "MIT",
   "type": "module",

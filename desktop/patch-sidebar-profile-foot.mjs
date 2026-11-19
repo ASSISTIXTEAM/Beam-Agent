@@ -975,10 +975,12 @@ function patchHtml(file) {
     }
   };
 
+  // Auth gate is overlay chrome — must NOT block sidebar profile/rings footer.
   const isBeamDialogOpen = () =>
-    !!document.querySelector("#beam-profile-modal:not([hidden]),#beam-limits-modal:not([hidden]),#beam-auth-gate:not([hidden])");
+    !!document.querySelector("#beam-profile-modal:not([hidden]),#beam-limits-modal:not([hidden])");
 
   const isBlockingModalOpen = () => {
+    // Never skip footer for auth-gate (signed-out / login UI).
     if (document.querySelector(".ReactModal__Overlay")) return true;
     if (isBeamDialogOpen()) return true;
     return [...document.querySelectorAll('[aria-modal="true"]')].some((el) => {

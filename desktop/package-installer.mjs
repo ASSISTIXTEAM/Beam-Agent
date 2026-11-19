@@ -80,8 +80,8 @@ function stripEnvFiles(dir) {
   return n
 }
 
-const INSTALLER_VERSION = '0.1.6'
-const INSTALLER_EXE = 'Beam-Agent-0.1.6-Setup.exe'
+const INSTALLER_VERSION = '0.1.8'
+const INSTALLER_EXE = 'Beam-Agent-0.1.8-Setup.exe'
 const UPDATE_FEED_URL = 'https://agent.assistix.org/download/'
 const APP_UPDATE_YML_SRC = path.join(ROOT, 'desktop', 'installer', 'app-update.yml')
 
@@ -95,13 +95,14 @@ function writeUpdateFeeds(artifactPath) {
   const size = fs.statSync(artifactPath).size
   const digest = sha512Base64(artifactPath)
   const releaseDate = new Date().toISOString()
+  const ghUrl = `https://github.com/ASSISTIXTEAM/Beam-Agent/releases/download/v${INSTALLER_VERSION}/${INSTALLER_EXE}`
   const body =
     `version: ${INSTALLER_VERSION}\n` +
     `files:\n` +
-    `  - url: ${INSTALLER_EXE}\n` +
+    `  - url: ${ghUrl}\n` +
     `    sha512: ${digest}\n` +
     `    size: ${size}\n` +
-    `path: ${INSTALLER_EXE}\n` +
+    `path: ${ghUrl}\n` +
     `sha512: ${digest}\n` +
     `releaseDate: '${releaseDate}'\n`
   for (const name of ['nightly.yml', 'latest.yml']) {
@@ -120,7 +121,8 @@ function writeUpdateFeeds(artifactPath) {
         feedUrl: UPDATE_FEED_URL,
         urls: {
           page: UPDATE_FEED_URL,
-          exe: `${UPDATE_FEED_URL}${INSTALLER_EXE}`,
+          exe: `https://github.com/ASSISTIXTEAM/Beam-Agent/releases/download/v${INSTALLER_VERSION}/${INSTALLER_EXE}`,
+          github: `https://github.com/ASSISTIXTEAM/Beam-Agent/releases/tag/v${INSTALLER_VERSION}`,
           nightly: `${UPDATE_FEED_URL}nightly.yml`,
           latest: `${UPDATE_FEED_URL}latest.yml`,
         },
@@ -211,19 +213,23 @@ Silent launch: Start menu / shortcut opens \`Start Beam Agent.vbs\` — no conso
 ## First launch
 
 1. The local bridge starts on \`127.0.0.1:17865\` (bundled Node).
-2. Sign in with **ASSISTIX ID** when prompted (in-app OAuth / \`assistix-official\` — not a false ACCOUNT_SIGN_IN).
+2. Sign in with **ASSISTIX ID** when prompted (browser OAuth or email/password — no stub \`user@assistix.org\`).
 3. Create a **project by name** from the sidebar (projects are isolated), then start a chat.
-4. Models: **Tide** (500K) / **Flare** (10K) / **Pine** (1K) quotas via local bridge → Kumorouter. Hard stop + renew notice when exhausted. No manual API keys for core chat.
+4. Models: weekly quotas **Tide 100K** / **Flare 50K** / **Pine 10K** via local bridge → Kumorouter (unified with server). Soft-block + Auto fallthrough when Tide is exhausted. No manual API keys for core chat.
 
 Data home: \`%USERPROFILE%\\.beam\` (Electron userData: \`%USERPROFILE%\\.beam\\electron-userdata\`).
 
-## What's bundled (0.1.5)
+## What's bundled (0.1.8)
 
 - Electron app (\`Beam Agent.exe\`) + patched frontend (Beam brand colors, ASSISTIX ID login restyle)
+- **Login:** browser OAuth + email/password against id.assistix.org; stub Assistix User removed; logout returns to gate
 - Local Assistix bridge (Tide / Flare / Pine + ASSISTIX OAuth ready)
 - Bundled Node runtime under \`resources\\runtime\\...\`
 - Silent launchers (\`Start Beam Agent.vbs\`, \`start-bridge-hidden.vbs\`)
-- Fixes baked in: \`.beam\` home / MISSING_CREDENTIAL, projects isolation + create-by-name, web tools, INVALID_REQUEST compact + DSML→tools (no chat dump), output auto-continue + **Продолжить**, Settings Profile/Limits + dynamic titles + Assistix session on Profile, session dots left + right-rail pull-out, plugins blocked, voice in settings
+- **Limits:** Tide 100K / Flare 50K / Pine 10K weekly defaults (unified), admin edit + unlimited, honest provider charge, Auto fallthrough, real-time gauges
+- **Settings nav:** Настройки / Профиль / Лимиты / О приложении (duocolor icons); Updates + Network inside About; critical-update UX
+- **Boot:** permanent \`dsh.profile.bundles\` + \`dsh.bundle\` fix (no connection/webServer crash)
+- Also: \`.beam\` home / MISSING_CREDENTIAL, projects isolation, web tools, DSML→tools, output auto-continue, stability tray
 
 **Not** bundled as secrets: no packaged \`.env\`, no \`BEAM_BASE_URL\` written into \`~/.beam/.env\`. Login/OAuth at runtime only.
 
@@ -332,12 +338,21 @@ if (fs.existsSync(BRIDGE_SRC)) {
   }
 }
 
-// Critical boot/runtime patches — must survive runtime→dist sync.
+// Critical boot/runtime + product UX patches — must survive runtime→dist sync.
 for (const name of [
   'patch-runtime-version-soft.mjs',
   'patch-boot-ipc-host-only.mjs',
   'patch-boot-ready-cap.mjs',
   'beam-splash-redesign.mjs',
+  // 0.1.8 product surface (idempotent)
+  'patch-settings-profile-limits.mjs',
+  'patch-quotas-ux-clarity.mjs',
+  'patch-settings-nav-extras.mjs',
+  'patch-locale-updates.mjs',
+  'patch-sidebar-profile-foot.mjs',
+  'patch-logout-sticky.mjs',
+  'patch-locale-strict.mjs',
+  'patch-iron-auth-gate.mjs',
 ]) {
   const script = path.join(ROOT, 'desktop', name)
   if (!fs.existsSync(script)) continue
@@ -505,7 +520,7 @@ fs.mkdirSync(OUT_DIR, { recursive: true })
 
 // Short drive letters avoid OneDrive / long-path flakiness during ISCC compression.
 const SRC_DRIVE = 'B:'
-const OUT_DRIVE = 'I:'
+const OUT_DRIVE = 'J:'
 function subst(drive, target) {
   spawnSync('subst', [drive, '/D'], { windowsHide: true, encoding: 'utf8' })
   const r = spawnSync('subst', [drive, target], { windowsHide: true, encoding: 'utf8' })

@@ -304,8 +304,10 @@ const NEW_BLOCK = `  let passwordBusy = false;
       try { g?.querySelector('[name="email"]')?.focus(); } catch {}
     });
     el.querySelector('[data-act="logout"]')?.addEventListener("click", async () => {
+      try { await stickySigned = null;
+      lastData = { signedIn: false, user: null };
       try { await fetch(BRIDGE + "/assistix/logout", { method: "POST" }); } catch {}
-      refresh({ force: true });
+      await refresh({ force: true, allowSignOut: true });
     });
     el.querySelector('[data-act="refresh"]')?.addEventListener("click", () => refresh({ force: true }));
   };
