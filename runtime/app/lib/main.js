@@ -117,7 +117,6 @@ function resolveDshHome(configured, env = process.env) {
 		if (!key) key = "beam-assistix-local";
 		if (!(typeof process.env.BEAM_API_KEY === "string" && process.env.BEAM_API_KEY.trim())) process.env.BEAM_API_KEY = key;
 		if (!(typeof process.env.DEEPSEEK_API_KEY === "string" && process.env.DEEPSEEK_API_KEY.trim())) process.env.DEEPSEEK_API_KEY = process.env.BEAM_API_KEY;
-		/* LLM provider key stays on Assistix API gateway — desktop uses Assistix ID only. */
 		try {
 			mkdirSync(home, { recursive: true });
 			const credPath = join(home, ".credentials.yaml");
@@ -133,24 +132,15 @@ function resolveDshHome(configured, env = process.env) {
 				if (!/^\s*DEEPSEEK_API_KEY:/m.test(text)) text += `  DEEPSEEK_API_KEY: ${process.env.BEAM_API_KEY}\n`;
 				writeFileSync(credPath, text);
 			}
-			// Strip any previously persisted provider key from local profile.
-			try {
-				let cred = readFileSync(credPath, "utf8");
-				if (/^\s*KUMO_API_KEY:/m.test(cred)) {
-					cred = cred.replace(/^\s*KUMO_API_KEY:.*$/mg, "");
-					writeFileSync(credPath, cred.replace(/\n{3,}/g, "\n\n"));
-				}
-			} catch {}
 			const envPath = join(home, ".env");
 			let envText = "";
 			try { envText = readFileSync(envPath, "utf8"); } catch { envText = ""; }
-			const lines = envText.split(/\r?\n/).filter((line) => line && !/^(BEAM_BASE_URL|BEAM_HOME|DEEPSEEK_BASE_URL|DSH_HOME|DEEPSEEK_SEARCH_BASE_URL|KUMO_API_KEY)=/i.test(line));
+			const lines = envText.split(/\r?\n/).filter((line) => line && !/^(BEAM_BASE_URL|BEAM_HOME|DEEPSEEK_BASE_URL|DSH_HOME|DEEPSEEK_SEARCH_BASE_URL)=/i.test(line));
 			const hasBeamKey = lines.some((line) => /^BEAM_API_KEY=/i.test(line));
 			const hasDeepKey = lines.some((line) => /^DEEPSEEK_API_KEY=/i.test(line));
 			if (!hasBeamKey) lines.unshift(`BEAM_API_KEY=${process.env.BEAM_API_KEY}`);
 			if (!hasDeepKey) lines.push(`DEEPSEEK_API_KEY=${process.env.BEAM_API_KEY}`);
 			writeFileSync(envPath, lines.filter(Boolean).join("\n") + "\n");
-			try { delete process.env.KUMO_API_KEY; } catch {}
 		} catch {}
 	} catch (error) {
 		console.warn("beam launch env:", error);
@@ -6865,7 +6855,7 @@ function platformClientHeaders(platform, client) {
 * @returns the region-tagged Platform locale for that language, `zh_CN` or `en_US`.
 */
 function platformWireLocale(locale) {
-	return locale.toLowerCase().split(/[-_]/)[0] === "ru" ? "ru_RU" : "en_US";
+	return locale.toLowerCase().split(/[-_]/)[0] === "zh" ? "zh_CN" : "en_US";
 }
 //#endregion
 //#region lib/types/client-metadata.js
@@ -6875,7 +6865,7 @@ function platformWireLocale(locale) {
 * @throws Error when the build carries no client version, instead of reporting a guessed one.
 */
 function desktopClientVersion() {
-	return "0.1.8";
+	return "0.1.6";
 }
 /**
 * Sample the Desktop client identity for one Platform request.
@@ -7796,10 +7786,9 @@ const ru = {
 /** Resolve Electron's locale to one shipped Desktop dictionary. */
 function resolveDesktopLocale(locale) {
 	const primary = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-	return {
-		id: primary === "ru" ? "ru" : "en",
-		messages: primary === "ru" ? ru : en
-	};
+	if (primary === "ru") return { id: "ru", messages: ru };
+	if (primary === "zh") return { id: "zh-CN", messages: zh };
+	return { id: "en", messages: en };
 }
 /**
 * Choose a built-in dictionary from the shared preference, then ordered OS languages.
@@ -7809,14 +7798,12 @@ function resolveDesktopLocale(locale) {
 */
 function resolveDesktopStartupLocale(preference, languages) {
 	const selected = preference?.toLowerCase();
-	if (selected === "ru" || selected === "en") return resolveDesktopLocale(selected);
-	if (selected === "zh") return resolveDesktopLocale("en");
+	if (selected === "zh" || selected === "en" || selected === "ru") return resolveDesktopLocale(selected);
 	for (const language of languages) {
-		const primary = language.toLowerCase().split("-")[0];
-		if (primary === "ru") return resolveDesktopLocale("ru");
-		if (primary === "en") return resolveDesktopLocale("en");
+		const primary = language.toLowerCase().split(/[-_]/)[0];
+		if (primary === "zh" || primary === "en" || primary === "ru") return resolveDesktopLocale(primary);
 	}
-	return resolveDesktopLocale("en");
+	return resolveDesktopLocale("ru");
 }
 /** Replace named placeholders in one locale-owned message. */
 function formatDesktopMessage(message, values) {
@@ -7862,8 +7849,8 @@ function claimDesktopSingleInstance(application, focusOwner) {
 */
 function desktopUpdateChannel(manifest) {
 	if (typeof manifest !== "object" || manifest === null) throw new Error("desktop update: invalid application manifest");
-	if (!("dshDesktopUpdateChannel" in manifest)) return "nightly";
-	const channel = manifest.dshDesktopUpdateChannel;
+	if (!("beamDesktopUpdateChannel" in manifest)) return "nightly";
+	const channel = manifest.beamDesktopUpdateChannel;
 	if (channel !== "nightly" && channel !== "latest") throw new Error("desktop update: invalid packaged channel");
 	return channel;
 }
@@ -8026,19 +8013,6 @@ var DesktopUpdateCoordinator = class {
 		this.updater.on("download-progress", this.onProgress);
 		this.updater.on("update-downloaded", this.onDownloaded);
 		this.updater.on("error", this.onError);
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -8459,7 +8433,7 @@ async function serveWebDocument(request, root) {
 		if (error.code === "ENOENT") return new Response(null, { status: 404 });
 		throw error;
 	}
-		const content = pathname === "/" || pathname === "/index.html" ? body.toString().replace("<head>", "<head><script>globalThis.__DSH_BOOT_READY__ = Promise.withResolvers()<\/script>") : new Uint8Array(body);
+	const content = pathname === "/" || pathname === "/index.html" ? body.toString().replace("<head>", "<head><script>globalThis.__BEAM_BOOT_READY__ = Promise.withResolvers(); globalThis.__DSH_BOOT_READY__ = globalThis.__BEAM_BOOT_READY__<\/script>") : new Uint8Array(body);
 	return new Response(request.method === "HEAD" ? null : content, { headers: { "content-type": MIME[extname(target)] ?? "application/octet-stream" } });
 }
 /**
@@ -8793,15 +8767,15 @@ async function pruneCrashReports(directory, retained = 10) {
 /** Operations available to the isolated native welcome renderer. */
 /** Private native welcome channels, installed only while its window exists. */
 const WELCOME_IPC = {
-	saveApiKey: "dsh-welcome:save-api-key",
-	analytics: "dsh-welcome:analytics",
-	analyticsEnabled: "dsh-welcome:analytics-enabled",
-	skip: "dsh-welcome:skip",
-	start: "dsh-welcome:start",
-	cancel: "dsh-welcome:cancel",
-	copyLink: "dsh-welcome:copy-link",
-	state: "dsh-welcome:state",
-	takeNotice: "dsh-welcome:take-notice"
+	saveApiKey: "beam-welcome:save-api-key",
+	analytics: "beam-welcome:analytics",
+	analyticsEnabled: "beam-welcome:analytics-enabled",
+	skip: "beam-welcome:skip",
+	start: "beam-welcome:start",
+	cancel: "beam-welcome:cancel",
+	copyLink: "beam-welcome:copy-link",
+	state: "beam-welcome:state",
+	takeNotice: "beam-welcome:take-notice"
 };
 /**
 * Decide whether a startup or sign-out requires the welcome entry.
@@ -8852,7 +8826,7 @@ function welcomeWindowOptions(platform, locale) {
 		} : {},
 		webPreferences: {
 			preload: fileURLToPath(new URL("./preload-welcome.cjs", import.meta.url)),
-			additionalArguments: [`--dsh-welcome-locale=${locale.id}`],
+			additionalArguments: [`--beam-welcome-locale=${locale.id}`],
 			nodeIntegration: false,
 			contextIsolation: true,
 			sandbox: true,
@@ -9523,7 +9497,7 @@ const SHELL_SESSION_KEYS = new Set([
 	...Object.keys(PROBE_ENVIRONMENT)
 ]);
 /** Desktop resolves paths such as `DSH_HOME` before the read, so the Host keeps the same inherited values. */
-const LAUNCHER_OWNED_PREFIXES = ["DSH_", "ELECTRON_"];
+const LAUNCHER_OWNED_PREFIXES = ["BEAM_", "DSH_", "ELECTRON_"]; /* BEAM_CUTOVER_ENV_READ */
 /**
 * Resolve login-shell read settings.
 * @param env - Desktop process environment.
@@ -12165,12 +12139,12 @@ protocol.registerSchemesAsPrivileged([{
 }]);
 function runtimeResources() {
 	const development = !app.isPackaged;
-	/* BEAM_DSH_ALIAS: keep both keys — consumers still read resources.dsh */
-	const beamDir = (development ? process.env.DSH_DESKTOP_DSH_DIR : void 0) ?? (development ? join(app.getAppPath(), ".desktop-build", "development", "project") : join(app.getAppPath(), "beam"));
+	/* BEAM_CUTOVER_RESOURCES_V2 */
+	const beamDir = (development ? (process.env.BEAM_DESKTOP_BEAM_DIR || process.env.DSH_DESKTOP_DSH_DIR) : void 0) ?? (development ? join(app.getAppPath(), ".desktop-build", "development", "project") : join(app.getAppPath(), "beam"));
 	return {
 		node: process.execPath,
 		nodeBin: development ? join(app.getAppPath(), "scripts", "node-bin") : join(process.resourcesPath, "runtime", "bin"),
-		pnpm: (development ? process.env.DSH_DESKTOP_PNPM_ENTRY : void 0) ?? (development ? join(app.getAppPath(), "node_modules", "pnpm", "bin", "pnpm.mjs") : join(process.resourcesPath, "runtime", "primary-runtime", "dependencies", "pnpm", "bin", "pnpm.mjs")),
+		pnpm: (development ? (process.env.BEAM_DESKTOP_PNPM_ENTRY || process.env.DSH_DESKTOP_PNPM_ENTRY) : void 0) ?? (development ? join(app.getAppPath(), "node_modules", "pnpm", "bin", "pnpm.mjs") : join(process.resourcesPath, "runtime", "primary-runtime", "dependencies", "pnpm", "bin", "pnpm.mjs")),
 		beam: beamDir,
 		dsh: beamDir
 	};
@@ -12256,7 +12230,7 @@ function createWindow(preload, show = false, primary = false) {
 	window.on("page-title-updated", (event, title) => {
 		event.preventDefault();
 		const raw = String(title || "");
-		const looksLikeUrl = /localhost|127\.0\.0\.1|\[::1\]|:\/\/|beam-app:\/\/|dsh-app:\/\/|file:\/\//i.test(raw);
+		const looksLikeUrl = /localhost|127\.0\.0\.1|\[::1\]|:\/\/|beam-app:\/\/|beam-app:\/\/|file:\/\//i.test(raw);
 		const next = !raw.trim() || looksLikeUrl ? "Beam Agent" : (/Beam Agent/i.test(raw) ? raw : `${raw} — Beam Agent`);
 		if (!window.isDestroyed()) window.setTitle(next);
 	});
@@ -12266,7 +12240,7 @@ function createWindow(preload, show = false, primary = false) {
 			window.setMenuBarVisibility(false);
 			window.setAutoHideMenuBar(true);
 			const cur = window.getTitle();
-			if (!cur || /localhost|127\.0\.0\.1|\[::1\]|:\/\/|beam-app:\/\/|dsh-app:\/\//i.test(cur)) window.setTitle("Beam Agent");
+			if (!cur || /localhost|127\.0\.0\.1|\[::1\]|:\/\/|beam-app:\/\/|beam-app:\/\//i.test(cur)) window.setTitle("Beam Agent");
 		} catch {}
 	};
 	window.webContents.on("did-finish-load", lockBeamTitle);
@@ -13361,7 +13335,7 @@ async function main() {
 					if (!url.startsWith("beam-app://app")) return;
 					wc.executeJavaScript(`(function(){
 						const root = document.getElementById("root");
-						const boot = document.querySelector("[data-dsh-boot]:not([hidden]), [data-dsh-boot-spinner]:not([hidden]), [data-beam-boot]:not([hidden])");
+						const boot = document.querySelector("[data-beam-boot]:not([hidden]), [data-beam-boot-spinner]:not([hidden]), [data-beam-boot]:not([hidden])");
 						const text = ((root && root.innerText) || (document.body && document.body.innerText) || "").trim();
 						const started = Number(window.__beamBootStartedAt || (window.__beamBootStartedAt = Date.now()));
 						const age = Date.now() - started;

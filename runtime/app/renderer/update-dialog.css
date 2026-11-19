@@ -115,3 +115,17 @@ body.update-dialog { opacity: 0; transition: opacity 150ms ease; }
 body.update-dialog.visible { opacity: 1; }
 @starting-style { body.update-dialog.visible { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { body.update-dialog { transition: none; } }
+
+/* BEAM_CUTOVER_ALIASES_V2 */
+:root, :host, html {
+  --beam-bg: var(--beam-bg);
+  --beam-surface: var(--beam-surface);
+  --beam-elevated: var(--beam-elevated);
+  --beam-line: var(--beam-line);
+  --beam-accent: var(--beam-accent);
+  --beam-accent-hover: var(--beam-accent-hover);
+  --beam-accent-soft: var(--beam-accent-soft);
+  --beam-text: var(--beam-text);
+  --beam-muted: var(--beam-muted);
+  --beam-cta-ink: var(--beam-cta-ink);
+}

@@ -362,3 +362,7 @@ body {
     --dsw-alias-border-l4: #27504a !important;
   }
 }
+/* BEAM_CUTOVER_ALIASES_V2 */
+:root, :host, html {
+  --beam-accent: var(--beam-accent);
+}

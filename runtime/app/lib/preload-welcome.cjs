@@ -2,13 +2,13 @@ let electron = require("electron");
 //#region lib/types/locale.js
 /** Typed English and Chinese copy owned by the Electron shell. */
 const en = {
-	cliCommandMenu: "Manage dsh Command…",
-	cliCommandTitle: "Manage dsh Command",
+	cliCommandMenu: "Manage Beam Agent Command…",
+	cliCommandTitle: "Manage Beam Agent Command",
 	cliCommandLocation: "Desktop command: {path}",
-	cliCommandSelected: "Current dsh command: {path}",
+	cliCommandSelected: "Current Beam Agent command: {path}",
 	cliCommandTarget: "Current launcher target: {path}",
-	cliCommandShadowed: "Another dsh takes precedence. Remove or reorder that installation to use the Desktop command by default. You can also run the Desktop command by its full path.",
-	cliCommandSelectionUnknown: "Your shell command could not be verified. An alias or another dsh installation may take precedence.",
+	cliCommandShadowed: "Another Beam Agent takes precedence. Remove or reorder that installation to use the Desktop command by default. You can also run the Desktop command by its full path.",
+	cliCommandSelectionUnknown: "Your shell command could not be verified. An alias or another Beam Agent installation may take precedence.",
 	cliCommandInstalled: "The Desktop command is installed.",
 	cliCommandNotInstalled: "Add the Desktop command to your terminal.",
 	cliCommandBroken: "The Desktop command needs repair.",
@@ -19,14 +19,14 @@ const en = {
 	cliCommandSwitch: "Continue with the Desktop command?",
 	cliCommandPreserve: "An existing command will be preserved. Other installations and shell startup files will not be changed.",
 	cliCommandContinue: "Continue",
-	cliCommandInstallApp: "Install Desktop in your Applications folder before managing the dsh command.",
+	cliCommandInstallApp: "Install Desktop in your Applications folder before managing the Beam Agent command.",
 	cliCommandUpdating: "An update is being installed. Manage the command after installation finishes.",
-	cliCommandNewTerminal: "Open a new terminal and run dsh --version.",
+	cliCommandNewTerminal: "Open a new terminal and run beam --version.",
 	cliCommandRemoved: "Desktop command registration removed.",
 	cliCommandPreviousRestored: "The previous launcher has been restored.",
 	cliCommandOtherKept: "Other command installations have been left in place.",
 	cliCommandBackupKept: "A previous launcher is preserved at: {path}",
-	cliCommandChanged: "The command or PATH changed while this dialog was open. Open Manage dsh Command again to review the current state.",
+	cliCommandChanged: "The command or PATH changed while this dialog was open. Open Manage Beam Agent Command again to review the current state.",
 	cliCommandOwnershipError: "The command registration or backup changed. No unrelated command was removed.",
 	cliCommandFailed: "The command could not be updated. Check that the application is installed and the destination is writable, then retry.",
 	application: "Application",
@@ -226,7 +226,7 @@ const zh = {
 	selectAll: "全选",
 	startupFailed: "Beam Agent 无法使用",
 	fatalSummary: "应用无法启动或已意外停止。",
-	startupAddressInUse: "有其他正在运行的 DSH（如其他 dsh web、桌面端），无法同时启动，请退出其他正在运行的 DSH 后重启。",
+	startupAddressInUse: "有其他正在运行的 Beam Agent（如其他 Beam Agent web、桌面端），无法同时启动，请退出其他正在运行的 Beam Agent 后重启。",
 	diagnosticTruncated: "… 错误详情已截短。",
 	reportWrittenTo: "诊断报告：{path}",
 	startupReinstallAdvice: "如果应用文件缺失或损坏，请关闭应用并重新安装。任务数据存储在独立位置。",
@@ -392,20 +392,20 @@ function resolveDesktopLocale(locale) {
 /** Operations available to the isolated native welcome renderer. */
 /** Private native welcome channels, installed only while its window exists. */
 const WELCOME_IPC = {
-	saveApiKey: "dsh-welcome:save-api-key",
-	analytics: "dsh-welcome:analytics",
-	analyticsEnabled: "dsh-welcome:analytics-enabled",
-	skip: "dsh-welcome:skip",
-	start: "dsh-welcome:start",
-	cancel: "dsh-welcome:cancel",
-	copyLink: "dsh-welcome:copy-link",
-	state: "dsh-welcome:state",
-	takeNotice: "dsh-welcome:take-notice"
+	saveApiKey: "beam-welcome:save-api-key",
+	analytics: "beam-welcome:analytics",
+	analyticsEnabled: "beam-welcome:analytics-enabled",
+	skip: "beam-welcome:skip",
+	start: "beam-welcome:start",
+	cancel: "beam-welcome:cancel",
+	copyLink: "beam-welcome:copy-link",
+	state: "beam-welcome:state",
+	takeNotice: "beam-welcome:take-notice"
 };
 //#endregion
 //#region lib/types/preload-welcome.js
 /** Localized welcome copy and write-only credential actions. */
-const prefix = "--dsh-welcome-locale=";
+const prefix = "--beam-welcome-locale=";
 const locale = process.argv.find((argument) => argument.startsWith(prefix))?.slice(21);
 if (locale === void 0) throw new Error("desktop welcome: missing window locale");
 const api = {
